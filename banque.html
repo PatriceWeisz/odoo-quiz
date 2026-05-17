@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banque — v{{ app_version }}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         background: #f0f4ff; color: #1a1a2e; min-height: 100vh; }
+  header { background: #714B67; color: white; padding: .55rem 1.1rem;
+           display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+  header .title-block { display: flex; flex-direction: row; align-items: baseline; gap: .65rem; flex-wrap: wrap; }
+  header h1 { font-size: 1rem !important; font-weight: 700; }
+  .app-version { font-size: .62rem; font-weight: 600; opacity: .88; }
+  .header-btn { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+                color: white; border-radius: 8px; padding: .4rem .9rem; cursor: pointer;
+                font-size: .85rem; font-weight: 600; text-decoration: none; display: inline-block; }
+  .header-btn:hover { background: rgba(255,255,255,.25); }
+  .header-nav { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+  .header-timer { font-size: 1.1rem; font-weight: bold; font-variant-numeric: tabular-nums;
+                  opacity: .42; padding: .4rem .35rem; user-select: none; white-space: nowrap; }
+  .app-build { text-align: center; padding: .75rem 1rem 1.25rem; font-size: .82rem; color: #94a3b8; }
+  .app-build strong { color: #64748b; font-weight: 600; }
+  main { max-width: 1200px; margin: 0 auto; padding: 1rem; display: grid;
+         grid-template-columns: minmax(260px, 1fr) minmax(0, 2.2fr); gap: 1rem; align-items: start; }
+  @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+  .panel { background: white; border-radius: 12px; padding: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+  h2 { font-size: 1rem; color: #714B67; margin-bottom: .75rem; }
+  input[type="search"], input[type="text"], select {
+    width: 100%; padding: .5rem .65rem; border: 1px solid #e2e8f0; border-radius: 8px; font: inherit; }
+  textarea {
+    width: 100%; padding: .55rem .7rem; border: 1px solid #e2e8f0; border-radius: 8px; font: inherit;
+    min-height: 4rem; resize: vertical; line-height: 1.45; font-size: .9rem; word-wrap: break-word; }
+  #ed-title, #ed-titlefr { min-height: 3.25rem; }
+  #ed-exc { min-height: 14rem; }
+  #ed-exs { min-height: 5rem; }
+  .list { max-height: calc(100vh - 220px); overflow-y: auto; margin-top: .5rem; }
+  .list button { display: block; width: 100%; text-align: left; padding: .55rem .6rem; margin-bottom: .35rem;
+                 border: 1px solid #e2e8f0; border-radius: 8px; background: #fafafa; cursor: pointer;
+                 font-size: .82rem; line-height: 1.35; }
+  .list button:hover { border-color: #714B67; background: #faf5ff; }
+  .list button.active { border-color: #714B67; background: #f3e8ff; }
+  .muted { font-size: .75rem; color: #64748b; margin-top: .2rem; }
+  .badge { display: inline-block; font-size: .68rem; padding: .1rem .35rem; border-radius: 4px;
+           background: #e2e8f0; color: #334155; margin-left: .35rem; }
+  .badge-src-udemy { background: #e0e7ff; color: #3730a3; }
+  .badge-src-claude { background: #fae8ff; color: #86198f; }
+  .badge-src-user { background: #dcfce7; color: #166534; }
+  .btn { padding: .55rem 1.1rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: .9rem; }
+  .btn-primary { background: #714B67; color: white; }
+  .btn-secondary { background: #e2e8f0; color: #1a1a2e; margin-right: .5rem; }
+  .row { margin-bottom: 1rem; }
+  label { font-size: .78rem; font-weight: 600; color: #475569; display: block; margin-bottom: .25rem; }
+  /* Titres EN / FR côte à côte, espacement réduit */
+  .title-lang-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .35rem .65rem;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .title-lang-grid { grid-template-columns: 1fr; gap: .35rem; }
+  }
+  .lang-cell { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+  .lang-tag { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+              color: #714B67; background: #f3e8ff; padding: .12rem .4rem; border-radius: 4px; width: fit-content; }
+  /* Réponse : EN | FR sur une ligne (très proches), bonne réponse à droite ; fond vert si cochée */
+  .ans-block {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: .35rem .6rem;
+    padding: .45rem .55rem;
+    margin-bottom: .45rem;
+    border: 1px solid #e4d9ec;
+    border-radius: 10px;
+    background: #faf9fc;
+    align-items: stretch;
+    transition: background .15s, border-color .15s, box-shadow .15s;
+  }
+  .ans-block:has(input[type="radio"]:checked) {
+    background: linear-gradient(105deg, #d1fae5 0%, #ecfdf5 35%, #f0fdf4 70%, #faf9fc 100%);
+    border-color: #34d399;
+    box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.35);
+  }
+  .ans-block .lang-pair {
+    grid-column: 1;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .25rem .4rem;
+    align-items: start;
+  }
+  @media (max-width: 640px) {
+    .ans-block .lang-pair { grid-template-columns: 1fr; }
+  }
+  .ans-block .ans-correct {
+    grid-column: 2;
+    align-self: center;
+    white-space: nowrap;
+    padding-left: .15rem;
+  }
+  .ans-block .ans-correct label { display: flex; align-items: center; gap: .3rem; margin: 0;
+    font-size: .78rem; font-weight: 600; color: #334155; cursor: pointer; }
+  .ans-block textarea.av,
+  .ans-block textarea.afr {
+    min-height: 2.5rem;
+    font-size: .84rem;
+    line-height: 1.38;
+    padding: .4rem .5rem;
+  }
+  .ans-block .micro { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+                      color: #64748b; line-height: 1; margin-bottom: .06rem; display: block; }
+  .ed-meta-line { margin-bottom: .45rem; }
+  .ed-meta-line .ed-meta {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .6rem;
+    font-size: .78rem; color: #475569; line-height: 1.2;
+  }
+  .ed-meta-line .ed-meta code { font-size: .76rem; background: #f1f5f9; padding: .1rem .35rem; border-radius: 4px; }
+  .ed-qimg-row .ed-qimg-frame {
+    border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc;
+    padding: .5rem; text-align: center; max-width: 100%;
+  }
+  .ed-qimg-row img {
+    display: block; margin: 0 auto; max-width: 100%; max-height: min(48vh, 440px);
+    height: auto; object-fit: contain; cursor: zoom-in; background: #fff; border-radius: 6px;
+  }
+  .bank-q-zoom-overlay[hidden] { display: none !important; }
+  .bank-q-zoom-overlay:not([hidden]) {
+    position: fixed; inset: 0; z-index: 5000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 3.25rem 0.35rem 0.85rem;
+    background: rgba(15, 23, 42, 0.92);
+    cursor: zoom-out;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .bank-q-zoom-img {
+    max-width: min(100vw - 1rem, 3200px);
+    width: auto; height: auto; object-fit: contain;
+    max-height: min(calc(96vh - 4rem), 2800px);
+    flex-shrink: 0;
+    border-radius: 10px; box-shadow: 0 12px 48px rgba(0,0,0,.45);
+    cursor: default;
+  }
+  .bank-q-zoom-close {
+    position: fixed; top: .85rem; right: .85rem; z-index: 5001;
+    padding: .5rem 1rem; font-size: .88rem; font-weight: 700;
+    border: none; border-radius: 8px; cursor: pointer;
+    background: #fff; color: #334155; box-shadow: 0 2px 10px rgba(0,0,0,.2);
+  }
+  .bank-q-zoom-close:hover { background: #f1f5f9; }
+  .err { background: #fef2f2; color: #b91c1c; padding: .65rem; border-radius: 8px; font-size: .88rem; margin: .5rem 0; }
+  .ok { background: #f0fdf4; color: #166534; padding: .65rem; border-radius: 8px; font-size: .88rem; margin: .5rem 0; }
+  .pager { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin-top: .5rem; font-size: .85rem; }
+</style>
+</head>
+<body>
+<header>
+  <div class="title-block">
+    <h1>📋 Banque de questions</h1>
+    <span class="app-version">v{{ app_version }}</span>
+  </div>
+  <nav class="header-nav" aria-label="Navigation principale">
+    <a class="header-btn" href="/">🎓 Quiz</a>
+    <a class="header-btn" href="/banque" aria-current="page">📋 Banque</a>
+    <a class="header-btn" href="/import-capture">📷 Capture</a>
+    <a class="header-btn" href="/?openAsk=1">💬 Question</a>
+    <a class="header-btn" href="/" onclick="return confirm('Retour au quiz et recommencer ?');">↺ Recommencer</a>
+    <span class="header-timer" title="Pendant un quiz">⏱ --:--</span>
+  </nav>
+</header>
+<main>
+  <div class="panel" style="grid-column:1/-1">
+    <h2>Importer depuis Odoo (votre instance)</h2>
+    <p class="muted" style="margin-bottom:.65rem;line-height:1.45">
+      Via l’API XML-RPC de <strong>senedoo.odoo.com</strong> (<code>config.json</code>).
+      Ne concerne pas le quiz public sur
+      <a href="https://www.odoo.com/fr_FR/slides/odoo-certification-sample-test-50" target="_blank" rel="noopener">odoo.com/eLearning</a>
+      — pour celui-ci, utilisez <a href="/import-capture">📷 Capture</a> (collage d’écran).
+    </p>
+    <div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:flex-end;margin-bottom:.5rem">
+      <div style="flex:1;min-width:12rem">
+        <label for="odoo-survey-search">Rechercher un sondage</label>
+        <input type="search" id="odoo-survey-search" placeholder="certification, survey…">
+      </div>
+      <button type="button" class="btn btn-secondary" id="odoo-survey-refresh">Actualiser</button>
+    </div>
+    <select id="odoo-survey-select" size="4" style="width:100%;margin-bottom:.5rem;font-size:.88rem">
+      <option value="">—</option>
+    </select>
+    <button type="button" class="btn btn-primary" id="odoo-survey-extract">Importer ce sondage → questions.json</button>
+    <div id="odoo-extract-msg"></div>
+  </div>
+  <div class="panel">
+    <h2>Liste</h2>
+    <input type="search" id="q" placeholder="Filtrer (titre, n°, thème)…">
+    <select id="topicf" style="margin-top:.5rem"><option value="__all__">Tous les thèmes</option></select>
+    <div class="list" id="list"></div>
+    <div class="pager">
+      <button type="button" class="btn btn-secondary" id="prev">←</button>
+      <span id="pginfo"></span>
+      <button type="button" class="btn btn-secondary" id="next">→</button>
+    </div>
+  </div>
+  <div class="panel" id="editor">
+    <h2>Édition</h2>
+    <div id="msg"></div>
+    <p class="muted" id="ed-hint">Sélectionnez une question dans la liste.</p>
+    <div id="form" style="display:none">
+      <div class="ed-meta-line">
+        <div class="ed-meta">
+          <span>Question <strong id="ed-num"></strong></span>
+          <span>·</span>
+          <span>id <code id="ed-id"></code></span>
+          <span>·</span>
+          <span>Bonne réponse : <strong id="ed-answer-src">—</strong></span>
+        </div>
+      </div>
+      <div class="row"><label for="ed-topic">Thème / module</label>
+        <div style="display:flex;gap:.35rem;flex-wrap:wrap">
+          <input type="text" id="ed-topic" placeholder="Ex. Stock / Inventaire" style="flex:1;min-width:12rem">
+          <button type="button" class="btn btn-secondary" id="btn-guess">Deviner</button>
+        </div>
+        <span class="muted" id="topic-hint"></span>
+      </div>
+      <div class="row">
+        <label>Intitulé de la question</label>
+        <div class="title-lang-grid">
+          <div class="lang-cell">
+            <span class="lang-tag">EN</span>
+            <textarea id="ed-title" rows="2"></textarea>
+          </div>
+          <div class="lang-cell">
+            <span class="lang-tag">FR</span>
+            <textarea id="ed-titlefr" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="row ed-qimg-row" id="ed-qimg-row">
+        <span class="label-like" style="font-size:.78rem;font-weight:600;color:#475569;display:block;margin-bottom:.25rem">Image de question (banque)</span>
+        <div class="ed-qimg-frame" id="ed-qimg-frame" style="display:none">
+          <img id="ed-qimg" alt="Illustration enregistrée pour cette question" loading="lazy">
+        </div>
+        <p class="muted" id="ed-qimg-meta"></p>
+        <p class="muted" id="ed-qimg-hint" style="font-size:.78rem;line-height:1.45">Pour ajouter ou remplacer une image : <a href="/import-capture">Capture Udemy</a> — même intitulé (doublon), cochez l’option image puis validez avec « Mettre à jour la banque ».</p>
+      </div>
+      <div class="row"><label>Réponses</label><div id="ed-answers"></div></div>
+      <div class="row"><label for="ed-exc">Explication Claude</label><textarea id="ed-exc" rows="12"></textarea></div>
+      <div class="row"><label for="ed-exs">Explication Senedoo / Udemy</label><textarea id="ed-exs" rows="5"></textarea></div>
+      <button type="button" class="btn btn-primary" id="btn-save">Enregistrer dans questions.json</button>
+    </div>
+  </div>
+</main>
+<div id="bank-q-zoom-overlay" class="bank-q-zoom-overlay" hidden role="dialog" aria-modal="true" aria-label="Agrandissement image question">
+  <button type="button" class="bank-q-zoom-close" id="bank-q-zoom-close">Fermer</button>
+  <img id="bank-q-zoom-img" class="bank-q-zoom-img" src="" alt="">
+</div>
+<footer class="app-build">Version livrée : <strong>v{{ app_version }}</strong></footer>
+<script>
+(function(){
+  let offset = 0, limit = 40, total = 0, selectedId = null, current = null;
+  const listEl = document.getElementById('list');
+  const qEl = document.getElementById('q');
+  const topicf = document.getElementById('topicf');
+  const msg = document.getElementById('msg');
+  const escDiv = document.createElement('div');
+
+  function showMsg(html, cls) {
+    msg.innerHTML = html ? '<div class="' + cls + '">' + html + '</div>' : '';
+  }
+
+  function answerSourceLabel(code) {
+    if (code === 'odoo') return 'Site Odoo (capture)';
+    if (code === 'udemy') return 'Udemy / capture';
+    if (code === 'claude') return 'Claude';
+    if (code === 'user') return 'Utilisateur';
+    return '—';
+  }
+
+  function answerSourceBadgeClass(code) {
+    if (code === 'odoo') return 'badge badge-src-udemy';
+    if (code === 'udemy') return 'badge badge-src-udemy';
+    if (code === 'claude') return 'badge badge-src-claude';
+    if (code === 'user') return 'badge badge-src-user';
+    return 'badge';
+  }
+
+  function esc(s) {
+    escDiv.textContent = s == null ? '' : String(s);
+    return escDiv.innerHTML;
+  }
+
+  async function loadList() {
+    const q = encodeURIComponent(qEl.value.trim());
+    const t = encodeURIComponent(topicf.value);
+    const res = await fetch('/api/bank?q=' + q + '&topic=' + t + '&offset=' + offset + '&limit=' + limit);
+    const data = await res.json();
+    total = data.total || 0;
+    document.getElementById('pginfo').textContent =
+      (total === 0 ? '0' : (offset + 1) + '–' + Math.min(offset + limit, total)) + ' / ' + total;
+    if (data.topics && topicf.options.length === 1) {
+      data.topics.forEach(function(t) {
+        var o = document.createElement('option');
+        o.value = t; o.textContent = t;
+        topicf.appendChild(o);
+      });
+    }
+    listEl.innerHTML = '';
+    (data.items || []).forEach(function(item) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.id = item.id;
+      var auto = item.topic_auto ? ' <span class="badge">auto</span>' : '';
+      var src = item.correct_answer_source || '';
+      var srcBadge = src ? '<span class="' + answerSourceBadgeClass(src) + '" title="Provenance de la bonne réponse">' +
+        esc(answerSourceLabel(src)) + '</span>' : '';
+      var title = item.title == null ? '' : String(item.title);
+      var imgMark = item.has_question_image ? ' <span title="Image de question enregistrée">📷</span>' : '';
+      b.innerHTML = '<strong>#' + item.num + '</strong> ' + esc(title.slice(0, 120)) +
+        (title.length > 120 ? '…' : '') + imgMark + srcBadge +
+        '<div class="muted">' + esc(item.topic) + auto + '</div>';
+      b.onclick = function() { select(item.id); };
+      if (selectedId === item.id) b.classList.add('active');
+      listEl.appendChild(b);
+    });
+  }
+
+  async function select(id) {
+    selectedId = id;
+    Array.from(listEl.querySelectorAll('button')).forEach(function(b) {
+      b.classList.toggle('active', parseInt(b.dataset.id, 10) === id);
+    });
+    showMsg('', '');
+    var res = await fetch('/api/bank/' + id);
+    if (!res.ok) { showMsg('Erreur chargement', 'err'); return; }
+    current = await res.json();
+    document.getElementById('ed-hint').style.display = 'none';
+    document.getElementById('form').style.display = 'block';
+    document.getElementById('ed-num').textContent = '#' + current.num;
+    document.getElementById('ed-id').textContent = current.id;
+    document.getElementById('ed-answer-src').textContent = answerSourceLabel(current.correct_answer_source || '');
+    document.getElementById('ed-topic').value = current.topic || '';
+    document.getElementById('topic-hint').textContent = current.topic_is_auto_display
+      ? ('Suggestion auto : ' + (current.topic_inferred || '') + ' — modifiable puis enregistrer.')
+      : 'Thème enregistré sur cette question.';
+    document.getElementById('ed-title').value = current.title || '';
+    document.getElementById('ed-titlefr').value = current.title_fr || '';
+    (function renderQImg() {
+      var frame = document.getElementById('ed-qimg-frame');
+      var im = document.getElementById('ed-qimg');
+      var meta = document.getElementById('ed-qimg-meta');
+      var rel = (current.question_image || '').trim();
+      im.onerror = null;
+      if (rel && rel.indexOf('..') < 0 && rel.indexOf(':') < 0 && rel.indexOf('question_media/') === 0) {
+        frame.style.display = 'block';
+        im.style.display = 'block';
+        im.onerror = function() {
+          im.removeAttribute('src');
+          im.removeAttribute('title');
+          frame.style.display = 'none';
+          meta.textContent = 'Référence « ' + rel + ' » : chargement impossible (fichier manquant ?).';
+          meta.style.color = '#b91c1c';
+        };
+        if (current.question_image_file_ok) {
+          meta.textContent = 'Fichier : ' + rel + ' — cliquer l’image pour agrandir.';
+          meta.style.color = '#64748b';
+        } else {
+          meta.textContent = 'Référence enregistrée mais fichier absent sur le serveur : ' + rel;
+          meta.style.color = '#b45309';
+        }
+        im.alt = 'Illustration enregistrée pour cette question';
+        im.title = 'Cliquer pour agrandir';
+        im.src = '/static/' + rel + '?t=' + Date.now();
+      } else {
+        im.removeAttribute('src');
+        im.removeAttribute('title');
+        frame.style.display = 'none';
+        meta.textContent = 'Aucune image enregistrée pour cette question.';
+        meta.style.color = '#64748b';
+      }
+    })();
+    document.getElementById('ed-exs').value = current.explication_senedoo || '';
+    document.getElementById('ed-exc').value = current.explication_claude || '';
+    var wrap = document.getElementById('ed-answers');
+    wrap.innerHTML = '';
+    (current.answers || []).forEach(function(a) {
+      var block = document.createElement('div');
+      block.className = 'ans-block';
+      var pair = document.createElement('div');
+      pair.className = 'lang-pair';
+      var enWrap = document.createElement('div');
+      enWrap.innerHTML = '<span class="micro">EN</span>';
+      var en = document.createElement('textarea');
+      en.className = 'av'; en.rows = 2; en.value = a.value || '';
+      enWrap.appendChild(en);
+      var frWrap = document.createElement('div');
+      frWrap.innerHTML = '<span class="micro">FR</span>';
+      var fr = document.createElement('textarea');
+      fr.className = 'afr'; fr.rows = 2; fr.value = a.value_fr || '';
+      frWrap.appendChild(fr);
+      pair.appendChild(enWrap);
+      pair.appendChild(frWrap);
+      var cor = document.createElement('div');
+      cor.className = 'ans-correct';
+      var lab = document.createElement('label');
+      var rad = document.createElement('input');
+      rad.type = 'radio'; rad.name = 'cor'; rad.checked = !!a.is_correct;
+      lab.appendChild(rad);
+      lab.appendChild(document.createTextNode('Bonne réponse'));
+      cor.appendChild(lab);
+      block.appendChild(pair);
+      block.appendChild(cor);
+      wrap.appendChild(block);
+    });
+  }
+
+  document.getElementById('btn-guess').onclick = function() {
+    if (!current) return;
+    document.getElementById('ed-topic').value = current.topic_inferred || '';
+  };
+
+  document.getElementById('btn-save').onclick = async function() {
+    if (!current) return;
+    var rows = document.querySelectorAll('#ed-answers .ans-block');
+    var answers = [];
+    rows.forEach(function(row, i) {
+      var av = row.querySelector('.av');
+      var afr = row.querySelector('.afr');
+      var rad = row.querySelector('input[type=radio]');
+      answers.push({
+        id: current.answers[i] ? current.answers[i].id : null,
+        value: av.value,
+        value_fr: afr.value,
+        is_correct: !!(rad && rad.checked)
+      });
+    });
+    var body = {
+      title: document.getElementById('ed-title').value,
+      title_fr: document.getElementById('ed-titlefr').value,
+      topic: document.getElementById('ed-topic').value,
+      explication_senedoo: document.getElementById('ed-exs').value,
+      explication_claude: document.getElementById('ed-exc').value,
+      answers: answers
+    };
+    var res = await fetch('/api/bank/' + current.id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    var data = {};
+    try { data = await res.json(); } catch (e) {}
+    if (!res.ok) { showMsg(data.error || 'Erreur enregistrement', 'err'); return; }
+    showMsg('Modifications enregistrées.', 'ok');
+    while (topicf.options.length > 1) topicf.removeChild(topicf.lastChild);
+    offset = 0;
+    await loadList();
+  };
+
+  var tmo;
+  function debounce(fn) { clearTimeout(tmo); tmo = setTimeout(fn, 250); }
+
+  qEl.addEventListener('input', function() { offset = 0; debounce(loadList); });
+  topicf.addEventListener('change', function() { offset = 0; loadList(); });
+  document.getElementById('prev').onclick = function() { offset = Math.max(0, offset - limit); loadList(); };
+  document.getElementById('next').onclick = function() { if (offset + limit < total) { offset += limit; loadList(); } };
+
+  loadList();
+
+  var odooSurveySearch = document.getElementById('odoo-survey-search');
+  var odooSurveySelect = document.getElementById('odoo-survey-select');
+  var odooExtractMsg = document.getElementById('odoo-extract-msg');
+  function showOdooMsg(html, kind) {
+    if (!odooExtractMsg) return;
+    odooExtractMsg.className = kind === 'ok' ? 'ok' : (kind === 'err' ? 'err' : 'muted');
+    odooExtractMsg.innerHTML = html || '';
+  }
+  async function loadOdooSurveys() {
+    if (!odooSurveySelect) return;
+    var q = odooSurveySearch ? odooSurveySearch.value.trim() : '';
+    showOdooMsg('Chargement des sondages…', '');
+    try {
+      var res = await fetch('/api/odoo/surveys?q=' + encodeURIComponent(q));
+      var data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Erreur');
+      odooSurveySelect.innerHTML = '';
+      if (!data.surveys || !data.surveys.length) {
+        odooSurveySelect.innerHTML = '<option value="">Aucun sondage trouvé</option>';
+        showOdooMsg('Aucun sondage. Essayez un autre mot-clé.', 'err');
+        return;
+      }
+      data.surveys.forEach(function (s) {
+        var opt = document.createElement('option');
+        opt.value = String(s.id);
+        opt.textContent = '[' + s.id + '] ' + s.title + ' (' + s.question_count + ' questions)';
+        odooSurveySelect.appendChild(opt);
+      });
+      showOdooMsg(data.surveys.length + ' sondage(s) sur ' + (data.odoo_url || 'Odoo') + '.', 'ok');
+    } catch (e) {
+      odooSurveySelect.innerHTML = '<option value="">—</option>';
+      showOdooMsg('Erreur : ' + (e.message || e), 'err');
+    }
+  }
+  var odooRefresh = document.getElementById('odoo-survey-refresh');
+  if (odooRefresh) odooRefresh.addEventListener('click', loadOdooSurveys);
+  if (odooSurveySearch) {
+    odooSurveySearch.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); loadOdooSurveys(); }
+    });
+  }
+  var odooExtractBtn = document.getElementById('odoo-survey-extract');
+  if (odooExtractBtn) {
+    odooExtractBtn.addEventListener('click', async function () {
+      var sid = odooSurveySelect && odooSurveySelect.value;
+      if (!sid) { showOdooMsg('Choisissez un sondage.', 'err'); return; }
+      if (!confirm('Remplacer questions.json par ce sondage ? (sauvegarde .bak automatique)')) return;
+      odooExtractBtn.disabled = true;
+      showOdooMsg('Import en cours…', '');
+      try {
+        var res = await fetch('/api/odoo/extract', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ survey_id: parseInt(sid, 10) })
+        });
+        var data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Échec import');
+        showOdooMsg(
+          'Importé : <strong>' + data.question_count + '</strong> questions — « ' +
+          (data.survey_title || '') + ' ». Rechargez la liste si besoin.',
+          'ok'
+        );
+        offset = 0;
+        await loadList();
+      } catch (e) {
+        showOdooMsg('Erreur : ' + (e.message || e), 'err');
+      } finally {
+        odooExtractBtn.disabled = false;
+      }
+    });
+  }
+  loadOdooSurveys();
+
+  var zOver = document.getElementById('bank-q-zoom-overlay');
+  var zImg = document.getElementById('bank-q-zoom-img');
+  var zClose = document.getElementById('bank-q-zoom-close');
+  function closeBankQZoom() {
+    if (!zOver || !zImg) return;
+    zOver.hidden = true;
+    zImg.removeAttribute('src');
+    zImg.alt = '';
+    document.body.style.overflow = '';
+  }
+  function openBankQZoom(src) {
+    if (!zOver || !zImg || !src) return;
+    zImg.src = src;
+    zImg.alt = 'Image question agrandie';
+    zOver.hidden = false;
+    document.body.style.overflow = 'hidden';
+    if (zClose) zClose.focus();
+  }
+  var edQimg = document.getElementById('ed-qimg');
+  if (edQimg) {
+    edQimg.addEventListener('click', function() {
+      var s = edQimg.getAttribute('src');
+      if (s) openBankQZoom(s);
+    });
+  }
+  if (zClose) zClose.addEventListener('click', closeBankQZoom);
+  if (zOver) {
+    zOver.addEventListener('click', function(e) {
+      if (e.target === zOver) closeBankQZoom();
+    });
+  }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && zOver && !zOver.hidden) closeBankQZoom();
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Validation capture — v{{ app_version }}</title>
+<script>
+(function () {
+  if (window.top !== window.self) return;
+  var path = window.location.pathname + window.location.search;
+  try {
+    var hub = window.opener;
+    if (hub && !hub.closed && hub.name === 'odoo_capture_udemy') {
+      hub.postMessage({ type: 'odoo-capture-embed-request', url: path }, '*');
+      hub.focus();
+      document.documentElement.innerHTML =
+        '<body style="font-family:system-ui;padding:2rem;max-width:36rem;margin:auto;line-height:1.5">' +
+        '<p><strong>Retour à l’onglet capture…</strong></p><p>La validation s’y affiche dans la page ' +
+        'pour <strong>ne pas couper</strong> le partage Udemy. Cet onglet peut être fermé.</p></body>';
+      setTimeout(function () { try { window.close(); } catch (e) {} }, 120);
+      return;
+    }
+  } catch (e) { /* ignore */ }
+  var bar = document.createElement('div');
+  bar.setAttribute('role', 'alert');
+  bar.style.cssText = 'background:#fef3c7;color:#92400e;padding:.65rem 1rem;font-size:.88rem;line-height:1.45;border-bottom:2px solid #f59e0b';
+  bar.innerHTML = '⚠️ Cette page en plein écran <strong>coupe le partage Udemy</strong>. Fermez-la et utilisez ' +
+    '<a href="/import-capture" style="color:#b45309;font-weight:700">/import-capture</a> (Ctrl+Shift+R), puis « Capturer et analyser ».';
+  document.addEventListener('DOMContentLoaded', function () {
+    if (document.body.firstChild) document.body.insertBefore(bar, document.body.firstChild);
+    else document.body.appendChild(bar);
+  });
+})();
+</script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         background: #f0f4ff; color: #1a1a2e; min-height: 100vh; }
+  header { background: #714B67; color: white; padding: .55rem 1.1rem;
+           display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+  header .title-block { display: flex; flex-direction: row; align-items: baseline; gap: .65rem; flex-wrap: wrap; }
+  header h1 { font-size: 1rem; font-weight: 700; }
+  .app-version { font-size: .62rem; font-weight: 600; opacity: .88; }
+  .header-btn { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+                color: white; border-radius: 8px; padding: .4rem .9rem; cursor: pointer;
+                font-size: .85rem; font-weight: 600; text-decoration: none; display: inline-block; }
+  .header-btn:hover { background: rgba(255,255,255,.25); }
+  .header-nav { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+  .header-timer { font-size: 1.1rem; font-weight: bold; font-variant-numeric: tabular-nums;
+                  opacity: .42; padding: .4rem .35rem; user-select: none; white-space: nowrap; }
+  main { max-width: 1180px; margin: 0 auto; padding: 1rem .75rem 1.5rem; }
+  .intro-acc { margin-bottom: 1.25rem; border-radius: 10px; border: 1px solid #6ee7b7; background: #ecfdf5; overflow: hidden; }
+  .intro-acc > summary {
+    padding: .55rem .9rem; font-size: .88rem; font-weight: 700; color: #047857; cursor: pointer;
+    list-style-position: outside; user-select: none;
+  }
+  .intro-acc > summary:hover { background: rgba(255,255,255,.35); }
+  .intro-acc-body {
+    padding: .75rem 1rem 1rem; font-size: .9rem; line-height: 1.45; color: #065f46;
+    border-top: 1px solid rgba(110, 231, 183, 0.65);
+  }
+  .preview-card { background: white; border-radius: 12px; padding: 0 1rem 1rem; margin-bottom: 1.75rem;
+                   box-shadow: 0 4px 18px rgba(0,0,0,.09); border: 2px solid #e2e8f0; overflow: hidden; }
+  .preview-card-head {
+    margin: 0 -1rem 1rem; padding: .7rem 1rem;
+    font-size: 1rem; font-weight: 800; letter-spacing: .02em;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .35rem;
+  }
+  .preview-card-head .preview-card-sub { font-size: .78rem; font-weight: 600; opacity: .85; }
+  .preview-card--q1 { border-color: #a78bfa; }
+  .preview-card--q1 .preview-card-head { background: #ede9fe; color: #5b21b6; border-bottom: 4px solid #7c3aed; }
+  .preview-card--q2 { border-color: #60a5fa; }
+  .preview-card--q2 .preview-card-head { background: #dbeafe; color: #1e40af; border-bottom: 4px solid #2563eb; }
+  .preview-card--q3 { border-color: #34d399; }
+  .preview-card--q3 .preview-card-head { background: #d1fae5; color: #047857; border-bottom: 4px solid #059669; }
+  .preview-card--q4 { border-color: #fb923c; }
+  .preview-card--q4 .preview-card-head { background: #ffedd5; color: #c2410c; border-bottom: 4px solid #ea580c; }
+  .preview-card h3 { font-size: .88rem; color: #714B67; margin-bottom: .5rem; }
+  .preview-card h4 { font-size: .88rem; color: #475569; margin: .75rem 0 .45rem; }
+  .stat-banner { font-size: .88rem; line-height: 1.45; padding: .55rem .75rem; border-radius: 8px; margin-bottom: .85rem; font-weight: 600; }
+  .stat-banner.new { background: #ecfdf5; color: #047857; border: 1px solid #6ee7b7; }
+  .stat-banner.api-fallback { background: #fffbeb; color: #92400e; border: 1px solid #fcd34d; }
+  .stat-banner a { color: inherit; font-weight: 700; text-decoration: underline; }
+  .diff-banner { background: #eff6ff; border: 1px solid #93c5fd; color: #1e3a5f; border-radius: 8px;
+                 padding: .6rem .75rem; margin-bottom: .85rem; font-size: .88rem; font-weight: 600; line-height: 1.45; }
+  .conflict-banner { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 8px;
+                      padding: .6rem .75rem; margin-bottom: .85rem; font-size: .88rem; font-weight: 600; line-height: 1.45; }
+  .preview-focus { border: 1px solid #e2e8f0; border-radius: 10px; padding: .65rem .75rem; margin-bottom: .65rem;
+                   background: linear-gradient(180deg, #fafbfc 0%, #fff 100%); }
+  .preview-focus .hero-label { font-size: .68rem; font-weight: 700; color: #714B67; text-transform: uppercase; letter-spacing: .04em; margin: .35rem 0 .28rem; }
+  .capture-title-block { margin-bottom: .5rem; }
+  .capture-title-label {
+    display: block; font-size: .78rem; font-weight: 700; color: #475569; margin-bottom: .28rem;
+  }
+  .capture-title-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .35rem .45rem;
+    min-width: 0;
+  }
+  @media (max-width: 720px) {
+    .capture-title-row { grid-template-columns: 1fr; }
+  }
+  .capture-title-row .capture-lang { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+  .capture-title-row textarea {
+    width: 100%; padding: .4rem .5rem; border: 1px solid #cbd5e1; border-radius: 8px;
+    font-size: .95rem; line-height: 1.35; min-height: 2.45rem; resize: vertical; font-family: inherit;
+  }
+  .capture-title-row textarea.capture-title-en { font-weight: 600; color: #0f172a; }
+  .capture-title-row textarea.capture-title-fr { font-weight: 500; color: #334155; }
+  .capture-hero-block .capture-title-label { font-size: .82rem; color: #714B67; }
+  .capture-hero-block .capture-title-row textarea.capture-title-en {
+    font-size: 1.12rem; line-height: 1.4; min-height: 2.85rem; font-weight: 700;
+  }
+  .capture-hero-block .capture-title-row textarea.capture-title-fr {
+    font-size: 1.02rem; line-height: 1.38; min-height: 2.65rem;
+  }
+  .capture-ans:not(:has(.capture-ans-radio:checked)) textarea {
+    font-size: .8rem; color: #475569;
+  }
+  .capture-ans:has(.capture-ans-radio:checked) {
+    border-color: #16a34a; border-width: 2px;
+    box-shadow: 0 2px 12px rgba(22, 163, 74, 0.18);
+  }
+  .capture-ans:has(.capture-ans-radio:checked) textarea {
+    font-size: 1rem; line-height: 1.42; font-weight: 600; color: #0f172a;
+    min-height: 2.65rem;
+  }
+  .capture-ans:has(.capture-ans-radio:checked) .capture-ans-ix {
+    min-width: 1.65rem; height: 1.65rem; font-size: .88rem;
+  }
+  .claude-rag-panel {
+    margin: 0 0 .65rem; border: 1px solid #c4b5fd; border-radius: 10px;
+    background: #faf5ff; padding: .55rem .7rem .65rem; font-size: .8rem;
+  }
+  .claude-rag-head {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .5rem;
+    font-weight: 700; color: #5b21b6; line-height: 1.4; margin-bottom: .4rem;
+  }
+  .claude-rag-scores {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; margin-bottom: .45rem;
+  }
+  .claude-rag-scores-label {
+    font-size: .72rem; font-weight: 700; color: #6b21a8; margin-right: .15rem;
+  }
+  .score-pill {
+    display: inline-block; padding: .12rem .42rem; border-radius: 6px;
+    font-size: .72rem; font-weight: 800; font-variant-numeric: tabular-nums;
+    background: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe;
+  }
+  .score-pill--dup { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+  .score-pill--ok { background: #ecfdf5; color: #047857; border-color: #6ee7b7; }
+  .score-pill--warn { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+  .rag-acc-list { display: flex; flex-direction: column; gap: .35rem; }
+  .rag-acc-item {
+    border: 1px solid #e9d5ff; border-radius: 8px; background: #fff; overflow: hidden;
+  }
+  .rag-acc-item--dup { border-color: #93c5fd; background: #eff6ff; }
+  .rag-acc-item--muted { opacity: .72; }
+  .rag-acc-item > summary {
+    list-style: none; cursor: pointer; padding: .45rem .55rem;
+    display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .5rem;
+    font-size: .76rem; font-weight: 600; color: #5b21b6; user-select: none;
+  }
+  .rag-acc-item > summary::-webkit-details-marker { display: none; }
+  .rag-acc-item > summary::before {
+    content: "▸"; display: inline-block; width: .85rem; color: #7c3aed; transition: transform .15s;
+  }
+  .rag-acc-item[open] > summary::before { transform: rotate(90deg); }
+  .rag-acc-metrics { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .45rem; flex: 1; }
+  .rag-acc-metric { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rag-acc-metric strong { color: #6d28d9; font-weight: 800; }
+  .rag-acc-metric--claude-yes { color: #047857; }
+  .rag-acc-metric--claude-no { color: #94a3b8; }
+  .rag-acc-metric--dup { color: #1e40af; font-weight: 800; }
+  .rag-acc-body {
+    padding: .5rem .65rem .65rem; border-top: 1px solid #e9d5ff; font-size: .78rem; line-height: 1.45;
+  }
+  .rag-acc-body .rag-q { color: #334155; margin: 0 0 .45rem; }
+  .rag-acc-body .rag-ans { color: #047857; font-weight: 600; margin: 0; }
+  .fold-acc {
+    border: 1px solid #cbd5e1; border-radius: 10px; background: #f8fafc; overflow: hidden; margin-bottom: .65rem;
+  }
+  .fold-acc > summary {
+    list-style: none; cursor: pointer; padding: .55rem .75rem;
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: .35rem .6rem;
+    font-size: .86rem; font-weight: 700; color: #334155; user-select: none;
+  }
+  .fold-acc > summary::-webkit-details-marker { display: none; }
+  .fold-acc > summary::before {
+    content: "▸"; display: inline-block; width: .9rem; color: #64748b; transition: transform .15s;
+  }
+  .fold-acc[open] > summary::before { transform: rotate(90deg); }
+  .fold-acc-tags { font-size: .72rem; font-weight: 600; color: #64748b; }
+  .fold-acc-body { padding: .55rem .75rem .75rem; border-top: 1px solid #e2e8f0; }
+  .fold-acc-nested {
+    border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; margin-top: .55rem; overflow: hidden;
+  }
+  .fold-acc-nested > summary {
+    list-style: none; cursor: pointer; padding: .42rem .6rem;
+    font-size: .78rem; font-weight: 700; color: #475569;
+  }
+  .fold-acc-nested > summary::-webkit-details-marker { display: none; }
+  .fold-acc-nested > summary::before {
+    content: "▸"; display: inline-block; width: .85rem; color: #94a3b8; margin-right: .2rem;
+  }
+  .fold-acc-nested[open] > summary::before { transform: rotate(90deg); }
+  .fold-acc-nested .diff-table-wrap { padding: 0 .5rem .5rem; }
+  .capture-unknown-ci {
+    font-size: .82rem; font-weight: 600; color: #92400e; background: #fffbeb;
+    border: 1px solid #fcd34d; border-radius: 8px; padding: .45rem .65rem; margin: 0 0 .35rem; line-height: 1.4;
+  }
+  .capture-answer-src {
+    font-size: .8rem; font-weight: 600; line-height: 1.4; margin: 0 0 .4rem;
+    padding: .42rem .6rem; border-radius: 8px; border: 1px solid #cbd5e1;
+    background: #f8fafc; color: #334155;
+  }
+  .capture-answer-src .muted { font-size: .76rem; font-weight: 500; color: #64748b; }
+  .capture-answer-src--udemy { border-color: #fdba74; background: #fff7ed; color: #9a3412; }
+  .capture-answer-src--banque { border-color: #93c5fd; background: #eff6ff; color: #1e3a5f; }
+  .capture-answer-src--claude { border-color: #c4b5fd; background: #faf5ff; color: #5b21b6; }
+  .capture-answer-src--aucune { border-color: #fcd34d; background: #fffbeb; color: #92400e; }
+  /* Réponses : même logique visuelle que le quiz (.answer-btn / .correct) */
+  .capture-answers { display: flex; flex-direction: column; gap: .35rem; margin-top: .35rem; }
+  .capture-ans {
+    display: block; position: relative;
+    border: 2px solid #e2e8f0; border-radius: 7px; background: #fff;
+    padding: .4rem .5rem; cursor: pointer; transition: border-color .15s, background .15s, box-shadow .15s;
+  }
+  .capture-ans:hover { border-color: #714B67; background: #faf5ff; }
+  .capture-ans:has(.capture-ans-radio:checked) {
+    border-color: #16a34a; background: #f0fdf4;
+    box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.12);
+  }
+  .capture-ans-radio {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+  .capture-ans-row {
+    display: grid;
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    gap: .4rem .5rem;
+    align-items: start;
+  }
+  .capture-ans-ix-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    padding-top: .12rem; min-height: 100%;
+  }
+  .capture-ans-ix {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.4rem; height: 1.4rem; border-radius: 5px; background: #e2e8f0; color: #334155; font-size: .76rem; font-weight: 800;
+  }
+  .capture-ans:has(.capture-ans-radio:checked) .capture-ans-ix { background: #16a34a; color: #fff; }
+  .capture-ans-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .35rem .45rem;
+    min-width: 0;
+  }
+  @media (max-width: 720px) {
+    .capture-ans-fields { grid-template-columns: 1fr; }
+  }
+  .capture-lang { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+  .capture-lang-tag {
+    font-size: .58rem; font-weight: 800; color: #64748b; letter-spacing: .08em;
+  }
+  .capture-ans textarea {
+    width: 100%; padding: .38rem .45rem; border: 1px solid #cbd5e1; border-radius: 6px;
+    font-size: .86rem; font-family: inherit; line-height: 1.38; min-height: 2.35rem; resize: vertical;
+    background: rgba(255,255,255,.92); cursor: text;
+  }
+  .dup-footer { margin-top: .85rem; padding-top: .75rem; border-top: 1px solid #e2e8f0; }
+  .dup-footer .diff-panel { margin-bottom: 0; }
+  .new-choice-footer { margin-top: .85rem; padding-top: .75rem; border-top: 1px solid #e2e8f0; }
+  .merge-btn-row { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: .55rem; align-items: stretch; }
+  .merge-btn { cursor: pointer; margin: 0; flex: 1 1 140px; }
+  .merge-btn input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .merge-btn span {
+    display: block; text-align: center; padding: .75rem 1rem; border-radius: 10px; font-weight: 800; font-size: .95rem;
+    border: 2px solid transparent; transition: transform .1s, box-shadow .15s;
+  }
+  button.merge-btn { border: none; background: transparent; padding: 0; font: inherit; width: 100%; }
+  button.merge-btn span { width: 100%; box-sizing: border-box; }
+  .merge-btn:active span { transform: scale(0.98); }
+  .merge-btn-over span { background: #d1fae5; color: #065f46; border-color: #34d399; }
+  .merge-btn-over input:checked + span { background: #059669; color: #fff; border-color: #047857; box-shadow: 0 6px 20px rgba(5, 150, 105, .35); }
+  .merge-btn-skip span { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+  .merge-btn-skip input:checked + span { background: #475569; color: #fff; border-color: #334155; box-shadow: 0 6px 20px rgba(71, 85, 105, .3); }
+  .merge-btn-new span { background: #eef2ff; color: #312e81; border-color: #a5b4fc; }
+  .merge-btn-new:hover span { background: #e0e7ff; }
+  .diff-panel { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: .85rem .95rem; margin-bottom: 1rem; }
+  .diff-summary { margin: .4rem 0 .65rem 1.1rem; font-size: .86rem; color: #334155; line-height: 1.5; }
+  .diff-table-wrap { overflow-x: auto; margin-top: .5rem; }
+  .diff-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  .diff-table th, .diff-table td { border: 1px solid #e2e8f0; padding: .4rem .45rem; vertical-align: top; text-align: left; }
+  .diff-table th { background: #e2e8f0; color: #334155; }
+  .diff-table tr.diff-hot td { background: #fff7ed; }
+  .diff-table .idx { width: 2rem; text-align: center; color: #64748b; font-weight: 600; }
+  .diff-text-cell { color: #334155; white-space: pre-wrap; word-break: break-word; line-height: 1.45; }
+  .diff-token { padding: .06em .1em; border-radius: 3px; font-weight: 600; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  .diff-bank-only { background: #fecdd3; color: #881337; }
+  .diff-cap-only { background: #bbf7d0; color: #14532d; }
+  .match-pill { display: inline-block; font-size: .72rem; font-weight: 600; color: #475569; background: #e2e8f0;
+                padding: .2rem .45rem; border-radius: 6px; margin-bottom: .5rem; }
+  .capture-thumb-block { margin: 0 0 .45rem; display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem .65rem; }
+  .capture-thumb-btn {
+    display: inline-block; padding: 0; margin: 0; border: 2px solid #e2e8f0; border-radius: 10px;
+    cursor: zoom-in; background: #f8fafc; overflow: hidden; line-height: 0;
+    vertical-align: top; transition: border-color .15s, box-shadow .15s;
+  }
+  .capture-thumb-btn:hover, .capture-thumb-btn:focus-visible {
+    border-color: #714B67; outline: none;
+    box-shadow: 0 4px 14px rgba(113, 75, 103, 0.25);
+  }
+  .capture-thumb-img {
+    display: block; width: 120px; height: 80px; object-fit: cover;
+    border-radius: 6px;
+  }
+  .capture-thumb-hint { margin: 0; font-size: .72rem; max-width: 14rem; line-height: 1.35; }
+  .capture-zoom-overlay[hidden] { display: none !important; }
+  .capture-zoom-overlay:not([hidden]) {
+    position: fixed; inset: 0; z-index: 2000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 3.25rem 0.35rem 0.85rem;
+    background: rgba(15, 23, 42, 0.92);
+    cursor: zoom-out;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .capture-zoom-img {
+    max-width: min(100vw - 1rem, 3200px);
+    width: auto; height: auto; object-fit: contain;
+    max-height: min(calc(96vh - 4rem), 2800px);
+    flex-shrink: 0;
+    border-radius: 10px; box-shadow: 0 12px 48px rgba(0,0,0,.45);
+    cursor: default;
+  }
+  .capture-zoom-close {
+    position: fixed; top: .85rem; right: .85rem; z-index: 2001;
+    padding: .5rem 1rem; font-size: .88rem; font-weight: 700;
+    border: none; border-radius: 8px; cursor: pointer;
+    background: #fff; color: #334155; box-shadow: 0 2px 10px rgba(0,0,0,.2);
+  }
+  .capture-zoom-close:hover { background: #f1f5f9; }
+  .exp-acc {
+    margin-bottom: .55rem; border: 1px solid #e2e8f0; border-radius: 8px;
+    background: #fafbfc; overflow: hidden;
+  }
+  .exp-acc > summary {
+    padding: .42rem .75rem; font-size: .78rem; font-weight: 700; color: #475569;
+    cursor: pointer; list-style-position: outside; user-select: none;
+  }
+  .exp-acc-udemy > summary { border-left: 3px solid #f59e0b; padding-left: calc(.9rem - 3px); }
+  .exp-acc-claude > summary { border-left: 3px solid #714B67; padding-left: calc(.9rem - 3px); }
+  .exp-acc > summary:hover { background: #f1f5f9; }
+  .exp-acc-body { padding: .5rem .75rem .65rem; border-top: 1px solid #e2e8f0; background: #fff; }
+  .exp-acc-body .fld { margin-bottom: 0; }
+  .fld { margin-bottom: .55rem; }
+  .fld label { display: block; font-size: .78rem; font-weight: 600; color: #475569; margin-bottom: .28rem; }
+  .fld textarea, .fld input[type="text"] { width: 100%; padding: .45rem .55rem; border: 1px solid #cbd5e1; border-radius: 8px;
+        font-size: .9rem; font-family: inherit; line-height: 1.4; }
+  .fld textarea { min-height: 2.75rem; resize: vertical; }
+  .fld textarea.exp-tall { min-height: 12rem; line-height: 1.45; }
+  .expl { margin-top: .65rem; font-size: .85rem; color: #475569; line-height: 1.5; white-space: pre-wrap;
+          background: #fffbeb; border-left: 3px solid #f59e0b; padding: .5rem .65rem; border-radius: 0 6px 6px 0; }
+  .expl.claude { border-left-color: #714B67; background: #faf5ff; margin-top: .5rem; }
+  .actions { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
+  .btn { display: inline-block; padding: .65rem 1.35rem; border-radius: 8px; border: none;
+         font-weight: 600; font-size: .95rem; cursor: pointer; text-decoration: none; }
+  .btn-primary { background: #714B67; color: white; }
+  .btn-primary:hover { background: #5a3a52; }
+  .btn-secondary { background: #e2e8f0; color: #1a1a2e; margin-left: .5rem; }
+  .app-build { text-align: center; padding: .75rem 1rem 1.25rem; font-size: .82rem; color: #94a3b8; }
+  .app-build strong { color: #64748b; font-weight: 600; }
+  .muted { font-size: .82rem; color: #94a3b8; margin-top: .5rem; }
+  .img-flag { margin: .25rem 0 .45rem; font-size: .8rem; }
+  .img-flag input { margin-right: .35rem; vertical-align: middle; }
+  .balance-strip {
+    font-size: .8rem; line-height: 1.45; padding: .52rem .7rem; border-radius: 8px; margin: 0 0 .55rem;
+  }
+  .balance-strip strong { font-weight: 800; }
+  .balance-strip--ok { background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46; }
+  .balance-strip--warn { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; }
+  .balance-strip--hint { background: #eff6ff; border: 1px solid #93c5fd; color: #1e3a5f; }
+</style>
+</head>
+<body>
+<header>
+  <div class="title-block">
+    <h1>✅ Validation avant banque</h1>
+    <span class="app-version">v{{ app_version }}</span>
+  </div>
+  <nav class="header-nav" aria-label="Navigation principale">
+    <a class="header-btn" id="btn-return-capture" href="/import-capture?cancel=1&amp;pending={{ pending_id|e }}" title="Fermer sans enregistrer et revenir au collage">↩ Retour au collage</a>
+    <a class="header-btn" href="/">🎓 Quiz</a>
+    <a class="header-btn" href="/banque">📋 Banque</a>
+    <a class="header-btn" href="/import-capture">📷 Capture</a>
+    <a class="header-btn" href="/?openAsk=1">💬 Question</a>
+    <a class="header-btn" href="/" onclick="return confirm('Retour au quiz et recommencer ?');">↺ Recommencer</a>
+    <span class="header-timer" title="Pendant un quiz">⏱ --:--</span>
+  </nav>
+</header>
+<main>
+  <details class="intro-acc">
+    <summary>Consigne — comment utiliser cette page (cliquer pour afficher)</summary>
+    <div class="intro-acc-body">
+      Modifiez les champs de chaque carte. <strong>Question</strong> : intitulé unique, champs <strong>EN | FR</strong> côte à côte. <strong>Réponses</strong> en grille (numéro à gauche, EN | FR côte à côte). <strong>Bonne réponse suggérée</strong> — trois cas : (1) <strong>Udemy</strong> : la correction ou la bonne réponse est <strong>visible sur la capture</strong> ; (2) <strong>Banque</strong> : la question existe déjà avec une bonne réponse enregistrée ; (3) sinon <strong>Claude</strong> est interrogé : si une réponse est proposée, provenance Claude ; sinon <strong>pas de suggestion par Claude</strong> — vous choisissez l’option puis vous validez l’enregistrement. La provenance est enregistrée avec la question. Pour les <strong>tableaux / trial balance</strong>, un recadrage image peut être proposé ; clic sur la vignette pour zoomer. <strong>Doublons / nouvelle question</strong> : boutons en bas de carte puis retour au collage.
+    </div>
+  </details>
+
+  <div id="capture-preview-done" class="ok" style="display:none;margin:0 0 1rem" role="status"></div>
+  <form method="post" action="/import-capture" class="capture-form">
+    <input type="hidden" name="confirm" value="1">
+    <input type="hidden" name="pending_id" value="{{ pending_id|e }}">
+    <input type="hidden" name="capture_n" value="{{ preview_blocks|length }}">
+
+    {% if vision_notice|default('') %}
+    <p class="stat-banner api-fallback" role="status">{{ vision_notice }}</p>
+    {% endif %}
+    {% if preview_blocks|length > 1 %}
+    <p class="stat-banner new" role="status">
+      <strong>{{ preview_blocks|length }} questions</strong> sur cette capture —
+      enregistrez-les <strong>une par une</strong> avec le bouton en bas de chaque fiche (les autres restent affichées).
+    </p>
+    {% endif %}
+
+    {% for b in preview_blocks %}
+    {% set i = loop.index0 %}
+    {% set qslot = (loop.index0 % 4) + 1 %}
+    {% set frs = b.answers_fr if b.answers_fr is defined else [] %}
+    <section class="preview-card preview-card--q{{ qslot }}" aria-labelledby="preview-card-head-{{ i }}">
+      <div class="preview-card-head" id="preview-card-head-{{ i }}">
+        <span>Question {{ loop.index }} / {{ preview_blocks|length }}</span>
+        <span class="preview-card-sub">Fiche d’extraction — enregistrez avec le bouton en bas</span>
+      </div>
+
+      {% if not b.in_banque|default(false) %}
+      <p class="stat-banner new">✨ <strong>Nouvelle question</strong> — pas de doublon strict (titre + options alignés ou score ≥ 98&nbsp;%). Choix <strong>Ajouter / Ignorer</strong> en bas de carte.</p>
+      {% elif b.dup_title_only|default(false) %}
+      <p class="stat-banner api-fallback" role="status">
+        <strong>Titre déjà en banque</strong> (fiche id {% if b.existing_id is not none %}{{ b.existing_id }}{% else %}—{% endif %}) —
+        ce n’est <strong>pas</strong> un doublon complet : la réponse affichée <strong>ne vient pas</strong> de cette fiche banque
+        {% if b.correct_suggestion_source|default('') == 'claude' %} (proposition <strong>Claude</strong>){% elif b.correct_suggestion_source|default('') == 'aucune' %} (<strong>pas de suggestion par Claude</strong> — choix manuel){% elif b.correct_suggestion_source|default('') == 'udemy' %} (lue sur la <strong>capture Udemy</strong>){% endif %}.
+        Comparez les écarts ci-dessous si besoin, puis choisissez en bas : <strong>mettre à jour</strong> la fiche, <strong>ajouter comme nouvelle question</strong>, ou <strong>ignorer</strong>.
+      </p>
+      {% endif %}
+
+      <div class="preview-focus">
+        {% set show_claude_rag = b.correct_suggestion_source|default('') == 'claude' or b.rag_similar|default([])|length > 0 %}
+        {% if (b.match_source|default('') or b.correct_suggestion_source|default('') or b.in_banque|default(false)) and not show_claude_rag %}
+        <p class="match-pill">Provenance :
+          {% if b.correct_suggestion_source|default('') == 'udemy' %}<strong>Udemy</strong> — correction visible sur la capture
+          {% elif b.correct_suggestion_source|default('') == 'aucune' %}<strong>Pas de suggestion Claude</strong> — choix manuel
+          {% elif b.match_source == 'claude_api_timeout' %}Claude — délai dépassé
+          {% elif b.match_source == 'claude_api_surcharge' %}Claude — serveurs saturés
+          {% elif b.match_source == 'claude_api_erreur' %}Claude — erreur
+          {% elif b.match_source == 'sans_api' %}API indisponible
+          {% elif b.match_source|default('') %}{{ b.match_source|e }}
+          {% else %}fusion banque{% endif %}
+        </p>
+        {% endif %}
+
+        {% if b.image_data_url %}
+        <div class="capture-thumb-block">
+          <button type="button" class="capture-thumb-btn" title="Agrandir la capture" data-zoom-src="{{ (b.zoom_image_data_url or b.image_data_url)|safe }}">
+            <img src="{{ b.image_data_url|safe }}" alt="Vignette de la capture" class="capture-thumb-img" loading="lazy" width="120" height="80">
+          </button>
+          <p class="muted capture-thumb-hint">
+            {% if b.needs_image and b.has_balance_crop|default(false) %}
+            Vignette = zone <strong>tableau</strong> extraite ; le zoom affiche la <strong>capture Udemy entière</strong> —
+            {% elif b.needs_image %}
+            Vignette : zone image ou capture entière —
+            {% else %}
+            Aperçu de la capture entière —
+            {% endif %}
+            cliquer pour zoomer (Échap pour fermer).</p>
+        </div>
+        {% endif %}
+        {% if b.needs_image and b.has_balance_crop|default(false) %}
+        <p class="balance-strip balance-strip--ok" role="status">
+          <strong>Image balance / tableau</strong> — recadrage automatique détecté sur la capture.
+          Conservez la case ci-dessous pour <strong>enregistrer cette zone en banque</strong> avec la question (recommandé pour les questions trial balance).
+        </p>
+        {% elif b.needs_image %}
+        <p class="balance-strip balance-strip--ok" role="status">
+          <strong>Image requise</strong> — la question renvoie à un élément visible sur la capture (message, fenêtre, tableau, etc.).
+          {% if b.has_balance_crop|default(false) %}
+          Un extrait a été détecté ; le zoom montre la capture entière.
+          {% else %}
+          La capture entière (réduite) sera enregistrée avec la question — gardez la case cochée ci-dessous.
+          {% endif %}
+        </p>
+        {% elif b.screen_context_hint|default(false) %}
+        <p class="balance-strip balance-strip--hint" role="status">
+          L’intitulé renvoie à un élément <strong>visible sur l’écran</strong> (message, fenêtre, capture…) non recopié dans le texte.
+          Cochez ci-dessous pour <strong>enregistrer l’image</strong> avec la question en banque.
+        </p>
+        {% elif b.balance_context_hint|default(false) %}
+        <p class="balance-strip balance-strip--hint" role="status">
+          L’intitulé évoque un <strong>tableau de balance</strong> ; aucune zone n’a été extraite automatiquement.
+          Vous pouvez cocher ci-dessous pour joindre la <strong>capture entière</strong> à la banque comme image de contexte.
+        </p>
+        {% endif %}
+        {% if b.needs_image %}
+        <p class="img-flag"><label><input type="checkbox" name="c{{ i }}_needs_image" value="1" checked> Enregistrer l’image avec la question en banque (extrait ou capture)</label></p>
+        {% elif b.balance_context_hint|default(false) %}
+        <p class="img-flag"><label><input type="checkbox" name="c{{ i }}_needs_image" value="1"> Joindre la capture entière comme image de question en banque</label></p>
+        {% elif b.in_banque|default(false) %}
+        <p class="img-flag"><label><input type="checkbox" name="c{{ i }}_needs_image" value="1"> Joindre ou mettre à jour l’image depuis cette capture (fichier WebP en banque){% if b.dup_title_only|default(false) %} <span class="muted">— facultatif, la question ne repose pas sur une image</span>{% endif %}</label></p>
+        {% else %}
+        <input type="hidden" name="c{{ i }}_needs_image" value="">
+        {% endif %}
+
+        <input type="hidden" name="c{{ i }}_n_answers" value="{{ b.answers|length }}">
+        <input type="hidden" name="c{{ i }}_existing_id" value="{{ b.existing_id if b.existing_id is not none else '' }}">
+        <input type="hidden" name="c{{ i }}_crop_json" value="{{ (b.crop_rel or {}) | tojson | e }}">
+        <input type="hidden" name="c{{ i }}_suggested_ci" value="{% if b.suggested_correct_index is not none %}{{ b.suggested_correct_index }}{% endif %}">
+        <input type="hidden" name="c{{ i }}_suggested_src" value="{{ b.suggested_correct_source|default('')|e }}">
+
+        <div class="capture-title-block capture-hero-block">
+          <span class="capture-title-label" id="c{{ i }}_q_heading">Question</span>
+          <div class="capture-title-row" role="group" aria-labelledby="c{{ i }}_q_heading">
+            <div class="capture-lang">
+              <span class="capture-lang-tag">EN</span>
+              <textarea class="capture-title-en" id="c{{ i }}_title" name="c{{ i }}_title" required aria-label="Question (anglais)">{{ b.title }}</textarea>
+            </div>
+            <div class="capture-lang">
+              <span class="capture-lang-tag">FR</span>
+              <textarea class="capture-title-fr" id="c{{ i }}_title_fr" name="c{{ i }}_title_fr" aria-label="Question (français)">{{ b.title_fr }}</textarea>
+            </div>
+          </div>
+        </div>
+
+        <p class="hero-label">Réponses</p>
+        {% if b.bank_answer_line_fr|default('') %}
+        <p class="capture-answer-src capture-answer-src--banque" role="status">{{ b.bank_answer_line_fr }}</p>
+        {% elif b.correct_suggestion_source|default('') == 'udemy' %}
+        <p class="capture-answer-src capture-answer-src--udemy" role="status">Réponse <strong>provenant d’Udemy</strong> : la bonne réponse ou la correction est <strong>visible sur la capture</strong>.</p>
+        {% elif b.correct_suggestion_source|default('') == 'banque' %}
+        <p class="capture-answer-src capture-answer-src--banque" role="status">Réponse <strong>provenant de la banque de questions</strong>{% if b.bank_answer_provenance|default('') == 'udemy' %}<span class="muted"> — fiche enregistrée comme : Udemy / Odoo</span>{% elif b.bank_answer_provenance|default('') == 'claude' %}<span class="muted"> — fiche enregistrée comme : Claude</span>{% elif b.bank_answer_provenance|default('') == 'user' %}<span class="muted"> — fiche enregistrée comme : utilisateur</span>{% endif %}.</p>
+        {% elif b.correct_suggestion_source|default('') == 'aucune' %}
+        <p class="capture-answer-src capture-answer-src--aucune" role="status"><strong>Pas de suggestion Claude</strong> — choisissez la bonne option ci-dessous.</p>
+        {% endif %}
+        {% if b.correct_index is none and b.correct_suggestion_source|default('') != 'aucune' %}
+        <p class="capture-unknown-ci" role="status">Réponse inconnue — choisissez la bonne option ci-dessous.</p>
+        {% endif %}
+        {% if show_claude_rag %}
+        <div class="claude-rag-panel" role="status">
+          <div class="claude-rag-head">
+            <span>Réponse suggérée par <strong>Claude</strong></span>
+            {% if b.in_banque|default(false) and b.bank_duplicate_score %}
+            <span class="score-pill score-pill--dup">Doublon {{ "%.0f"|format((b.bank_duplicate_score|default(0)) * 100) }}&nbsp;% · id {{ b.existing_id }}</span>
+            {% endif %}
+            {% if b.bank_prior_correct_index is not none and b.bank_answer_agrees_claude %}
+            <span class="score-pill score-pill--ok">Accord banque n°{{ b.bank_prior_correct_index }}</span>
+            {% elif b.bank_prior_correct_index is not none and b.bank_answer_agrees_claude == false %}
+            <span class="score-pill score-pill--warn">Banque n°{{ b.bank_prior_correct_index }} ≠ Claude{% if b.correct_index is not none %} n°{{ b.correct_index }}{% endif %}</span>
+            {% endif %}
+          </div>
+          {% if b.rag_similar|default([])|length > 0 %}
+          <p class="muted" style="font-size:.72rem;margin:0 0 .45rem;line-height:1.35">
+            Cliquez une ligne pour voir la question banque. Score max = max(vecteur, mots). Claude : oui si ≥ {{ ((b.rag_prompt_min_score|default(0.45)) * 100)|int }}&nbsp;% ou doublon.
+          </p>
+          <div class="rag-acc-list">
+            {% for ref in b.rag_similar %}
+            <details class="rag-acc-item{% if ref.is_duplicate|default(false) %} rag-acc-item--dup{% elif not ref.in_prompt|default(false) %} rag-acc-item--muted{% endif %}">
+              <summary>
+                <span class="rag-acc-metrics">
+                  <span class="rag-acc-metric">Max <strong>{{ "%.0f"|format((ref.score|default(0)) * 100) }}&nbsp;%</strong></span>
+                  <span class="rag-acc-metric">Vect. <strong>{% if ref.score_vector is not none %}{{ "%.0f"|format(ref.score_vector * 100) }}%{% else %}—{% endif %}</strong></span>
+                  <span class="rag-acc-metric">Mots <strong>{% if ref.score_keyword is not none %}{{ "%.0f"|format(ref.score_keyword * 100) }}%{% else %}—{% endif %}</strong></span>
+                  <span class="rag-acc-metric rag-acc-metric--{% if ref.in_prompt|default(false) %}claude-yes{% else %}claude-no{% endif %}">Claude {% if ref.in_prompt|default(false) %}oui{% else %}non{% endif %}</span>
+                  <span class="rag-acc-metric{% if ref.is_duplicate|default(false) %} rag-acc-metric--dup{% endif %}">id {{ ref.id }}{% if ref.is_duplicate|default(false) %} · doublon{% endif %}</span>
+                </span>
+              </summary>
+              <div class="rag-acc-body">
+                <p class="rag-q"><strong>Question :</strong> {{ ref.title }}</p>
+                <p class="rag-ans"><strong>Bonne rép. :</strong> n°{{ ref.correct_index }} — {{ ref.correct_text }}</p>
+              </div>
+            </details>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+        <p class="muted" style="margin:0 0 .3rem;font-size:.76rem;line-height:1.35">Cliquer sur un bloc pour modifier la réponse suggérée (option sélectionnée en plus grand).</p>
+        <div class="capture-answers" role="radiogroup" aria-label="Réponse suggérée (modifiable)">
+          {% for a in b.answers %}
+          {% set fr = frs[loop.index0] if frs|length > loop.index0 else '' %}
+          <label class="capture-ans" aria-label="Réponse {{ loop.index }}">
+            <input class="capture-ans-radio" type="radio" name="c{{ i }}_correct" value="{{ loop.index }}"{% if b.correct_index is none %}{% if loop.index == 1 %} required{% endif %}{% else %}{% if b.correct_index == loop.index %} checked required{% endif %}{% endif %}>
+            <div class="capture-ans-row">
+              <div class="capture-ans-ix-wrap"><span class="capture-ans-ix" aria-hidden="true">{{ loop.index }}</span></div>
+              <div class="capture-ans-fields">
+                <div class="capture-lang">
+                  <span class="capture-lang-tag">EN</span>
+                  <textarea name="c{{ i }}_a{{ loop.index0 }}_en" required rows="2">{{ a }}</textarea>
+                </div>
+                <div class="capture-lang">
+                  <span class="capture-lang-tag">FR</span>
+                  <textarea name="c{{ i }}_a{{ loop.index0 }}_fr" rows="2">{{ fr }}</textarea>
+                </div>
+              </div>
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <details class="exp-acc exp-acc-udemy">
+        <summary>Texte Udemy / explication lue sur l’écran</summary>
+        <div class="exp-acc-body">
+          <div class="fld">
+            <textarea class="exp-tall" id="c{{ i }}_exp_udemy" name="c{{ i }}_exp_udemy" aria-label="Texte Udemy / explication lue sur l’écran">{{ b.explication_udemy }}</textarea>
+          </div>
+        </div>
+      </details>
+      <details class="exp-acc exp-acc-claude">
+        <summary>Explication pédagogique (FR, type Claude / banque)</summary>
+        <div class="exp-acc-body">
+          <div class="fld">
+            <textarea class="exp-tall" id="c{{ i }}_exp_claude" name="c{{ i }}_exp_claude" aria-label="Explication pédagogique (FR, type Claude / banque)">{{ b.explication_claude }}</textarea>
+          </div>
+        </div>
+      </details>
+
+      {% if b.in_banque|default(false) and b.show_bank_diff|default(false) %}
+      {% set ndd = not (b.has_any_diff|default(false)) and not (b.merge_conflict|default(false)) and not (b.needs_image|default(false)) %}
+      <div class="dup-footer">
+        {% if ndd %}
+        <p class="diff-banner">Doublon avec la banque (id {{ b.existing_id }}). Aucun écart détecté : la fiche est déjà alignée avec la capture.</p>
+        <div class="merge-btn-row" style="margin-top:.65rem">
+          <a class="btn btn-secondary capture-return-collage" href="/import-capture?cancel=1&amp;pending={{ pending_id|e }}" title="Fermer sans modifier la banque">Retour au collage</a>
+        </div>
+        <input type="hidden" name="c{{ i }}_dup_choice" value="ignore">
+        <input type="hidden" name="c{{ i }}_is_dup" value="1">
+        {% else %}
+        {% if b.merge_conflict|default(false) %}
+        <p class="conflict-banner">Attention : <strong>nombre de réponses différent</strong> et/ou <strong>image à créer</strong> alors qu’elle manque en banque — la fiche banque n’a pas pu fournir la bonne réponse ; vérifiez les lignes ci-dessous.</p>
+        {% elif b.dup_title_only|default(false) %}
+        <p class="diff-banner">Titre déjà en banque (id {{ b.existing_id }}) — <strong>réponse non reprise depuis la banque</strong>{% if b.correct_suggestion_source|default('') == 'claude' %} (proposition Claude){% elif b.correct_suggestion_source|default('') == 'aucune' %} (choix manuel){% endif %}. Écarts par rapport à la fiche existante :</p>
+        {% else %}
+        <p class="diff-banner">Doublon avec la banque (id {{ b.existing_id }}). Seuls les <strong>écarts</strong> sont listés ; choisissez ensuite une action.</p>
+        {% endif %}
+        {% if b.needs_image|default(false) and not (b.has_any_diff|default(false)) and not (b.merge_conflict|default(false)) %}
+        <p class="diff-banner" style="margin-top:.55rem;background:#eff6ff;border:1px solid #93c5fd;color:#1e3a5f">
+          Texte déjà identique en banque : vous pouvez tout de même <strong>Mettre à jour la banque</strong> pour enregistrer ou remplacer <strong>l’image</strong> (tableau / balance) issue de cette capture.
+        </p>
+        {% endif %}
+        <details class="fold-acc diff-fold-acc">
+          <summary>
+            <span>Résumé des écarts</span>
+            <span class="fold-acc-tags">{% if b.merge_count_mismatch %}Nb réponses{% endif %}{% if b.merge_image_gap or b.image_status_differs|default(false) or b.image_overwrite_desired|default(false) %}{% if b.merge_count_mismatch %} · {% endif %}Image{% endif %}{% if b.title_en_differs_visible|default(false) %}{% if b.merge_count_mismatch or b.merge_image_gap or b.image_status_differs|default(false) or b.image_overwrite_desired|default(false) %} · {% endif %}Titre EN{% endif %}{% if b.title_fr_differs_visible|default(false) %} · Titre FR{% endif %}{% if b.correct_differs|default(false) %} · Bonne rép.{% endif %}{% if b.explication_udemy_differs|default(false) %} · Texte Udemy{% endif %}{% if b.explication_claude_differs|default(false) %} · Explication Claude{% endif %}{% if not (b.has_any_diff|default(false)) and not b.merge_count_mismatch and not b.merge_image_gap %}Aucun écart textuel{% endif %}</span>
+          </summary>
+          <div class="fold-acc-body">
+          <ul class="diff-summary">
+            {% if b.merge_count_mismatch %}<li><strong>Nombre de réponses</strong> : banque {{ b.bank_n_answers }}, formulaire {{ b.capture_n_answers }}.</li>{% endif %}
+            {% if b.merge_image_gap %}<li><strong>Image</strong> : extraction prévue alors qu’aucune image valide n’est en banque.</li>{% endif %}
+            {% if b.image_status_differs|default(false) and not b.merge_image_gap %}<li><strong>Image</strong> : statut différent — banque {% if b.bank_has_question_image %}avec fichier{% else %}sans fichier valide{% endif %}, formulaire {% if b.needs_image %}avec enregistrement d’image{% else %}sans enregistrement d’image{% endif %}.</li>{% endif %}
+            {% if b.image_overwrite_desired|default(false) %}<li><strong>Image</strong> : la banque a déjà un fichier ; cette capture peut le <strong>remplacer</strong> si vous validez avec <strong>Mettre à jour la banque</strong>.</li>{% endif %}
+            {% if b.title_en_differs_visible|default(false) %}<li><strong>Titre (EN)</strong> : texte différent.</li>{% endif %}
+            {% if b.title_fr_differs_visible|default(false) %}<li><strong>Titre (FR)</strong> : texte différent.</li>{% endif %}
+            {% if b.correct_differs|default(false) %}<li><strong>Bonne réponse</strong> : banque n°{% if b.correct_index_bank is not none %}{{ b.correct_index_bank }}{% else %}non définie{% endif %}, formulaire n°{% if b.correct_index_capture is not none %}{{ b.correct_index_capture }}{% else %}non définie{% endif %}.</li>{% endif %}
+            {% if b.explication_udemy_differs|default(false) %}<li><strong>Texte Udemy / Senedoo</strong> : contenu différent.</li>{% endif %}
+            {% if b.explication_claude_differs|default(false) %}<li><strong>Explication Claude</strong> : contenu différent.</li>{% endif %}
+            {% if not (b.has_any_diff|default(false)) %}<li style="color:#64748b">Aucun écart textuel détecté (titres, options, explications identiques).</li>{% endif %}
+            {% if b.needs_image|default(false) and not (b.has_any_diff|default(false)) and not (b.merge_conflict|default(false)) %}
+            <li><strong>Image</strong> : enregistrement possible sans modifier le texte — bouton <strong>Mettre à jour la banque</strong> ci-dessous.</li>
+            {% endif %}
+          </ul>
+
+          {% if b.show_title_compare|default(false) %}
+          <details class="fold-acc-nested">
+            <summary>Titres banque ↔ formulaire</summary>
+            <div class="diff-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;font-size:.82rem;margin:.35rem .5rem .65rem;padding:0 .5rem;">
+              <div><strong>Banque — EN</strong><br><span class="diff-text-cell">{{ b.bank_title_en_html }}</span></div>
+              <div><strong>Formulaire — EN</strong><br><span class="diff-text-cell">{{ b.capture_title_en_html }}</span></div>
+              <div><strong>Banque — FR</strong><br><span class="diff-text-cell">{{ b.bank_title_fr_html }}</span></div>
+              <div><strong>Formulaire — FR</strong><br><span class="diff-text-cell">{{ b.capture_title_fr_html }}</span></div>
+            </div>
+          </details>
+          {% endif %}
+
+          {% if b.merge_image_gap or b.image_status_differs|default(false) %}
+          <p class="muted" style="font-size:.84rem;margin:.35rem 0 .65rem"><strong>Image question</strong> : banque {% if b.bank_has_question_image %}oui (fichier){% else %}non{% endif %} — capture {% if b.needs_image %}oui (extraction){% else %}non{% endif %}.</p>
+          {% endif %}
+
+          {% set enrows = b.diff_rows if b.merge_count_mismatch else b.diff_rows_en_changed %}
+          {% if b.show_en_diff_table|default(false) and enrows|length > 0 %}
+          <details class="fold-acc-nested">
+            <summary>Options EN — {% if b.merge_count_mismatch %}toutes les lignes{% else %}lignes en écart{% endif %}</summary>
+            <div class="diff-table-wrap">
+              <table class="diff-table">
+                <thead><tr><th class="idx">#</th><th>Banque (EN)</th><th>Formulaire (EN)</th></tr></thead>
+                <tbody>
+                  {% for row in enrows %}
+                  <tr class="diff-hot">
+                    <td class="idx">{{ row.idx }}</td>
+                    <td class="diff-text-cell">{% if row.bank %}{{ row.bank_html }}{% else %}<span class="muted">—</span>{% endif %}</td>
+                    <td class="diff-text-cell">{% if row.cap %}{{ row.cap_html }}{% else %}<span class="muted">—</span>{% endif %}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </details>
+          {% endif %}
+
+          {% set frrows = b.diff_rows_fr if b.merge_count_mismatch else b.diff_rows_fr_changed %}
+          {% if b.show_fr_diff_table|default(false) and frrows|length > 0 %}
+          <details class="fold-acc-nested">
+            <summary>Options FR — {% if b.merge_count_mismatch %}toutes les lignes{% else %}lignes en écart{% endif %}</summary>
+            <div class="diff-table-wrap">
+              <table class="diff-table">
+                <thead><tr><th class="idx">#</th><th>Banque (FR)</th><th>Formulaire (FR)</th></tr></thead>
+                <tbody>
+                  {% for row in frrows %}
+                  <tr class="diff-hot">
+                    <td class="idx">{{ row.idx }}</td>
+                    <td class="diff-text-cell">{% if row.bank %}{{ row.bank_html }}{% else %}<span class="muted">—</span>{% endif %}</td>
+                    <td class="diff-text-cell">{% if row.cap %}{{ row.cap_html }}{% else %}<span class="muted">—</span>{% endif %}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </details>
+          {% endif %}
+
+          </div>
+        </details>
+        <p style="font-size:.82rem;font-weight:700;color:#334155;margin-top:1rem">Action</p>
+        {% if b.dup_title_only|default(false) %}
+        <p class="muted" style="font-size:.8rem;line-height:1.45;margin:0 0 .5rem">La fiche id {{ b.existing_id }} partage le titre mais n’a pas fourni la réponse affichée. <strong>Mettre à jour</strong> remplace cette fiche ; <strong>Ajouter comme nouvelle question</strong> crée une entrée distincte sans la modifier.</p>
+        {% else %}
+        <p class="muted" style="font-size:.8rem;line-height:1.45;margin:0 0 .5rem">Si le rapprochement banque / capture vous semble erroné, enregistrez la capture comme <strong>nouvelle question</strong> sans modifier l’entrée existante.</p>
+        {% endif %}
+        <div class="merge-btn-row" role="group" aria-label="Fusion banque">
+          <button type="button" class="merge-btn merge-btn-over capture-quick-btn" data-i="{{ i }}" data-role="dup" data-value="update"><span>Mettre à jour la banque</span></button>
+          <button type="button" class="merge-btn merge-btn-new capture-quick-btn" data-i="{{ i }}" data-role="dup" data-value="add_new"><span>Ajouter comme nouvelle question</span></button>
+          <button type="button" class="merge-btn merge-btn-skip capture-quick-btn" data-i="{{ i }}" data-role="dup" data-value="ignore"><span>Ignorer (banque inchangée)</span></button>
+        </div>
+        <input type="hidden" name="c{{ i }}_is_dup" value="1">
+        {% endif %}
+      </div>
+      {% elif b.in_banque|default(false) %}
+      <div class="dup-footer">
+        {% if b.dup_title_only|default(false) %}
+        <p class="diff-banner">Titre déjà en banque (id {% if b.existing_id is not none %}{{ b.existing_id }}{% else %}—{% endif %}) — <strong>réponse non reprise depuis la banque</strong>{% if b.correct_suggestion_source|default('') == 'claude' %} : proposition <strong>Claude</strong>{% elif b.correct_suggestion_source|default('') == 'aucune' %} : <strong>pas de suggestion par Claude</strong>, choisissez l’option ci-dessus{% elif b.correct_suggestion_source|default('') == 'udemy' %} : lue sur la capture{% endif %}.</p>
+        {% else %}
+        <p class="muted" style="font-size:.88rem;line-height:1.45;margin-bottom:.75rem">Question marquée comme présente en banque (id {% if b.existing_id is not none %}{{ b.existing_id }}{% else %}—{% endif %}). Détail des écarts indisponible : choisissez l’action.</p>
+        {% endif %}
+        <p style="font-size:.82rem;font-weight:700;color:#334155;margin-top:0">Action</p>
+        {% if b.dup_title_only|default(false) %}
+        <p class="muted" style="font-size:.8rem;line-height:1.45;margin:0 0 .5rem"><strong>Mettre à jour</strong> la fiche existante, <strong>ajouter comme nouvelle question</strong> (recommandé si la fiche banque est incorrecte), ou <strong>ignorer</strong>.</p>
+        {% else %}
+        <p class="muted" style="font-size:.8rem;line-height:1.45;margin:0 0 .5rem">Faux doublon possible : vous pouvez <strong>ajouter</strong> le formulaire comme nouvelle entrée sans toucher à la fiche id {{ b.existing_id if b.existing_id is not none else '—' }}.</p>
+        {% endif %}
+        <div class="merge-btn-row" role="group" aria-label="Fusion banque">
+          <button type="button" class="merge-btn merge-btn-over capture-quick-btn" data-i="{{ i }}" data-role="dup" data-value="update"><span>Mettre à jour la banque</span></button>
+          <button type="button" class="merge-btn merge-btn-new capture-quick-btn" data-i="{{ i }}" data-role="dup" data-value="add_new"><span>Ajouter comme nouvelle question</span></button>
+          <button type="button" class="merge-btn merge-btn-skip capture-quick-btn" data-i="{{ i }}" data-role="dup" data-value="ignore"><span>Ignorer (banque inchangée)</span></button>
+        </div>
+        <input type="hidden" name="c{{ i }}_is_dup" value="1">
+      </div>
+      {% else %}
+      <input type="hidden" name="c{{ i }}_is_dup" value="0">
+      {% endif %}
+      {% if not b.in_banque|default(false) %}
+      <div class="new-choice-footer">
+        <p style="font-size:.82rem;font-weight:700;color:#334155;margin-bottom:.5rem">Pas un doublon : ajouter cette question à la banque ou l’ignorer.</p>
+        <div class="merge-btn-row" role="group" aria-label="Ajout à la banque">
+          <button type="button" class="merge-btn merge-btn-over capture-quick-btn" data-i="{{ i }}" data-role="new" data-value="add"><span>Ajouter à la banque</span></button>
+          <button type="button" class="merge-btn merge-btn-skip capture-quick-btn" data-i="{{ i }}" data-role="new" data-value="ignore"><span>Ignorer cette question</span></button>
+        </div>
+      </div>
+      {% endif %}
+    </section>
+    {% endfor %}
+
+    <script type="application/json" id="capture-card-meta">
+[
+{% for b in preview_blocks %}
+{"i":{{ loop.index0 }},"isDup":{{ b.in_banque|default(false)|tojson }},"noDiffDup":{{ (b.in_banque|default(false) and b.show_bank_diff|default(false) and not (b.has_any_diff|default(false)) and not (b.merge_conflict|default(false)) and not (b.needs_image|default(false)))|tojson }}}{% if not loop.last %},{% endif %}
+{% endfor %}
+]
+    </script>
+    <script>
+    (function () {
+      var form = document.querySelector('form.capture-form');
+      var metaEl = document.getElementById('capture-card-meta');
+      var doneBanner = document.getElementById('capture-preview-done');
+      if (!form || !metaEl) return;
+      var meta;
+      try { meta = JSON.parse(metaEl.textContent); } catch (e) { return; }
+      var pendingId = {{ pending_id|tojson }};
+      function captureHubWindow() {
+        try {
+          if (window.parent && window.parent !== window && window.parent.name === 'odoo_capture_udemy') {
+            return window.parent;
+          }
+        } catch (e) { /* ignore */ }
+        try {
+          if (window.opener && !window.opener.closed && window.opener.name === 'odoo_capture_udemy') {
+            return window.opener;
+          }
+        } catch (e2) { /* ignore */ }
+        return null;
+      }
+      function captureInIframe() {
+        try {
+          return window.parent && window.parent !== window && window.parent.name === 'odoo_capture_udemy';
+        } catch (e) { return false; }
+      }
+      function captureOpenerReady() {
+        return !!captureHubWindow();
+      }
+      function postToCaptureHub(msg) {
+        var hub = captureHubWindow();
+        if (!hub) return false;
+        try {
+          hub.postMessage(msg, '*');
+          if (!captureInIframe()) hub.focus();
+        } catch (eMsg) { /* ignore */ }
+        return true;
+      }
+      function returnToCaptureCollage(e, href) {
+        if (e) e.preventDefault();
+        var url = href || (e && e.currentTarget && e.currentTarget.getAttribute('href')) || '';
+        function finishReturn() {
+          if (postToCaptureHub({
+            type: 'odoo-capture-return',
+            pending_id: pendingId || ''
+          })) {
+            if (!captureInIframe()) window.close();
+            return;
+          }
+          if (url) window.location.href = url;
+        }
+        if (url && captureOpenerReady()) {
+          fetch(url, { credentials: 'same-origin' }).finally(finishReturn);
+        } else {
+          finishReturn();
+        }
+      }
+      function ensure(name, val) {
+        var el = form.querySelector('input[name="' + name + '"]');
+        if (!el) {
+          el = document.createElement('input');
+          el.type = 'hidden';
+          el.name = name;
+          form.appendChild(el);
+        }
+        el.disabled = false;
+        el.value = val;
+      }
+      function showPartialOrFullDone(data) {
+        var remain = parseInt(data.remaining_cards, 10) || 0;
+        var msg = data.success || 'Enregistré.';
+        if (remain > 0) {
+          msg += ' — il reste ' + remain + ' fiche(s) à traiter ci-dessous.';
+        }
+        if (remain > 0 && captureInIframe()) {
+          postToCaptureHub({
+            type: 'odoo-capture-partial-done',
+            success: msg,
+            notice: data.notice || '',
+            pending_id: pendingId || data.pending_id || ''
+          });
+          var pid = pendingId || data.pending_id || '';
+          window.location.href = '/import-capture/preview?pending=' + encodeURIComponent(pid) +
+            '&embed=1&saved=1&_=' + Date.now();
+          return;
+        }
+        if (remain > 0) {
+          var pid2 = pendingId || data.pending_id || '';
+          window.location.href = '/import-capture/preview?pending=' + encodeURIComponent(pid2) + '&saved=1';
+          return;
+        }
+        if (captureInIframe()) {
+          postToCaptureHub({
+            type: 'odoo-capture-done',
+            success: data.success || '',
+            notice: data.notice || ''
+          });
+          return;
+        }
+        postToCaptureHub({
+          type: 'odoo-capture-done',
+          success: data.success || '',
+          notice: data.notice || ''
+        });
+        if (doneBanner) {
+          doneBanner.innerHTML = (data.success || 'Enregistré.') +
+            (data.notice ? '<br><span style="font-weight:400;font-size:.9em">' + data.notice + '</span>' : '') +
+            '<br><br><strong>Onglet capture :</strong> le partage reste actif — revenez-y pour une nouvelle capture.';
+          doneBanner.style.display = 'block';
+        }
+        form.style.display = 'none';
+        window.scrollTo(0, 0);
+      }
+      function submitCaptureForm() {
+        if (!captureOpenerReady()) {
+          form.submit();
+          return;
+        }
+        var fd = new FormData(form);
+        fd.append('ajax', '1');
+        var buttons = form.querySelectorAll('.capture-quick-btn');
+        buttons.forEach(function (b) { b.disabled = true; });
+        fetch(form.action, {
+          method: 'POST',
+          body: fd,
+          headers: { 'X-Capture-Ajax': '1' },
+          credentials: 'same-origin'
+        }).then(function (res) {
+          return res.json().then(function (data) {
+            if (!res.ok || !data.ok) {
+              throw new Error((data && data.error) || ('HTTP ' + res.status));
+            }
+            showPartialOrFullDone(data);
+          });
+        }).catch(function (err) {
+          buttons.forEach(function (b) { b.disabled = false; });
+          alert('Enregistrement : ' + (err.message || err));
+        });
+      }
+      if (doneBanner && window.location.search.indexOf('saved=1') >= 0) {
+        doneBanner.textContent = 'Question enregistrée en banque. Traitez les fiches restantes ci-dessous.';
+        doneBanner.style.display = 'block';
+        window.scrollTo(0, 0);
+      }
+      form.querySelectorAll('.capture-quick-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var ix = parseInt(btn.getAttribute('data-i'), 10);
+          var role = btn.getAttribute('data-role');
+          var val = btn.getAttribute('data-value');
+          var p = 'c' + ix + '_';
+          if (role === 'dup') ensure(p + 'dup_choice', val);
+          else ensure(p + 'new_choice', val);
+          ensure('submit_card_index', String(ix));
+          submitCaptureForm();
+        });
+      });
+      var returnBtn = document.getElementById('btn-return-capture');
+      if (returnBtn) {
+        returnBtn.addEventListener('click', function (e) {
+          returnToCaptureCollage(e, returnBtn.getAttribute('href'));
+        });
+      }
+      document.querySelectorAll('a.capture-return-collage').forEach(function (lnk) {
+        lnk.addEventListener('click', function (e) {
+          returnToCaptureCollage(e, lnk.getAttribute('href'));
+        });
+      });
+      if (captureInIframe()) {
+        document.querySelectorAll('.header-nav a').forEach(function (lnk) {
+          var href = lnk.getAttribute('href') || '';
+          if (href.indexOf('/import-capture') === 0 || href === '/import-capture') {
+            lnk.addEventListener('click', function (e) {
+              e.preventDefault();
+              returnToCaptureCollage(e, null);
+            });
+          }
+        });
+      }
+    })();
+    </script>
+  </form>
+
+  <div id="capture-zoom-overlay" class="capture-zoom-overlay" hidden role="dialog" aria-modal="true" aria-label="Agrandissement de la capture">
+    <button type="button" class="capture-zoom-close" id="capture-zoom-close">Fermer</button>
+    <img id="capture-zoom-img" class="capture-zoom-img" src="" alt="">
+  </div>
+</main>
+<footer class="app-build">Version livrée : <strong>v{{ app_version }}</strong></footer>
+<script>
+(function () {
+  var overlay = document.getElementById('capture-zoom-overlay');
+  var zoomImg = document.getElementById('capture-zoom-img');
+  var closeBtn = document.getElementById('capture-zoom-close');
+  if (!overlay || !zoomImg || !closeBtn) return;
+  function closeZoom() {
+    overlay.hidden = true;
+    zoomImg.removeAttribute('src');
+    zoomImg.alt = '';
+    document.body.style.overflow = '';
+  }
+  function openFromThumb(btn) {
+    var im = btn.querySelector('img');
+    if (!im || !im.getAttribute('src')) return;
+    var z = btn.getAttribute('data-zoom-src') || im.getAttribute('src');
+    zoomImg.src = z;
+    zoomImg.alt = im.alt || 'Capture agrandie';
+    overlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+    closeBtn.focus();
+  }
+  document.querySelectorAll('.capture-thumb-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () { openFromThumb(btn); });
+  });
+  closeBtn.addEventListener('click', closeZoom);
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) closeZoom();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !overlay.hidden) closeZoom();
+  });
+})();
+</script>
+</body>
+</html>

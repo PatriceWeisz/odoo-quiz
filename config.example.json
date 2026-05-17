@@ -1,0 +1,30 @@
+{
+  "odoo": {
+    "url": "https://senedoo.odoo.com",
+    "db": "senedoo",
+    "login": "support@senedoo.com",
+    "api_key": "ODOO_API_KEY_ICI"
+  },
+  "anthropic": {
+    "api_key": "ANTHROPIC_API_KEY_ICI",
+    "vision_model": "claude-sonnet-4-6",
+    "text_model": "claude-haiku-4-5"
+  },
+  "survey_name": "certification odoo",
+  "questions_file": "questions.json",
+  "flask": {
+    "host": "127.0.0.1",
+    "port": 5001,
+    "debug": false
+  },
+  "capture": {
+    "default_source": "udemy"
+  },
+  "bank_rag": {
+    "embeddings": true,
+    "model": "sentence-transformers/all-MiniLM-L6-v2",
+    "min_cosine": 0.28,
+    "duplicate_score_threshold": 0.98,
+    "rag_prompt_min_score": 0.45
+  }
+}

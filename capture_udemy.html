@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capture quiz — v{{ app_version }}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         background: #f0f4ff; color: #1a1a2e; min-height: 100vh; }
+  header { background: #714B67; color: white; padding: .55rem 1.1rem;
+           display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+  header .title-block { display: flex; flex-direction: row; align-items: baseline; gap: .65rem; flex-wrap: wrap; }
+  header h1 { font-size: 1rem; font-weight: 700; }
+  .app-version { font-size: .62rem; font-weight: 600; opacity: .88; }
+  .header-btn { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+                color: white; border-radius: 8px; padding: .4rem .9rem; cursor: pointer;
+                font-size: .85rem; font-weight: 600; text-decoration: none; display: inline-block; }
+  .header-btn:hover { background: rgba(255,255,255,.25); }
+  .header-nav { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+  .header-timer { font-size: 1.1rem; font-weight: bold; font-variant-numeric: tabular-nums;
+                  opacity: .42; padding: .4rem .35rem; user-select: none; white-space: nowrap; }
+  main { max-width: 560px; margin: 0 auto; padding: 1.5rem; }
+  .box { background: white; border-radius: 12px; padding: 1.75rem; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+  h2 { font-size: 1.1rem; color: #714B67; margin-bottom: .75rem; }
+  p { color: #64748b; font-size: .95rem; line-height: 1.55; margin: .75rem 0; }
+  .steps { background: #faf5ff; border-radius: 8px; padding: 1rem; margin: 1rem 0;
+           font-size: .88rem; color: #334155; line-height: 1.5; }
+  .steps strong { color: #714B67; }
+  kbd { font-size: .78em; padding: .1rem .35rem; border-radius: 4px; background: #e2e8f0; }
+  #pastezone { border: 2px dashed #c4b5d0; border-radius: 12px; min-height: 160px;
+               display: flex; flex-direction: column; align-items: center; justify-content: center;
+               padding: 1rem; text-align: center; cursor: pointer; background: #fafafa;
+               transition: .15s; margin: 1rem 0; outline: none; }
+  #pastezone:hover, #pastezone:focus { border-color: #714B67; background: #faf5ff; }
+  #pastezone.ready { border-style: solid; border-color: #16a34a; background: #f0fdf4; }
+  #pastezone .hint { font-size: .95rem; color: #475569; font-weight: 600; }
+  #pastezone .sub { font-size: .8rem; color: #64748b; margin-top: .35rem; }
+  #preview { max-width: 100%; max-height: 220px; margin-top: .75rem; border-radius: 8px; display: none; }
+  .btn { display: inline-block; padding: .65rem 1.4rem; border-radius: 8px; border: none;
+         font-weight: 600; font-size: .95rem; cursor: pointer; text-decoration: none; }
+  .btn-primary { background: #714B67; color: white; }
+  .btn-primary:hover:not(:disabled) { background: #5a3a52; }
+  .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-secondary { background: #e2e8f0; color: #1a1a2e; margin-left: .5rem; }
+  .btn-screen {
+    display: block; width: 100%; margin-top: .75rem;
+    background: #0f766e; color: #fff;
+  }
+  .btn-screen:hover:not(:disabled) { background: #115e59; }
+  .err { background: #fef2f2; color: #b91c1c; padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; }
+  .ok { background: #f0fdf4; color: #166534; padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; }
+  .notice { background: #fffbeb; color: #92400e; padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; line-height: 1.45; }
+  .progress-overlay {
+    position: fixed; inset: 0; z-index: 1500;
+    background: rgba(15, 23, 42, 0.55);
+    display: none; align-items: center; justify-content: center; padding: 1rem;
+  }
+  .progress-overlay.visible { display: flex; }
+  .capture-preview-panel {
+    position: fixed; inset: 0; z-index: 1450;
+    background: #f1f5f9; display: none;
+  }
+  .capture-preview-panel.visible { display: block; }
+  .capture-preview-panel iframe {
+    width: 100%; height: 100%; border: 0; display: block;
+  }
+  .progress-panel {
+    background: #fff; border-radius: 14px;
+    max-width: min(92vw, 56rem); width: 100%;
+    max-height: min(94vh, 900px);
+    padding: 1.15rem 1.35rem; box-shadow: 0 12px 40px rgba(0,0,0,.22);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .progress-layout {
+    display: flex; flex-wrap: wrap; gap: 1.1rem 1.35rem;
+    align-items: flex-start; flex: 1; min-height: 0;
+  }
+  .progress-zoom-col {
+    flex: 1 1 280px; max-width: 100%; min-width: 0;
+    display: flex; flex-direction: column; gap: .4rem;
+  }
+  .progress-zoom-col figcaption {
+    font-size: .78rem; font-weight: 700; color: #714B67; letter-spacing: .02em;
+  }
+  .progress-zoom-img {
+    display: block; width: 100%; height: auto;
+    max-height: min(62vh, 640px);
+    object-fit: contain;
+    border-radius: 10px; border: 1px solid #e2e8f0;
+    background: #0f172a;
+    box-shadow: 0 4px 20px rgba(0,0,0,.12);
+  }
+  .progress-zoom-col.is-empty .progress-zoom-img { display: none; }
+  .progress-zoom-col.is-empty figcaption { display: none; }
+  .progress-main-col {
+    flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column;
+    min-height: 0; max-height: min(70vh, 720px);
+  }
+  .progress-main-col h3 { flex-shrink: 0; }
+  .progress-main-col .step-bar { flex-shrink: 0; }
+  .progress-main-col .progress-hint { flex-shrink: 0; }
+  .progress-main-col .progress-log { flex: 1; min-height: 0; max-height: none; }
+  .progress-panel h3 { font-size: 1rem; color: #714B67; margin-bottom: .5rem; }
+  .step-bar {
+    margin-bottom: .65rem;
+  }
+  .step-bar-track {
+    height: 7px; background: #e2e8f0; border-radius: 99px; overflow: hidden;
+    margin-bottom: .55rem;
+  }
+  .step-bar-fill {
+    height: 100%; width: 0%; border-radius: 99px;
+    background: linear-gradient(90deg, #5a3a52, #714B67 40%, #8b5cf6);
+    transition: width .4s cubic-bezier(.4, 0, .2, 1);
+  }
+  .step-bar-nodes {
+    display: flex; justify-content: space-between; gap: .2rem;
+    list-style: none; margin: 0; padding: 0; align-items: flex-start;
+  }
+  .step-node {
+    flex: 1; min-width: 0; text-align: center; font-size: .68rem; color: #94a3b8;
+  }
+  .step-node .step-bubble {
+    width: 1.85rem; height: 1.85rem; margin: 0 auto .32rem;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: .8rem; background: #e2e8f0; color: #64748b;
+    border: 2px solid #cbd5e1;
+  }
+  .step-node .step-label {
+    display: block; line-height: 1.2; font-weight: 600; hyphens: auto;
+  }
+  .step-node.pending .step-label { color: #94a3b8; }
+  .step-node.active .step-bubble {
+    background: #ede9fe; border-color: #714B67; color: #714B67;
+    box-shadow: 0 0 0 3px rgba(113, 75, 103, .22);
+    animation: stepPulse 1.25s ease-in-out infinite;
+  }
+  .step-node.active .step-label { color: #714B67; }
+  @keyframes stepPulse {
+    50% { box-shadow: 0 0 0 5px rgba(113, 75, 103, .12); }
+  }
+  .step-node.done .step-bubble {
+    background: #059669; border-color: #059669; color: #fff;
+  }
+  .step-node.done .step-label { color: #047857; }
+  .step-node.warn .step-bubble {
+    background: #d97706; border-color: #d97706; color: #fff;
+  }
+  .step-node.warn .step-label { color: #b45309; }
+  .step-node.error .step-bubble {
+    background: #b91c1c; border-color: #b91c1c; color: #fff;
+  }
+  .step-node.error .step-label { color: #991b1b; }
+  .progress-hint {
+    font-size: .74rem; color: #64748b; line-height: 1.4; margin-bottom: .6rem;
+  }
+  .progress-log { list-style: none; font-size: .84rem; color: #334155; max-height: 48vh; overflow-y: auto; }
+  .progress-log li.progress-item { padding: .55rem 0; border-bottom: 1px solid #e2e8f0; line-height: 1.4; }
+  .progress-log li.progress-item:last-child { border-bottom: none; }
+  .progress-step-title { font-weight: 700; color: #0f172a; font-size: .88rem; }
+  .progress-step-detail { font-size: .78rem; color: #64748b; margin-top: .25rem; line-height: 1.45; }
+  .progress-log .st-running::before { content: "⋯ "; color: #64748b; font-weight: 700; }
+  .progress-log .st-done::before { content: "✓ "; color: #059669; font-weight: 700; }
+  .progress-log .st-warn::before { content: "⚠ "; color: #d97706; font-weight: 700; }
+  .progress-log .st-error::before { content: "✗ "; color: #b91c1c; font-weight: 700; }
+  .foot { margin-top: 1.25rem; font-size: .82rem; color: #64748b; }
+  #js-err { display: none; background: #fef2f2; color: #b91c1c; padding: .65rem 1rem; border-radius: 8px; margin-bottom: .75rem; font-size: .88rem; }
+  .app-build { text-align: center; padding: .75rem 1rem 1.25rem; font-size: .82rem; color: #94a3b8; }
+  .app-build strong { color: #64748b; font-weight: 600; }
+  .source-pick { display: flex; gap: .5rem; margin: .75rem 0 1rem; flex-wrap: wrap; }
+  .source-pick label {
+    flex: 1; min-width: 9rem; cursor: pointer; border: 2px solid #e2e8f0; border-radius: 10px;
+    padding: .55rem .75rem; font-size: .88rem; font-weight: 600; color: #475569; text-align: center;
+    background: #fafafa; transition: .15s;
+  }
+  .source-pick input { position: absolute; opacity: 0; pointer-events: none; }
+  .source-pick input:checked + span { color: #714B67; }
+  .source-pick label:has(input:checked) {
+    border-color: #714B67; background: #faf5ff; box-shadow: 0 0 0 2px rgba(113,75,103,.15);
+  }
+  .capture-odoo-only, .capture-udemy-only { display: none; }
+  body.capture-mode-odoo .capture-odoo-only { display: block; }
+  body.capture-mode-udemy .capture-udemy-only { display: block; }
+  body.capture-mode-odoo #btn-screen-link,
+  body.capture-mode-odoo #btn-screen-stop { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <div class="title-block">
+    <h1>📷 Capture quiz</h1>
+    <span class="app-version" title="Version">v{{ app_version }}</span>
+  </div>
+  <nav class="header-nav" aria-label="Navigation principale">
+    <a class="header-btn" href="/">🎓 Quiz</a>
+    <a class="header-btn" href="/banque">📋 Banque</a>
+    <a class="header-btn" href="/import-capture" aria-current="page">📷 Capture</a>
+    <a class="header-btn" href="/?openAsk=1">💬 Question</a>
+    <a class="header-btn" href="/" onclick="return confirm('Retour au quiz et recommencer ?');">↺ Recommencer</a>
+    <span class="header-timer" title="Pendant un quiz">⏱ --:--</span>
+  </nav>
+</header>
+<main>
+<div class="box" id="capture-hub-main">
+  <h2>Coller une capture</h2>
+  <p class="muted" style="font-size:.88rem;margin-bottom:.5rem">Même flux pour Udemy et pour le quiz sur <strong>odoo.com</strong> (eLearning) : vision → comparaison banque → Claude si besoin → validation. La capture doit montrer <strong>l’énoncé et les options de réponse</strong> — sinon l’analyse vous l’indiquera.</p>
+  <div class="source-pick" role="radiogroup" aria-label="Source de la capture">
+    <label><input type="radio" name="capture-source" value="udemy" {% if default_capture_source != 'odoo' %}checked{% endif %}><span>Udemy</span></label>
+    <label><input type="radio" name="capture-source" value="odoo" {% if default_capture_source == 'odoo' %}checked{% endif %}><span>Odoo (site web)</span></label>
+  </div>
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  {% if notice %}<div class="notice">{{ notice }}</div>{% endif %}
+  {% if success %}<div class="ok">{{ success }}</div>{% endif %}
+  <div id="capture-live-success" class="ok" style="display:none" role="status"></div>
+  <div id="capture-orphan-notice" class="notice" style="display:none" role="status"></div>
+  <div id="js-err"></div>
+  <div class="steps capture-udemy-only" id="steps-udemy">
+    <strong>Étapes — Udemy</strong><br>
+    1) Ouvrez la question sur Udemy.<br>
+    2) Copiez la capture (<kbd>⌃⌘⇧4</kbd> ou <kbd>Win+⇧+S</kbd>) et collez ici — ou partage d’onglet (boutons ci-dessous).<br>
+    3) <strong>Analyser la capture</strong> : vision → banque → doublon → complément Claude → validation.<br>
+    4) Enregistrez dans la banque.
+  </div>
+  <div class="steps capture-odoo-only" id="steps-odoo">
+    <strong>Étapes — Odoo (odoo.com / eLearning)</strong><br>
+    1) Ouvrez la question sur le quiz (ex. <a href="https://www.odoo.com/fr_FR/slides/odoo-certification-sample-test-50" target="_blank" rel="noopener">Certification Sample Test</a>).<br>
+    2) <strong>Capturer et analyser</strong> : Chrome vous demande l’onglet Odoo à chaque fois (normal si vous préférez ainsi).<br>
+    3) Ou capture écran + <strong>coller</strong> dans la zone, puis <strong>Analyser la capture</strong>.<br>
+    4) Comparaison banque → Claude si besoin → validation → enregistrement.<br>
+    <em>Sur odoo.com, une même capture peut afficher jusqu’à <strong>4 questions</strong> : l’analyse crée <strong>une fiche par question</strong> (bandeaux colorés à la validation).</em>
+  </div>
+  <div id="pastezone" tabindex="0" title="Cliquez puis collez la capture">
+    <span class="hint">Zone de collage — cliquez ici puis Cmd+V / Ctrl+V</span>
+    <span class="sub">Ou glissez-déposez une image</span>
+    <img id="preview" alt="Aperçu">
+  </div>
+  <div class="capture-screen-tools" id="capture-screen-tools">
+    <button type="button" class="btn btn-secondary btn-screen-link" id="btn-screen-link">
+      Lier l’onglet du quiz
+    </button>
+    <button type="button" class="btn btn-primary btn-screen" id="btn-screen-capture">
+      Capturer et analyser
+    </button>
+    <p class="sub" id="screen-share-hint" style="margin:.35rem 0 0;text-align:center;font-size:.82rem;color:#64748b"></p>
+    <p id="preview-open-manual" class="sub" style="display:none;margin:.35rem 0 0;text-align:center;font-size:.82rem">
+      <a href="#" id="preview-open-manual-link" target="_blank" rel="noopener">Ouvrir la validation dans un nouvel onglet</a>
+    </p>
+    <p id="screen-share-status" class="sub" style="margin:.25rem 0 0;text-align:center;font-size:.8rem;color:#047857;font-weight:600;display:none"></p>
+    <button type="button" class="btn btn-secondary" id="btn-screen-stop" style="display:none;width:100%;margin-top:.5rem">
+      Arrêter le partage d’onglet
+    </button>
+  </div>
+  <button type="button" class="btn btn-primary" id="btn-send" disabled>Analyser la capture</button>
+  <a class="btn btn-secondary" href="/">Accueil</a>
+  <p class="foot">Lecture d’image : clé <strong>anthropic.api_key</strong> dans <code>config.json</code>.</p>
+</div>
+</main>
+<div id="capture-preview-panel" class="capture-preview-panel" hidden aria-hidden="true">
+  <iframe id="capture-preview-frame" title="Validation avant banque" src="about:blank"></iframe>
+</div>
+<div id="progress-overlay" class="progress-overlay" aria-hidden="true">
+  <div class="progress-panel" role="dialog" aria-modal="true" aria-labelledby="prog-title" aria-live="polite">
+    <div class="progress-layout">
+      <figure class="progress-zoom-col is-empty" id="progress-zoom-col">
+        <figcaption>Capture (agrandie)</figcaption>
+        <img id="progress-zoom-img" class="progress-zoom-img" alt="" decoding="async">
+      </figure>
+      <div class="progress-main-col">
+        <h3 id="prog-title">Analyse de votre capture</h3>
+        <nav class="step-bar" id="step-bar" aria-label="Progression des étapes" role="group">
+          <div class="step-bar-track" aria-hidden="true">
+            <div class="step-bar-fill" id="step-bar-fill"></div>
+          </div>
+          <ol class="step-bar-nodes">
+            <li class="step-node pending" id="step-node-vision" data-step="vision">
+              <span class="step-bubble" aria-hidden="true">1</span>
+              <span class="step-label">Vision</span>
+            </li>
+            <li class="step-node pending" id="step-node-bank" data-step="bank">
+              <span class="step-bubble" aria-hidden="true">2</span>
+              <span class="step-label">Banque</span>
+            </li>
+            <li class="step-node pending" id="step-node-dup" data-step="dup">
+              <span class="step-bubble" aria-hidden="true">3</span>
+              <span class="step-label">Doublon</span>
+            </li>
+            <li class="step-node pending" id="step-node-enrich" data-step="enrich">
+              <span class="step-bubble" aria-hidden="true">4</span>
+              <span class="step-label">Texte</span>
+            </li>
+          </ol>
+        </nav>
+        <p class="progress-hint" id="progress-hint">Détail des opérations ci-dessous.</p>
+        <ul id="progress-log" class="progress-log"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+<footer class="app-build">Version livrée : <strong>v{{ app_version }}</strong></footer>
+<script>
+(function(){
+  if (!window.name) window.name = 'odoo_capture_udemy';
+  var SS_CAPTURE_SOURCE = 'odoo_capture_source';
+  function getCaptureSource() {
+    var r = document.querySelector('input[name="capture-source"]:checked');
+    return r && r.value === 'odoo' ? 'odoo' : 'udemy';
+  }
+  function readUrlCaptureSource() {
+    try {
+      var s = (new URLSearchParams(window.location.search).get('source') || '').toLowerCase();
+      if (s === 'odoo' || s === 'udemy') return s;
+    } catch (eUrl) { /* ignore */ }
+    return null;
+  }
+  function setCaptureSourceRadio(src) {
+    var inp = document.querySelector('input[name="capture-source"][value="' + src + '"]');
+    if (inp) inp.checked = true;
+  }
+  function initCaptureSourceFromMemory() {
+    var urlSrc = readUrlCaptureSource();
+    var stored = null;
+    try { stored = sessionStorage.getItem(SS_CAPTURE_SOURCE); } catch (eSt) { /* ignore */ }
+    var src = urlSrc || (stored === 'odoo' || stored === 'udemy' ? stored : null);
+    if (src) setCaptureSourceRadio(src);
+  }
+  function isOdooCapture() { return getCaptureSource() === 'odoo'; }
+  function quizTabName() { return isOdooCapture() ? 'Odoo' : 'Udemy'; }
+  function linkTabButtonLabel() {
+    return isOdooCapture() ? 'Lier l’onglet Odoo' : 'Lier l’onglet Udemy';
+  }
+  function reloadNoticeHtml() {
+    if (isOdooCapture()) {
+      return (
+        '<strong>Page rechargée</strong> : recliquez « Capturer et analyser » — Chrome vous demandera l’onglet ' +
+        '<strong>Odoo</strong> (quiz) à chaque capture.'
+      );
+    }
+    return (
+      '<strong>Page rechargée</strong> : Chrome redemandera l’onglet <strong>Udemy</strong> <em>une fois</em> via « Capturer et analyser ». ' +
+      'Au retour du collage (sans recharger), ce n’est pas nécessaire.'
+    );
+  }
+  function refreshReloadOrphanNotice() {
+    try {
+      if (pageWasReloaded() && shareLinkedThisPage && !shareSessionActive()) {
+        showOrphanNotice(reloadNoticeHtml());
+      } else {
+        hideOrphanNotice();
+      }
+    } catch (eRn) { /* ignore */ }
+  }
+  function persistCaptureSourcePreference(src) {
+    try { sessionStorage.setItem(SS_CAPTURE_SOURCE, src); } catch (e) { /* ignore */ }
+    try {
+      var fd = new FormData();
+      fd.append('source', src);
+      fetch('/import-capture/preference', { method: 'POST', body: fd, credentials: 'same-origin' }).catch(function () {});
+    } catch (eF) { /* ignore */ }
+  }
+  function applyCaptureMode() {
+    var src = getCaptureSource();
+    document.body.classList.remove('capture-mode-udemy', 'capture-mode-odoo');
+    document.body.classList.add(src === 'odoo' ? 'capture-mode-odoo' : 'capture-mode-udemy');
+    persistCaptureSourcePreference(src);
+    updateScreenShareUi();
+    var hint = document.getElementById('screen-share-hint');
+    if (hint) {
+      hint.textContent = isOdooCapture()
+        ? '« Capturer et analyser » ouvre Chrome à chaque question : choisissez l’onglet du quiz Odoo.'
+        : 'Liez une fois, puis « Capturer et analyser ». Au retour du collage, gardez le partage actif si possible.';
+    }
+    refreshReloadOrphanNotice();
+  }
+  document.querySelectorAll('input[name="capture-source"]').forEach(function (inp) {
+    inp.addEventListener('change', applyCaptureMode);
+  });
+  let file = null;
+  const zone = document.getElementById('pastezone');
+  const preview = document.getElementById('preview');
+  const btn = document.getElementById('btn-send');
+  const btnScreenLink = document.getElementById('btn-screen-link');
+  const btnScreen = document.getElementById('btn-screen-capture');
+  const jsErr = document.getElementById('js-err');
+  const captureOrphanNotice = document.getElementById('capture-orphan-notice');
+  const captureLiveSuccess = document.getElementById('capture-live-success');
+  let shareLinkedThisPage = false;
+  const SS_SHARE_ACTIVE = 'odoo_share_session_active';
+  function markShareLinked() {
+    shareLinkedThisPage = true;
+    try {
+      sessionStorage.setItem(SS_SHARE_ACTIVE, '1');
+      sessionStorage.setItem('odoo_capture_was_linked', '1');
+    } catch (eSs) { /* ignore */ }
+  }
+  function clearShareSession() {
+    shareLinkedThisPage = false;
+    try {
+      sessionStorage.removeItem(SS_SHARE_ACTIVE);
+      sessionStorage.removeItem('odoo_capture_was_linked');
+    } catch (eSs) { /* ignore */ }
+  }
+  function pageWasReloaded() {
+    try {
+      var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+      return !!(nav && nav.type === 'reload');
+    } catch (eNav) { return false; }
+  }
+  const previewOpenManual = document.getElementById('preview-open-manual');
+  const previewOpenManualLink = document.getElementById('preview-open-manual-link');
+  const captureHubMain = document.getElementById('capture-hub-main');
+  const capturePreviewPanel = document.getElementById('capture-preview-panel');
+  const capturePreviewFrame = document.getElementById('capture-preview-frame');
+  let shareEndedTimer = null;
+  const progressOverlay = document.getElementById('progress-overlay');
+  const progressLog = document.getElementById('progress-log');
+  const progressZoomImg = document.getElementById('progress-zoom-img');
+  const progressZoomCol = document.getElementById('progress-zoom-col');
+  const stepBarFill = document.getElementById('step-bar-fill');
+  const stepBar = document.getElementById('step-bar');
+  const STEP_KEYS = ['vision', 'bank', 'dup', 'enrich'];
+  const screenShareStatus = document.getElementById('screen-share-status');
+  const btnScreenStop = document.getElementById('btn-screen-stop');
+  let sharedScreenStream = null;
+  let sharedScreenVideo = null;
+  let shareHandlersAttached = null;
+  let shareKeepAliveTimer = null;
+  let shareLinkInProgress = null;
+  let openPreviewEmbeddedAfterPipeline = false;
+  function ensureShareVideoElement() {
+    if (sharedScreenVideo) return sharedScreenVideo;
+    sharedScreenVideo = document.createElement('video');
+    sharedScreenVideo.setAttribute('playsinline', '');
+    sharedScreenVideo.muted = true;
+    sharedScreenVideo.setAttribute('aria-hidden', 'true');
+    sharedScreenVideo.style.cssText =
+      'position:fixed;width:1px;height:1px;left:-100px;top:0;opacity:0;pointer-events:none';
+    document.body.appendChild(sharedScreenVideo);
+    return sharedScreenVideo;
+  }
+  function bindActiveShareStream() {
+    var stream = null;
+    if (sharedScreenVideo && sharedScreenVideo.srcObject) {
+      stream = sharedScreenVideo.srcObject;
+    } else if (window.__odooCaptureStream) {
+      stream = window.__odooCaptureStream;
+    } else if (sharedScreenStream) {
+      stream = sharedScreenStream;
+    }
+    if (!stream) return null;
+    var video = ensureShareVideoElement();
+    window.__odooCaptureStream = stream;
+    sharedScreenStream = stream;
+    if (video.srcObject !== stream) video.srcObject = stream;
+    attachShareEndedHandler(stream);
+    return stream;
+  }
+  function shareSessionActive() {
+    bindActiveShareStream();
+    if (!sharedScreenStream) return false;
+    if (screenShareHasLiveVideoTrack(sharedScreenStream)) return true;
+    return !!(sharedScreenVideo && sharedScreenVideo.srcObject === sharedScreenStream);
+  }
+  function shareUsableForCapture() {
+    bindActiveShareStream();
+    if (!sharedScreenVideo || !sharedScreenVideo.srcObject) return false;
+    if (screenShareHasLiveVideoTrack(sharedScreenStream)) return true;
+    return videoHasCaptureFrame(sharedScreenVideo);
+  }
+  const nodePhases = { vision: 'pending', bank: 'pending', dup: 'pending', enrich: 'pending' };
+  function stopJsCaptureTracks() {
+    shareHandlersAttached = null;
+    stopShareKeepAlive();
+    window.__odooCaptureStream = null;
+    if (sharedScreenStream) {
+      try {
+        sharedScreenStream.getTracks().forEach(function (t) { t.stop(); });
+      } catch (e) { /* ignore */ }
+      sharedScreenStream = null;
+    }
+    if (sharedScreenVideo) {
+      try {
+        var oldObj = sharedScreenVideo.srcObject;
+        if (oldObj && oldObj.getTracks) {
+          oldObj.getTracks().forEach(function (t) { t.stop(); });
+        }
+        sharedScreenVideo.pause();
+        sharedScreenVideo.srcObject = null;
+      } catch (e) { /* ignore */ }
+    }
+  }
+  function clearSharedScreenCapture() {
+    clearShareSession();
+    stopJsCaptureTracks();
+    updateScreenShareUi();
+  }
+  function screenShareHasLiveVideoTrack(stream) {
+    if (!stream || !stream.getVideoTracks) return false;
+    return stream.getVideoTracks().some(function (t) { return t.readyState === 'live'; });
+  }
+  function videoHasCaptureFrame(video) {
+    return !!(video && video.videoWidth >= 8 && video.videoHeight >= 8);
+  }
+  function recoverStreamFromVideo() {
+    if (screenShareHasLiveVideoTrack(sharedScreenStream)) return sharedScreenStream;
+    if (sharedScreenVideo && sharedScreenVideo.srcObject) {
+      try {
+        if (screenShareHasLiveVideoTrack(sharedScreenVideo.srcObject)) {
+          sharedScreenStream = sharedScreenVideo.srcObject;
+          attachShareEndedHandler(sharedScreenStream);
+          return sharedScreenStream;
+        }
+      } catch (e) { /* ignore */ }
+    }
+    return null;
+  }
+  function attachShareEndedHandler(stream) {
+    if (!stream || shareHandlersAttached === stream) return;
+    shareHandlersAttached = stream;
+    var tracks = stream.getVideoTracks ? stream.getVideoTracks() : [];
+    for (var i = 0; i < tracks.length; i++) {
+      tracks[i].onended = function () {
+        if (shareEndedTimer) clearTimeout(shareEndedTimer);
+        shareEndedTimer = setTimeout(function () {
+          shareEndedTimer = null;
+          warmShareVideoForCapture().then(function () {
+            updateScreenShareUi();
+          });
+        }, 800);
+      };
+    }
+  }
+  function startShareKeepAlive() {
+    if (shareKeepAliveTimer) return;
+    var ms = (isPreviewFrameVisible && isPreviewFrameVisible()) ? 400 : 1200;
+    shareKeepAliveTimer = setInterval(function () {
+      bindActiveShareStream();
+      if (!sharedScreenVideo || !sharedScreenVideo.srcObject) return;
+      try { void sharedScreenVideo.play(); } catch (e) { /* ignore */ }
+    }, ms);
+  }
+  function restartShareKeepAlive() {
+    stopShareKeepAlive();
+    startShareKeepAlive();
+  }
+  function stopShareKeepAlive() {
+    if (shareKeepAliveTimer) {
+      clearInterval(shareKeepAliveTimer);
+      shareKeepAliveTimer = null;
+    }
+  }
+  async function warmShareVideoForCapture(dimTimeoutMs) {
+    recoverStreamFromVideo();
+    if (!bindActiveShareStream()) return false;
+    var video = sharedScreenVideo;
+    var waitMs = dimTimeoutMs != null ? dimTimeoutMs : 15000;
+    video.muted = true;
+    try {
+      await video.play();
+    } catch (e) { /* ignore */ }
+    startShareKeepAlive();
+    if (videoHasCaptureFrame(video)) return true;
+    try {
+      await waitVideoDimensions(video, waitMs);
+    } catch (e2) { /* ignore */ }
+    if (videoHasCaptureFrame(video)) return true;
+    try {
+      await video.play();
+      await waitVideoDimensions(video, Math.min(waitMs, 8000));
+    } catch (e3) { /* ignore */ }
+    return videoHasCaptureFrame(video);
+  }
+  function restoreShareOnReturnToCollage() {
+    hideOrphanNotice();
+    showErr('');
+    recoverStreamFromVideo();
+    bindActiveShareStream();
+    if (sharedScreenVideo && sharedScreenVideo.srcObject) {
+      try { void sharedScreenVideo.play(); } catch (ePlay) { /* ignore */ }
+      startShareKeepAlive();
+    }
+    return warmShareVideoForCapture(20000).then(function () {
+      updateScreenShareUi();
+    });
+  }
+  function updateScreenShareUi() {
+    recoverStreamFromVideo();
+    var active = shareSessionActive();
+    var live = screenShareHasLiveVideoTrack(sharedScreenStream);
+    var btnCap = document.getElementById('btn-screen-capture');
+    var btnLink = document.getElementById('btn-screen-link');
+    if (btnCap) {
+      btnCap.disabled = false;
+      btnCap.textContent = 'Capturer et analyser';
+    }
+    var tab = quizTabName();
+    if (!active) {
+      if (screenShareStatus) {
+        screenShareStatus.style.display = 'block';
+        screenShareStatus.style.color = isOdooCapture() ? '#64748b' : (shareLinkedThisPage ? '#0369a1' : '#64748b');
+        screenShareStatus.textContent = isOdooCapture()
+          ? 'Cliquez « Capturer et analyser » — Chrome vous demandera l’onglet Odoo.'
+          : (shareLinkedThisPage
+            ? 'Partage actif : affichez l’onglet Udemy 2 s si besoin, puis « Capturer et analyser ».'
+            : '« Capturer et analyser » lie l’onglet Udemy au premier clic.');
+      }
+      if (btnScreenStop) btnScreenStop.style.display = 'none';
+      if (btnLink) {
+        btnLink.style.display = isOdooCapture() ? 'none' : '';
+        btnLink.textContent = linkTabButtonLabel();
+      }
+    } else {
+      if (screenShareStatus) {
+        screenShareStatus.style.display = 'block';
+        screenShareStatus.style.color = live ? '#047857' : '#0369a1';
+        screenShareStatus.textContent = isOdooCapture()
+          ? 'Onglet lié — « Capturer et analyser » pour la question suivante (Chrome peut redemander l’onglet).'
+          : 'Partage actif : « Capturer et analyser » réutilise ce flux.';
+      }
+      if (btnScreenStop) btnScreenStop.style.display = isOdooCapture() ? 'none' : 'block';
+      if (btnLink) {
+        btnLink.style.display = isOdooCapture() ? 'none' : '';
+        btnLink.textContent = 'Changer d’onglet lié';
+      }
+    }
+  }
+  async function odooPickShareTab() {
+    if (!window.isSecureContext) {
+      throw new Error(
+        'Contexte non sécurisé : ouvrez cette page via http://127.0.0.1 ou https (pas une IP réseau en http).'
+      );
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+      throw new Error('Partage d’onglet non pris en charge (utilisez Chrome ou Edge).');
+    }
+    stopJsCaptureTracks();
+    if (screenShareStatus) {
+      screenShareStatus.style.display = 'block';
+      screenShareStatus.style.color = '#0369a1';
+      screenShareStatus.textContent =
+        'Chrome va s’ouvrir : choisissez l’onglet du quiz Odoo, puis cliquez « Partager » (ou « Share »).';
+    }
+    var stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+    window.__odooCaptureStream = stream;
+    sharedScreenStream = stream;
+    attachShareEndedHandler(stream);
+    var video = ensureShareVideoElement();
+    video.srcObject = stream;
+    try {
+      await waitVideoFrameReady(video, { relaxedLink: true, maxWaitMs: 12000 });
+    } catch (eDim) {
+      if (!screenShareHasLiveVideoTrack(stream) && !videoHasCaptureFrame(video)) throw eDim;
+    }
+    markShareLinked();
+    hideOrphanNotice();
+    startShareKeepAlive();
+    updateScreenShareUi();
+    return stream;
+  }
+  function resetStepBar() {
+    STEP_KEYS.forEach(function (key) {
+      nodePhases[key] = 'pending';
+      var el = document.getElementById('step-node-' + key);
+      if (el) el.className = 'step-node pending';
+    });
+    if (stepBarFill) stepBarFill.style.width = '0%';
+    if (stepBar) stepBar.removeAttribute('aria-valuenow');
+  }
+  function paintStepNodes() {
+    STEP_KEYS.forEach(function (key) {
+      var el = document.getElementById('step-node-' + key);
+      if (el) el.className = 'step-node ' + nodePhases[key];
+    });
+  }
+  function refreshStepBarFill() {
+    if (!stepBarFill) return;
+    var pct = 0;
+    var v = nodePhases.vision;
+    var b = nodePhases.bank;
+    var d = nodePhases.dup;
+    var e = nodePhases.enrich;
+    if (v === 'active') pct = 10;
+    else if (v === 'pending') pct = 0;
+    else {
+      pct = 25;
+      if (b === 'active') pct = 38;
+      else if (b === 'done') {
+        pct = 50;
+        if (d === 'active') pct = 62;
+        else if (d === 'done') {
+          pct = 72;
+          if (e === 'active') pct = 86;
+          else if (e !== 'pending' && e !== 'active') pct = 100;
+        }
+      }
+    }
+    stepBarFill.style.width = pct + '%';
+    if (stepBar) {
+      var stepNow = 0;
+      if (v === 'active') stepNow = 1;
+      else if (b === 'active') stepNow = 2;
+      else if (d === 'active') stepNow = 3;
+      else if (e === 'active') stepNow = 4;
+      else if (e !== 'pending' && e !== 'active') stepNow = 4;
+      else if (d === 'done' || d === 'warn' || d === 'error') stepNow = 3;
+      else if (b === 'done' || b === 'warn' || b === 'error') stepNow = 2;
+      else if (v !== 'pending' && v !== 'active') stepNow = 1;
+      stepBar.setAttribute('aria-valuenow', String(stepNow));
+    }
+  }
+  function updateStepBar(ev) {
+    if (!ev || ev.type !== 'step') return;
+    var id = ev.id;
+    var st = ev.state || 'done';
+    if (STEP_KEYS.indexOf(id) < 0) return;
+    if (id === 'vision') {
+      if (st === 'running') nodePhases.vision = 'active';
+      else if (st === 'done') nodePhases.vision = 'done';
+      else if (st === 'warn') nodePhases.vision = 'warn';
+      else if (st === 'error') nodePhases.vision = 'error';
+    } else if (id === 'bank') {
+      if (st === 'running') nodePhases.bank = 'active';
+      else if (st === 'done') nodePhases.bank = 'done';
+    } else if (id === 'dup') {
+      if (st === 'running') nodePhases.dup = 'active';
+      else if (st === 'done') nodePhases.dup = 'done';
+    } else if (id === 'enrich') {
+      if (st === 'running') {
+        nodePhases.dup = 'done';
+        nodePhases.enrich = 'active';
+      } else {
+        nodePhases.enrich = st === 'done' ? 'done' : (st === 'warn' ? 'warn' : 'error');
+      }
+    }
+    paintStepNodes();
+    refreshStepBarFill();
+  }
+  function showErr(msg) {
+    jsErr.style.display = msg ? 'block' : 'none';
+    jsErr.textContent = msg || '';
+  }
+  function showOrphanNotice(html) {
+    if (!captureOrphanNotice) return;
+    captureOrphanNotice.innerHTML = html || '';
+    captureOrphanNotice.style.display = html ? 'block' : 'none';
+  }
+  function hideOrphanNotice() {
+    showOrphanNotice('');
+  }
+  function installCapturePageGuards() {
+    document.querySelectorAll('a[href="/import-capture"]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        if (window.location.pathname.replace(/\/$/, '') === '/import-capture') {
+          e.preventDefault();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    });
+    var leaveMsg =
+      'Quitter la page Capture supprime le lien avec le partage sur cette page. ' +
+      'La barre bleue « Partage… » peut rester visible dans Chrome.\n\nContinuer ?';
+    function guardLeave(e) {
+      var href = (e.currentTarget.getAttribute('href') || '').split('#')[0].split('?')[0];
+      if (!href || href === '/import-capture') return;
+      if (href === window.location.pathname) return;
+      var active = shareSessionActive();
+      if (!active) {
+        try { active = sessionStorage.getItem('odoo_capture_was_linked') === '1'; } catch (x) { /* ignore */ }
+      }
+      if (!active && !shareLinkedThisPage) return;
+      if (!window.confirm(leaveMsg)) e.preventDefault();
+    }
+    document.querySelectorAll('header .header-btn, main .box a.btn').forEach(function (a) {
+      a.addEventListener('click', guardLeave);
+    });
+  }
+  function showLiveSuccess(msg, notice) {
+    if (!captureLiveSuccess) return;
+    var html = msg || '';
+    if (notice) html += '<br><span style="font-weight:400;font-size:.9em">' + notice + '</span>';
+    captureLiveSuccess.innerHTML = html;
+    captureLiveSuccess.style.display = html ? 'block' : 'none';
+  }
+  /** Chrome renvoie souvent message « Not supported » / NotSupportedError hors contexte sécurisé (http + IP). */
+  function explainScreenCaptureFailure(e) {
+    if (!e) return 'Erreur inconnue.';
+    if (e.name === 'NotAllowedError' || e.name === 'AbortError') {
+      return 'Partage annulé dans la fenêtre Chrome. Réessayez « Capturer et analyser ».';
+    }
+    if (e.name === 'NotSupportedError' || (e.message && /not supported/i.test(String(e.message)))) {
+      return (
+        'Capture d’onglet non prise en charge dans ce contexte. Ouvrez cette page en https, ou via ' +
+        'http://127.0.0.1:… ou http://localhost:… (évitez http://<adresse_IP>:… en clair). ' +
+        'Sinon utilisez le collage (Cmd+V / Ctrl+V) ou le glisser-déposer d’image.'
+      );
+    }
+    if (!window.isSecureContext) {
+      return (
+        'Contexte non sécurisé : le navigateur n’autorise pas le partage d’écran depuis cette URL. ' +
+        'Utilisez https, ou http://127.0.0.1 / localhost au lieu d’une IP réseau en http.'
+      );
+    }
+    return e.message ? String(e.message) : String(e);
+  }
+  function setProgressVisible(on) {
+    if (!progressOverlay) return;
+    progressOverlay.classList.toggle('visible', !!on);
+    progressOverlay.setAttribute('aria-hidden', on ? 'false' : 'true');
+    if (on) {
+      resetStepBar();
+      if (progressLog) progressLog.innerHTML = '';
+    }
+    if (on && progressZoomImg && progressZoomCol && preview && preview.src) {
+      progressZoomImg.src = preview.src;
+      progressZoomImg.alt = preview.alt || 'Capture en cours d’analyse';
+      progressZoomCol.classList.remove('is-empty');
+    } else if (!on && progressZoomImg && progressZoomCol) {
+      progressZoomImg.removeAttribute('src');
+      progressZoomCol.classList.add('is-empty');
+    } else if (on && progressZoomCol) {
+      progressZoomCol.classList.add('is-empty');
+    }
+  }
+  function appendProgress(ev) {
+    if (ev && ev.code === 'auto_odoo') {
+      setCaptureSourceRadio('odoo');
+      applyCaptureMode();
+    }
+    updateStepBar(ev);
+    if (!progressLog) return;
+    const li = document.createElement('li');
+    const st = ev.state || 'done';
+    li.className = 'progress-item st-' + st;
+    const title = (ev.title != null && ev.title !== '') ? String(ev.title) : '';
+    const detail = (ev.detail != null && ev.detail !== '') ? String(ev.detail) : '';
+    if (title || detail) {
+      if (title) {
+        const t = document.createElement('div');
+        t.className = 'progress-step-title';
+        t.textContent = title;
+        li.appendChild(t);
+      }
+      if (detail) {
+        const d = document.createElement('div');
+        d.className = 'progress-step-detail';
+        d.textContent = detail;
+        li.appendChild(d);
+      }
+    } else {
+      li.textContent = ev.label || JSON.stringify(ev);
+    }
+    progressLog.appendChild(li);
+    li.scrollIntoView({ block: 'nearest' });
+  }
+  function setImageFromBlob(blob) {
+    if (!blob || !blob.type || !blob.type.startsWith('image/')) {
+      showErr('Le presse-papiers ne contient pas d’image.');
+      return;
+    }
+    const ext = blob.type === 'image/jpeg' ? 'jpg' : (blob.type.split('/')[1] || 'png');
+    file = new File([blob], 'capture.' + ext, { type: blob.type });
+    if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
+    preview.src = URL.createObjectURL(blob);
+    preview.style.display = 'block';
+    zone.classList.add('ready');
+    btn.disabled = false;
+    showErr('');
+  }
+  function downscaleCanvas(srcCanvas, maxEdge) {
+    var w = srcCanvas.width, h = srcCanvas.height;
+    var m = Math.max(w, h);
+    if (m <= maxEdge) return srcCanvas;
+    var scale = maxEdge / m;
+    var nw = Math.max(1, Math.round(w * scale));
+    var nh = Math.max(1, Math.round(h * scale));
+    var out = document.createElement('canvas');
+    out.width = nw;
+    out.height = nh;
+    var ctx = out.getContext('2d');
+    if (ctx) ctx.drawImage(srcCanvas, 0, 0, nw, nh);
+    return out;
+  }
+  function canvasToJpegBlob(canvas, quality) {
+    return new Promise(function (resolve, reject) {
+      canvas.toBlob(function (b) {
+        if (b) resolve(b);
+        else reject(new Error('Export JPEG impossible.'));
+      }, 'image/jpeg', quality);
+    });
+  }
+  function resetCaptureHubUi() {
+    setProgressVisible(false);
+    if (btn) {
+      btn.disabled = !file;
+      btn.textContent = 'Analyser la capture';
+    }
+    if (btnScreenLink) btnScreenLink.disabled = false;
+    warmShareVideoForCapture().then(function () {
+      updateScreenShareUi();
+    });
+  }
+  function resetAfterPipelineError() {
+    resetCaptureHubUi();
+  }
+  function cancelPendingOnServer(pendingId) {
+    if (!pendingId) return Promise.resolve();
+    return fetch(
+      '/import-capture?cancel=1&pending=' + encodeURIComponent(pendingId),
+      { credentials: 'same-origin' }
+    ).catch(function () { /* ignore */ });
+  }
+  function showPreviewInFrame(url) {
+    if (!capturePreviewPanel || !capturePreviewFrame) return false;
+    markShareLinked();
+    try { sessionStorage.setItem('odoo_embed_preview', '1'); } catch (eSt) { /* ignore */ }
+    capturePreviewPanel.removeAttribute('hidden');
+    capturePreviewPanel.classList.add('visible');
+    capturePreviewPanel.setAttribute('aria-hidden', 'false');
+    if (captureHubMain) captureHubMain.style.display = 'none';
+    setProgressVisible(false);
+    var sep = url.indexOf('?') >= 0 ? '&' : '?';
+    var frameUrl = url + sep + 'embed=1';
+    startShareKeepAlive();
+    if (sharedScreenVideo && sharedScreenVideo.srcObject) {
+      try { sharedScreenVideo.play(); } catch (ePlay) { /* ignore */ }
+    }
+    restartShareKeepAlive();
+    requestAnimationFrame(function () {
+      capturePreviewFrame.src = frameUrl;
+    });
+    return true;
+  }
+  function isPreviewFrameVisible() {
+    return capturePreviewPanel && capturePreviewPanel.classList.contains('visible');
+  }
+  function hidePreviewFrame() {
+    if (captureHubMain) captureHubMain.style.display = '';
+    if (capturePreviewPanel) {
+      capturePreviewPanel.hidden = true;
+      capturePreviewPanel.classList.remove('visible');
+      capturePreviewPanel.setAttribute('aria-hidden', 'true');
+    }
+    markShareLinked();
+    return restoreShareOnReturnToCollage().then(function () {
+      restartShareKeepAlive();
+      if (capturePreviewFrame) capturePreviewFrame.src = 'about:blank';
+    });
+  }
+  function waitVideoFrameCallbackSafe(video, timeoutMs) {
+    var ms = timeoutMs != null ? timeoutMs : 2500;
+    if (typeof video.requestVideoFrameCallback === 'function') {
+      return Promise.race([
+        new Promise(function (resolve) {
+          video.requestVideoFrameCallback(function () { resolve(); });
+        }),
+        new Promise(function (resolve) {
+          setTimeout(resolve, ms);
+        })
+      ]);
+    }
+    return new Promise(function (resolve) {
+      requestAnimationFrame(resolve);
+    });
+  }
+  async function waitVideoDimensions(video, maxWaitMs) {
+    var deadline = Date.now() + (maxWaitMs != null ? maxWaitMs : 15000);
+    await new Promise(function (resolve, reject) {
+      var settled = false;
+      var rafId = 0;
+      function cleanup() {
+        video.removeEventListener('loadedmetadata', bump);
+        video.removeEventListener('loadeddata', bump);
+        video.removeEventListener('resize', bump);
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = 0;
+      }
+      function finishOk() {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve();
+      }
+      function finishErr(err) {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(err);
+      }
+      function bump() {
+        if (video.videoWidth >= 8 && video.videoHeight >= 8) {
+          finishOk();
+          return;
+        }
+        if (Date.now() > deadline) {
+          finishErr(
+            new Error(
+              'Aucune image reçue du partage (taille 0). Dans Chrome : onglet ' + quizTabName() + ' puis « Partager ». Sinon « Fenêtre entière » — ne partagez pas cet onglet de capture.'
+            )
+          );
+          return;
+        }
+        rafId = requestAnimationFrame(bump);
+      }
+      video.addEventListener('loadedmetadata', bump);
+      video.addEventListener('loadeddata', bump);
+      video.addEventListener('resize', bump);
+      bump();
+    });
+  }
+  async function waitVideoFrameReady(video, opts) {
+    opts = opts || {};
+    if (!video) throw new Error('Lecteur vidéo indisponible.');
+    if (videoHasCaptureFrame(video)) {
+      try { await video.play(); } catch (e0) { /* ignore */ }
+      await waitVideoFrameCallbackSafe(video, 1500);
+      return;
+    }
+    video.muted = true;
+    video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    try {
+      await video.play();
+    } catch (e) {
+      throw new Error(
+        'Lecture vidéo impossible. Vérifiez que le son/vidéo n’est pas bloqué pour ce site : ' +
+        (e && e.message ? e.message : e)
+      );
+    }
+    var track = null;
+    try {
+      if (video.srcObject && video.srcObject.getVideoTracks) {
+        track = video.srcObject.getVideoTracks()[0] || null;
+      }
+    } catch (e2) { /* ignore */ }
+    if (track && track.muted) {
+      await new Promise(function (resolve) {
+        var done = false;
+        function finish() {
+          if (done) return;
+          done = true;
+          track.removeEventListener('unmute', finish);
+          resolve();
+        }
+        track.addEventListener('unmute', finish);
+        setTimeout(finish, 4000);
+      });
+    }
+    if (opts.relaxedLink) {
+      await waitVideoFrameCallbackSafe(video, 1500);
+      return;
+    }
+    await waitVideoDimensions(video, opts.maxWaitMs != null ? opts.maxWaitMs : 15000);
+    await waitVideoFrameCallbackSafe(video, 3000);
+  }
+  async function requestDisplayMediaStream(replaceExisting) {
+    if (shareLinkInProgress) return shareLinkInProgress;
+    shareLinkInProgress = (async function () {
+      if (!replaceExisting && shareUsableForCapture()) {
+        return sharedScreenStream;
+      }
+      if (!replaceExisting && shareSessionActive()) {
+        if (await warmShareVideoForCapture()) return sharedScreenStream;
+        throw new Error(
+          'Partage déjà actif dans Chrome : affichez l’onglet ' + quizTabName() + ', revenez ici, puis « Capturer et analyser ». ' +
+          'Ne relancez pas le partage.'
+        );
+      }
+      if (replaceExisting) stopJsCaptureTracks();
+      var stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      window.__odooCaptureStream = stream;
+      sharedScreenStream = stream;
+      attachShareEndedHandler(stream);
+      var video = ensureShareVideoElement();
+      video.srcObject = stream;
+      try {
+        await waitVideoFrameReady(video, { relaxedLink: true, maxWaitMs: 8000 });
+      } catch (eDim) {
+        if (!screenShareHasLiveVideoTrack(stream) && !videoHasCaptureFrame(video)) throw eDim;
+      }
+      markShareLinked();
+      hideOrphanNotice();
+      startShareKeepAlive();
+      updateScreenShareUi();
+      return stream;
+    })();
+    try {
+      return await shareLinkInProgress;
+    } finally {
+      shareLinkInProgress = null;
+    }
+  }
+  async function linkSharedScreenTab(opts) {
+    opts = opts || {};
+    if (!window.isSecureContext) {
+      throw new Error(
+        'Contexte non sécurisé : utilisez https, ou http://127.0.0.1 / localhost au lieu d’une IP réseau en http.'
+      );
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+      throw new Error('Votre navigateur ne permet pas le partage d’écran (essayez Chrome ou Edge).');
+    }
+    if (!opts.forceNew && shareSessionActive()) {
+      if (await warmShareVideoForCapture()) {
+        hideOrphanNotice();
+        updateScreenShareUi();
+        return sharedScreenStream;
+      }
+      updateScreenShareUi();
+      throw new Error(
+        'Le partage Chrome est déjà actif (barre en haut) mais l’image du quiz n’est pas lisible. ' +
+        'Affichez l’onglet ' + quizTabName() + ', revenez ici, puis « Capturer et analyser ».'
+      );
+    }
+    hideOrphanNotice();
+    return requestDisplayMediaStream(!!opts.forceNew);
+  }
+  async function ensureShareLinkedForCapture() {
+    recoverStreamFromVideo();
+    bindActiveShareStream();
+    if (shareLinkedThisPage && shareSessionActive()) {
+      if (await warmShareVideoForCapture(22000)) return;
+      throw new Error(
+        'Image illisible : affichez l’onglet ' + quizTabName() + ' 2 s, revenez ici, recliquez « Capturer et analyser » ' +
+        '(ne stoppez pas le partage bleu en haut).'
+      );
+    }
+    if (shareSessionActive() && (await warmShareVideoForCapture(8000))) {
+      markShareLinked();
+      return;
+    }
+    if (screenShareStatus) {
+      screenShareStatus.style.display = 'block';
+      screenShareStatus.style.color = '#0369a1';
+      screenShareStatus.textContent = 'Chrome : choisissez l’onglet ' + quizTabName() + ', puis Partager…';
+    }
+    await linkSharedScreenTab({ forceNew: false });
+    markShareLinked();
+  }
+  async function captureAndAnalyzeFromScreen() {
+    showErr('');
+    hideOrphanNotice();
+    if (isOdooCapture()) {
+      await odooPickShareTab();
+    } else {
+      await ensureShareLinkedForCapture();
+    }
+    await snapshotSharedTabAndAnalyze();
+  }
+  async function snapshotSharedTabAndAnalyze() {
+    if (!shareSessionActive()) {
+      throw new Error(
+        'Partage non actif. En mode Odoo, recliquez « Capturer et analyser » et choisissez l’onglet dans Chrome.'
+      );
+    }
+    showErr('');
+    if (!(await warmShareVideoForCapture())) {
+      throw new Error(
+        'Image indisponible. Affichez l’onglet ' + quizTabName() + ' 2 s, revenez ici, recliquez « Capturer et analyser ».'
+      );
+    }
+    if (screenShareStatus) {
+      screenShareStatus.style.display = 'block';
+      screenShareStatus.style.color = '#0369a1';
+      screenShareStatus.textContent = 'Capture depuis le partage déjà actif…';
+    }
+    if (!videoHasCaptureFrame(sharedScreenVideo)) {
+      try {
+        await Promise.race([
+          waitVideoFrameReady(sharedScreenVideo),
+          new Promise(function (_, reject) {
+            setTimeout(function () {
+              reject(new Error(
+                'Délai dépassé. Affichez l’onglet ' + quizTabName() + ' puis réessayez « Capturer ».'
+              ));
+            }, 22000);
+          })
+        ]);
+      } finally {
+        if (screenShareStatus) screenShareStatus.style.color = '#047857';
+        updateScreenShareUi();
+      }
+    } else {
+      await waitVideoFrameCallbackSafe(sharedScreenVideo, 2000);
+      if (screenShareStatus) screenShareStatus.style.color = '#047857';
+      updateScreenShareUi();
+    }
+    var cap = document.createElement('canvas');
+    cap.width = sharedScreenVideo.videoWidth;
+    cap.height = sharedScreenVideo.videoHeight;
+    var ctx = cap.getContext('2d');
+    if (!ctx) throw new Error('Canvas indisponible.');
+    ctx.drawImage(sharedScreenVideo, 0, 0);
+    var scaled = downscaleCanvas(cap, 2400);
+    var jpegBlob = await canvasToJpegBlob(scaled, 0.88);
+    setImageFromBlob(jpegBlob);
+    if (sharedScreenVideo) {
+      try { await sharedScreenVideo.play(); } catch (ePlay) { /* ignore */ }
+    }
+    openPreviewEmbeddedAfterPipeline = true;
+    try { sessionStorage.setItem('odoo_embed_preview', '1'); } catch (eEmb) { /* ignore */ }
+    await runPipelineFromFile(file);
+  }
+  async function runPipelineFromFile(uploadFile) {
+    var useEmbeddedPreview = openPreviewEmbeddedAfterPipeline ||
+      screenShareHasLiveVideoTrack(sharedScreenStream) ||
+      (sharedScreenVideo && sharedScreenVideo.srcObject);
+    openPreviewEmbeddedAfterPipeline = false;
+    showErr('');
+    btn.disabled = true;
+    btn.textContent = 'Analyse…';
+    setProgressVisible(true);
+    var fd = new FormData();
+    fd.append('screenshot', uploadFile, uploadFile.name);
+    fd.append('source', getCaptureSource());
+    try {
+      var res = await fetch('/import-capture/pipeline', { method: 'POST', body: fd });
+      if (!res.ok) {
+        var t = await res.text();
+        throw new Error(t || ('HTTP ' + res.status));
+      }
+      var reader = res.body && res.body.getReader();
+      if (!reader) throw new Error('Lecture du flux impossible.');
+      var dec = new TextDecoder();
+      var buf = '';
+      var pendingId = null;
+      while (true) {
+        var chunk = await reader.read();
+        if (chunk.done) break;
+        buf += dec.decode(chunk.value, { stream: true });
+        var nl;
+        while ((nl = buf.indexOf('\n')) >= 0) {
+          var line = buf.slice(0, nl).trim();
+          buf = buf.slice(nl + 1);
+          if (!line) continue;
+          var ev;
+          try { ev = JSON.parse(line); } catch (e) { continue; }
+          if (ev.type === 'step') appendProgress(ev);
+          else if (ev.type === 'done') pendingId = ev.pending_id;
+          else if (ev.type === 'no_quiz') throw new Error(ev.message || 'Cette capture ne contient pas de question de quiz visible.');
+          else if (ev.type === 'fatal') throw new Error(ev.message || 'Échec du traitement.');
+        }
+      }
+      buf += dec.decode();
+      var tail = buf.trim();
+      if (tail) {
+        try {
+          var ev2 = JSON.parse(tail);
+          if (ev2.type === 'step') appendProgress(ev2);
+          else if (ev2.type === 'done') pendingId = ev2.pending_id;
+          else if (ev2.type === 'no_quiz') throw new Error(ev2.message || 'Cette capture ne contient pas de question de quiz visible.');
+          else if (ev2.type === 'fatal') throw new Error(ev2.message || 'Échec du traitement.');
+        } catch (e) { /* ignore */ }
+      }
+      if (!pendingId) throw new Error('Réponse serveur incomplète (pas d’identifiant d’aperçu).');
+      var previewUrl = '/import-capture/preview?pending=' + encodeURIComponent(pendingId);
+      if (useEmbeddedPreview) {
+        if (showPreviewInFrame(previewUrl)) {
+          if (previewOpenManual) previewOpenManual.style.display = 'none';
+          warmShareVideoForCapture();
+          return;
+        }
+        showErr(
+          'Impossible d’afficher la validation ici. Rechargez la page (Ctrl+Shift+R) — ' +
+          'ne quittez pas /import-capture pour garder le partage ' + quizTabName() + '.'
+        );
+        return;
+      }
+      window.location.href = previewUrl;
+    } catch (err) {
+      var msg = (err && err.message) ? String(err.message) : String(err);
+      if (msg.indexOf('question à choix multiples') >= 0 || msg.indexOf('Aucune question') >= 0) {
+        showErr(msg);
+      } else {
+        showErr('Réseau ou serveur : ' + msg);
+      }
+    } finally {
+      if (!isPreviewFrameVisible()) {
+        resetCaptureHubUi();
+      } else {
+        setProgressVisible(false);
+        if (btn) {
+          btn.disabled = !file;
+          btn.textContent = 'Analyser la capture';
+        }
+        warmShareVideoForCapture();
+      }
+    }
+  }
+  zone.addEventListener('click', function(){ zone.focus(); });
+  zone.addEventListener('paste', function(e) {
+    e.preventDefault();
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') === 0) {
+        const blob = items[i].getAsFile();
+        if (blob) { setImageFromBlob(blob); return; }
+      }
+    }
+    showErr('Aucune image dans le presse-papiers.');
+  });
+  zone.addEventListener('dragover', function(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+  zone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f && f.type.startsWith('image/')) setImageFromBlob(f);
+    else showErr('Déposez une image (png, jpg, webp, gif).');
+  });
+  btn.addEventListener('click', function () {
+    if (!file) return;
+    runPipelineFromFile(file);
+  });
+  if (btnScreenLink) {
+    btnScreenLink.addEventListener('click', async function () {
+      showErr('');
+      showLiveSuccess('');
+      btnScreenLink.disabled = true;
+      var prevLabel = btnScreenLink.textContent;
+      btnScreenLink.textContent = 'Chrome : onglet ' + quizTabName() + ' puis Partager…';
+      try {
+        await Promise.race([
+          linkSharedScreenTab({ forceNew: shareSessionActive() }),
+          new Promise(function (_, reject) {
+            setTimeout(function () {
+              reject(new Error(
+                'Délai dépassé lors de la liaison. Vérifiez que vous avez bien cliqué « Partager », puis réessayez.'
+              ));
+            }, 25000);
+          })
+        ]);
+        hideOrphanNotice();
+        if (screenShareStatus) {
+          screenShareStatus.style.color = '#047857';
+          screenShareStatus.textContent =
+            'Onglet lié — vous pouvez cliquer « Capturer et analyser ».';
+        }
+      } catch (e) {
+        showErr(explainScreenCaptureFailure(e));
+        btnScreenLink.textContent = prevLabel;
+      } finally {
+        btnScreenLink.disabled = false;
+        updateScreenShareUi();
+      }
+    });
+  }
+  if (btnScreen) {
+    btnScreen.addEventListener('click', async function () {
+      showErr('');
+      showLiveSuccess('');
+      if (previewOpenManual) previewOpenManual.style.display = 'none';
+      btnScreen.disabled = true;
+      if (isOdooCapture()) {
+        btnScreen.textContent = 'Chrome : choisir l’onglet Odoo…';
+        if (screenShareStatus) {
+          screenShareStatus.style.display = 'block';
+          screenShareStatus.style.color = '#0369a1';
+          screenShareStatus.textContent =
+            'Une fenêtre Chrome doit s’ouvrir pour choisir l’onglet du quiz. Si rien n’apparaît, vérifiez qu’elle n’est pas derrière cette fenêtre.';
+        }
+      } else {
+        btnScreen.textContent = 'Capture en cours…';
+      }
+      try {
+        await captureAndAnalyzeFromScreen();
+      } catch (e) {
+        if (e && (e.name === 'NotAllowedError' || e.name === 'AbortError')) {
+          showErr('Partage annulé. Cliquez à nouveau « Capturer et analyser » et choisissez l’onglet Odoo dans Chrome.');
+        } else {
+          showErr(explainScreenCaptureFailure(e));
+        }
+      } finally {
+        btnScreen.disabled = false;
+        btnScreen.textContent = 'Capturer et analyser';
+        updateScreenShareUi();
+      }
+    });
+  }
+  applyCaptureMode();
+  window.addEventListener('message', function (ev) {
+    if (!ev.data || !ev.data.type) return;
+    if (ev.data.type === 'odoo-capture-partial-done') {
+      markShareLinked();
+      showLiveSuccess(ev.data.success || 'Question enregistrée.', ev.data.notice || '');
+      showErr('');
+      if (ev.data.pending_id && capturePreviewFrame) {
+        capturePreviewFrame.src = '/import-capture/preview?pending=' +
+          encodeURIComponent(ev.data.pending_id) + '&embed=1&saved=1&_=' + Date.now();
+      }
+      return;
+    }
+    if (ev.data.type === 'odoo-capture-done') {
+      markShareLinked();
+      hidePreviewFrame();
+      showLiveSuccess(ev.data.success || 'Enregistrement effectué.', ev.data.notice || '');
+      showErr('');
+      if (preview && preview.src && preview.src.startsWith('blob:')) {
+        URL.revokeObjectURL(preview.src);
+        preview.removeAttribute('src');
+        preview.style.display = 'none';
+        zone.classList.remove('ready');
+        file = null;
+      }
+      resetCaptureHubUi();
+      return;
+    }
+    if (ev.data.type === 'odoo-capture-return') {
+      markShareLinked();
+      hidePreviewFrame();
+      showErr('');
+      if (ev.data.pending_id) cancelPendingOnServer(ev.data.pending_id);
+      resetCaptureHubUi();
+      return;
+    }
+    if (ev.data.type === 'odoo-capture-embed-request' && ev.data.url) {
+      showPreviewInFrame(ev.data.url);
+      warmShareVideoForCapture();
+    }
+  });
+  if (btnScreenStop) {
+    btnScreenStop.addEventListener('click', function () {
+      clearSharedScreenCapture();
+      hideOrphanNotice();
+      showErr('');
+      if (screenShareStatus) {
+        screenShareStatus.style.display = 'block';
+        screenShareStatus.style.color = '#b45309';
+        screenShareStatus.textContent =
+          'Partage coupé côté application. Cliquez aussi chaque « Arrêter le partage » restant en haut de Chrome.';
+      }
+    });
+  }
+  window.addEventListener('pageshow', function (ev) {
+    if (ev.persisted) {
+      try {
+        if (sessionStorage.getItem(SS_SHARE_ACTIVE) === '1') shareLinkedThisPage = true;
+      } catch (ePs) { /* ignore */ }
+      restoreShareOnReturnToCollage();
+    }
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') {
+      warmShareVideoForCapture().then(function () {
+        updateScreenShareUi();
+      });
+    }
+  });
+  try {
+    if (sessionStorage.getItem(SS_SHARE_ACTIVE) === '1') {
+      shareLinkedThisPage = true;
+    }
+    refreshReloadOrphanNotice();
+  } catch (eLoad) { /* ignore */ }
+  installCapturePageGuards();
+  initCaptureSourceFromMemory();
+  applyCaptureMode();
+})();
+</script>
+</body>
+</html>

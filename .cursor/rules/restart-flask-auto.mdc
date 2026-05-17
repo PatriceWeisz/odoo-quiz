@@ -1,0 +1,22 @@
+---
+description: Redémarrer Flask automatiquement après changements serveur, sans demander à l’utilisateur
+alwaysApply: true
+---
+
+# Redémarrage Flask (odoo-quiz)
+
+Après une modification qui affecte le serveur ou les pages servies au chargement :
+
+- `app.py`
+- `banque.html` (chargé au démarrage de `app.py`)
+- tout module Python importé par `app.py` au chargement (ex. `generate_explanations.py` si réimporté)
+
+**Action obligatoire (sans demander confirmation)** : exécuter en arrière-plan, depuis la racine du dépôt :
+
+`bash scripts/restart_flask.sh`
+
+(permissions `all` si besoin pour `lsof` / `kill` / liaison du port.)
+
+Ne pas se contenter d’indiquer à l’utilisateur de redémarrer à la main ; ne pas demander « voulez-vous que je redémarre ».
+
+Si le script est absent ou échoue, lancer équivalent : tuer le processus sur `flask.port` dans `config.json`, puis `source .venv/bin/activate && python app.py` en arrière-plan.
