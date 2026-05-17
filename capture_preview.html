@@ -145,7 +145,9 @@
   .score-pill--dup { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
   .score-pill--ok { background: #ecfdf5; color: #047857; border-color: #6ee7b7; }
   .score-pill--warn { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+  .rag-master-acc { margin-top: .15rem; }
   .rag-acc-list { display: flex; flex-direction: column; gap: .35rem; }
+  details.rag-acc-item:not([open]) .rag-acc-body { display: none; }
   .rag-acc-item {
     border: 1px solid #e9d5ff; border-radius: 8px; background: #fff; overflow: hidden;
   }
@@ -552,28 +554,36 @@
             {% endif %}
           </div>
           {% if b.rag_similar|default([])|length > 0 %}
-          <p class="muted" style="font-size:.72rem;margin:0 0 .45rem;line-height:1.35">
-            Cliquez une ligne pour voir la question banque. Score max = max(vecteur, mots). Claude : oui si ≥ {{ ((b.rag_prompt_min_score|default(0.45)) * 100)|int }}&nbsp;% ou doublon.
-          </p>
-          <div class="rag-acc-list">
-            {% for ref in b.rag_similar %}
-            <details class="rag-acc-item{% if ref.is_duplicate|default(false) %} rag-acc-item--dup{% elif not ref.in_prompt|default(false) %} rag-acc-item--muted{% endif %}">
-              <summary>
-                <span class="rag-acc-metrics">
-                  <span class="rag-acc-metric">Max <strong>{{ "%.0f"|format((ref.score|default(0)) * 100) }}&nbsp;%</strong></span>
-                  <span class="rag-acc-metric">Vect. <strong>{% if ref.score_vector is not none %}{{ "%.0f"|format(ref.score_vector * 100) }}%{% else %}—{% endif %}</strong></span>
-                  <span class="rag-acc-metric">Mots <strong>{% if ref.score_keyword is not none %}{{ "%.0f"|format(ref.score_keyword * 100) }}%{% else %}—{% endif %}</strong></span>
-                  <span class="rag-acc-metric rag-acc-metric--{% if ref.in_prompt|default(false) %}claude-yes{% else %}claude-no{% endif %}">Claude {% if ref.in_prompt|default(false) %}oui{% else %}non{% endif %}</span>
-                  <span class="rag-acc-metric{% if ref.is_duplicate|default(false) %} rag-acc-metric--dup{% endif %}">id {{ ref.id }}{% if ref.is_duplicate|default(false) %} · doublon{% endif %}</span>
-                </span>
-              </summary>
-              <div class="rag-acc-body">
-                <p class="rag-q"><strong>Question :</strong> {{ ref.title }}</p>
-                <p class="rag-ans"><strong>Bonne rép. :</strong> n°{{ ref.correct_index }} — {{ ref.correct_text }}</p>
+          <details class="fold-acc rag-master-acc">
+            <summary>
+              <span>Questions similaires en banque</span>
+              <span class="fold-acc-tags">{{ b.rag_similar|length }} ligne{% if b.rag_similar|length > 1 %}s{% endif %}{% if b.in_banque|default(false) and b.bank_duplicate_score %} · doublon {{ "%.0f"|format((b.bank_duplicate_score|default(0)) * 100) }}&nbsp;%{% if b.existing_id %} · id {{ b.existing_id }}{% endif %}{% elif b.rag_similar[0] is defined %} · max {{ "%.0f"|format((b.rag_similar[0].score|default(0)) * 100) }}&nbsp;%{% endif %}</span>
+            </summary>
+            <div class="fold-acc-body">
+              <p class="muted" style="font-size:.72rem;margin:0 0 .45rem;line-height:1.35">
+                Cliquez une ligne pour la question complète. Score max = max(vecteur, mots). Claude : oui si ≥ {{ ((b.rag_prompt_min_score|default(0.45)) * 100)|int }}&nbsp;% ou doublon.
+              </p>
+              <div class="rag-acc-list">
+                {% for ref in b.rag_similar %}
+                <details class="rag-acc-item{% if ref.is_duplicate|default(false) %} rag-acc-item--dup{% elif not ref.in_prompt|default(false) %} rag-acc-item--muted{% endif %}">
+                  <summary>
+                    <span class="rag-acc-metrics">
+                      <span class="rag-acc-metric">Max <strong>{{ "%.0f"|format((ref.score|default(0)) * 100) }}&nbsp;%</strong></span>
+                      <span class="rag-acc-metric">Vect. <strong>{% if ref.score_vector is not none %}{{ "%.0f"|format(ref.score_vector * 100) }}%{% else %}—{% endif %}</strong></span>
+                      <span class="rag-acc-metric">Mots <strong>{% if ref.score_keyword is not none %}{{ "%.0f"|format(ref.score_keyword * 100) }}%{% else %}—{% endif %}</strong></span>
+                      <span class="rag-acc-metric rag-acc-metric--{% if ref.in_prompt|default(false) %}claude-yes{% else %}claude-no{% endif %}">Claude {% if ref.in_prompt|default(false) %}oui{% else %}non{% endif %}</span>
+                      <span class="rag-acc-metric{% if ref.is_duplicate|default(false) %} rag-acc-metric--dup{% endif %}">id {{ ref.id }}{% if ref.is_duplicate|default(false) %} · doublon{% endif %}</span>
+                    </span>
+                  </summary>
+                  <div class="rag-acc-body">
+                    <p class="rag-q"><strong>Question :</strong> {{ ref.title }}</p>
+                    <p class="rag-ans"><strong>Bonne rép. :</strong> n°{{ ref.correct_index }} — {{ ref.correct_text }}</p>
+                  </div>
+                </details>
+                {% endfor %}
               </div>
-            </details>
-            {% endfor %}
-          </div>
+            </div>
+          </details>
           {% endif %}
         </div>
         {% endif %}
