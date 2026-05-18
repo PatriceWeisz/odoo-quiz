@@ -54,7 +54,7 @@ from quiz_llm import api_available, parse_json_value, run_prompt_with_images
 
 CONFIG_FILE = Path(__file__).parent / "config.json"
 # Incrémenter à chaque livraison (affichée dans l’UI : en-tête, onglet, pied de page ; F5 si auto_reload).
-APP_VERSION = "1.12.95"
+APP_VERSION = "1.12.96"
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12 Mo (captures)
@@ -298,9 +298,15 @@ HTML = """<!DOCTYPE html>
          background: #f0f4ff; color: #1a1a2e; min-height: 100vh; }
   header { background: #714B67; color: white; padding: 1rem 2rem;
            display: flex; align-items: center; justify-content: space-between;
-           flex-wrap: wrap; gap: .5rem; }
-  .header-nav { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
-  header .title-block { display: flex; flex-direction: column; align-items: flex-start; gap: .1rem; }
+           flex-wrap: wrap; gap: .5rem .75rem; width: 100%; }
+  header .title-block { display: flex; flex-direction: column; align-items: flex-start; gap: .1rem;
+                         flex: 0 1 auto; min-width: 0; }
+  .header-nav {
+    flex: 1 1 16rem; min-width: 0; width: 100%; max-width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 6.25rem), 1fr));
+    gap: .35rem; align-items: stretch;
+  }
   header h1 { font-size: 1.2rem; }
   .app-version { font-size: .78rem; font-weight: 600; opacity: .92; letter-spacing: .04em; }
   #timer { font-size: 1.5rem; font-weight: bold; font-variant-numeric: tabular-nums; }
@@ -384,9 +390,19 @@ HTML = """<!DOCTYPE html>
   #modal-actions { margin-top: 1rem; display: flex; gap: .75rem; justify-content: flex-end; }
   /* Boutons header */
   .header-btn { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
-                color: white; border-radius: 8px; padding: .4rem .9rem; cursor: pointer;
-                font-size: .85rem; font-weight: 600; transition: .15s; }
+                color: white; border-radius: 8px; padding: .4rem .5rem; cursor: pointer;
+                font-size: clamp(.72rem, 2vw, .85rem); font-weight: 600; transition: .15s;
+                display: flex; align-items: center; justify-content: center;
+                width: 100%; min-width: 0; text-align: center; white-space: nowrap;
+                overflow: hidden; text-overflow: ellipsis; }
   .header-btn:hover { background: rgba(255,255,255,.25); }
+  #timer { display: flex; align-items: center; justify-content: center; width: 100%;
+           min-width: 0; font-size: clamp(.95rem, 2.5vw, 1.5rem); }
+  @media (max-width: 640px) {
+    header { padding: .65rem 1rem; }
+    .header-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #timer { grid-column: 1 / -1; }
+  }
   .app-build { text-align: center; padding: .6rem 1rem 1.25rem; font-size: .82rem; color: #94a3b8; }
   .app-build strong { color: #64748b; font-weight: 600; }
 </style>
