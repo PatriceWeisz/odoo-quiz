@@ -44,15 +44,10 @@
   .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
   .btn-secondary { background: #e2e8f0; color: #1a1a2e; margin-left: .5rem; }
   .capture-screen-tools { margin-top: .5rem; }
-  .capture-screen-tools .btn-screen-link {
-    display: block; width: 100%; margin: .5rem 0 0;
-  }
   .capture-screen-tools .btn-screen {
-    display: block; width: 100%; margin-top: .5rem;
+    display: block; width: 100%; margin-top: .75rem;
     background: #0f766e; color: #fff;
   }
-  .capture-screen-tools.share-needed .btn-screen-link { margin-top: .75rem; }
-  .capture-screen-tools.share-active .btn-screen { margin-top: .75rem; }
   .btn-screen:hover:not(:disabled) { background: #115e59; }
   .err { background: #fef2f2; color: #b91c1c; padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; }
   .ok { background: #f0fdf4; color: #166534; padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; }
@@ -222,14 +217,14 @@
   <div class="steps capture-udemy-only" id="steps-udemy">
     <strong>Étapes — Udemy</strong><br>
     1) Ouvrez la question sur Udemy.<br>
-    2) Copiez la capture (<kbd>⌃⌘⇧4</kbd> ou <kbd>Win+⇧+S</kbd>) et collez ici — ou partage d’onglet (boutons ci-dessous).<br>
-    3) <strong>Analyser la capture</strong> : vision → banque → doublon → complément Claude → validation.<br>
-    4) Enregistrez dans la banque.
+    2) <strong>Capturer et analyser</strong> : au premier clic, Chrome demande l’onglet Udemy ; ensuite les captures s’enchaînent sans redemander.<br>
+    3) Ou capture écran + <strong>coller</strong> dans la zone, puis <strong>Analyser la capture</strong>.<br>
+    4) Vision → banque → Claude si besoin → validation → enregistrement.
   </div>
   <div class="steps capture-odoo-only" id="steps-odoo">
     <strong>Étapes — Odoo (odoo.com / eLearning)</strong><br>
     1) Ouvrez la question sur le quiz (ex. <a href="https://www.odoo.com/fr_FR/slides/odoo-certification-sample-test-50" target="_blank" rel="noopener">Certification Sample Test</a>).<br>
-    2) <strong>Lier l’onglet Odoo</strong> une fois (ou via « Capturer et analyser »), puis enchaînez les questions sans relier à chaque fois.<br>
+    2) <strong>Capturer et analyser</strong> : au premier clic, Chrome demande l’onglet Odoo ; ensuite les captures s’enchaînent sans redemander.<br>
     3) Ou capture écran + <strong>coller</strong> dans la zone, puis <strong>Analyser la capture</strong>.<br>
     4) Comparaison banque → Claude si besoin → validation → enregistrement.<br>
     <em>Sur odoo.com, une même capture peut afficher jusqu’à <strong>4 questions</strong> : l’analyse crée <strong>une fiche par question</strong> (bandeaux colorés à la validation).</em>
@@ -240,9 +235,6 @@
     <img id="preview" alt="Aperçu">
   </div>
   <div class="capture-screen-tools" id="capture-screen-tools">
-    <button type="button" class="btn btn-secondary btn-screen-link" id="btn-screen-link">
-      Lier l’onglet du quiz
-    </button>
     <button type="button" class="btn btn-primary btn-screen" id="btn-screen-capture">
       Capturer et analyser
     </button>
@@ -330,13 +322,10 @@
   }
   function isOdooCapture() { return getCaptureSource() === 'odoo'; }
   function quizTabName() { return isOdooCapture() ? 'Odoo' : 'Udemy'; }
-  function linkTabButtonLabel() {
-    return isOdooCapture() ? 'Lier l’onglet Odoo' : 'Lier l’onglet Udemy';
-  }
   function reloadNoticeHtml() {
     var tab = quizTabName();
     return (
-      '<strong>Page rechargée</strong> : Chrome redemandera l’onglet <strong>' + tab + '</strong> <em>une fois</em> via « Capturer et analyser » ou « Lier l’onglet ». ' +
+      '<strong>Page rechargée</strong> : Chrome redemandera l’onglet <strong>' + tab + '</strong> <em>une fois</em> via « Capturer et analyser ». ' +
       'Au retour du collage (sans recharger), ce n’est pas nécessaire.'
     );
   }
@@ -366,7 +355,7 @@
     var hint = document.getElementById('screen-share-hint');
     if (hint) {
       hint.textContent =
-        'Commencez par lier l’onglet ' + quizTabName() + ', puis enchaînez avec « Capturer et analyser ». Au retour du collage, gardez le partage actif si possible.';
+        '« Capturer et analyser » lie l’onglet ' + quizTabName() + ' au premier clic (Chrome), puis réutilise le partage. Au retour du collage, gardez le partage actif si possible.';
     }
     refreshReloadOrphanNotice();
   }
@@ -377,7 +366,6 @@
   const zone = document.getElementById('pastezone');
   const preview = document.getElementById('preview');
   const btn = document.getElementById('btn-send');
-  const btnScreenLink = document.getElementById('btn-screen-link');
   const btnScreen = document.getElementById('btn-screen-capture');
   const jsErr = document.getElementById('js-err');
   const captureOrphanNotice = document.getElementById('capture-orphan-notice');
@@ -591,32 +579,25 @@
     var tab = quizTabName();
     var tools = document.getElementById('capture-screen-tools');
     var btnCap = document.getElementById('btn-screen-capture');
-    var btnLink = document.getElementById('btn-screen-link');
     if (tools) {
       tools.classList.toggle('share-active', linked);
       tools.classList.toggle('share-needed', !linked);
     }
-    if (btnLink) {
-      btnLink.style.display = linked ? 'none' : 'block';
-      btnLink.textContent = linkTabButtonLabel();
-      btnLink.className = 'btn btn-primary btn-screen-link';
-    }
     if (btnCap) {
-      btnCap.disabled = !linked;
+      btnCap.disabled = false;
       btnCap.textContent = 'Capturer et analyser';
-      btnCap.className = linked ? 'btn btn-primary btn-screen' : 'btn btn-secondary btn-screen';
     }
     if (btnScreenStop) btnScreenStop.style.display = linked ? 'block' : 'none';
     if (screenShareStatus) {
       screenShareStatus.style.display = 'block';
       if (!linked) {
-        screenShareStatus.style.color = '#92400e';
+        screenShareStatus.style.color = '#64748b';
         screenShareStatus.textContent =
-          'Étape 1 : cliquez « ' + linkTabButtonLabel() + ' » et choisissez l’onglet ' + tab + ' dans Chrome.';
+          '« Capturer et analyser » ouvrira Chrome pour choisir l’onglet ' + tab + ' (une fois).';
       } else if (!live) {
         screenShareStatus.style.color = '#0369a1';
         screenShareStatus.textContent =
-          'Partage lié : affichez l’onglet ' + tab + ' 2 s si besoin, puis « Capturer et analyser ».';
+          'Partage actif : affichez l’onglet ' + tab + ' 2 s si besoin, puis recliquez « Capturer et analyser ».';
       } else {
         screenShareStatus.style.color = '#047857';
         screenShareStatus.textContent =
@@ -861,7 +842,6 @@
       btn.disabled = !file;
       btn.textContent = 'Analyser la capture';
     }
-    if (btnScreenLink) btnScreenLink.disabled = false;
     warmShareVideoForCapture().then(function () {
       updateScreenShareUi();
     });
@@ -1106,26 +1086,13 @@
   async function captureAndAnalyzeFromScreen() {
     showErr('');
     hideOrphanNotice();
-    recoverStreamFromVideo();
-    bindActiveShareStream();
-    if (!shareIsActive()) {
-      updateScreenShareUi();
-      throw new Error(
-        'Onglet non lié. Cliquez d’abord « ' + linkTabButtonLabel() + ' » et choisissez l’onglet ' + quizTabName() + ' dans Chrome.'
-      );
-    }
-    if (!(await warmShareVideoForCapture(22000))) {
-      throw new Error(
-        'Image illisible : affichez l’onglet ' + quizTabName() + ' 2 s, revenez ici, puis « Capturer et analyser ».'
-      );
-    }
-    markShareLinked();
+    await ensureShareLinkedForCapture();
     await snapshotSharedTabAndAnalyze();
   }
   async function snapshotSharedTabAndAnalyze() {
     if (!shareIsActive()) {
       throw new Error(
-        'Partage non actif. Cliquez « ' + linkTabButtonLabel() + ' » et choisissez l’onglet ' + quizTabName() + ' dans Chrome.'
+        'Partage non actif. Recliquez « Capturer et analyser » et choisissez l’onglet ' + quizTabName() + ' dans Chrome.'
       );
     }
     showErr('');
@@ -1286,39 +1253,6 @@
     if (!file) return;
     runPipelineFromFile(file);
   });
-  if (btnScreenLink) {
-    btnScreenLink.addEventListener('click', async function () {
-      showErr('');
-      showLiveSuccess('');
-      btnScreenLink.disabled = true;
-      var prevLabel = btnScreenLink.textContent;
-      btnScreenLink.textContent = 'Chrome : onglet ' + quizTabName() + ' puis Partager…';
-      try {
-        await Promise.race([
-          linkSharedScreenTab({ forceNew: false }),
-          new Promise(function (_, reject) {
-            setTimeout(function () {
-              reject(new Error(
-                'Délai dépassé lors de la liaison. Vérifiez que vous avez bien cliqué « Partager », puis réessayez.'
-              ));
-            }, 25000);
-          })
-        ]);
-        hideOrphanNotice();
-        if (screenShareStatus) {
-          screenShareStatus.style.color = '#047857';
-          screenShareStatus.textContent =
-            'Onglet lié — vous pouvez cliquer « Capturer et analyser ».';
-        }
-      } catch (e) {
-        showErr(explainScreenCaptureFailure(e));
-        btnScreenLink.textContent = prevLabel;
-      } finally {
-        btnScreenLink.disabled = false;
-        updateScreenShareUi();
-      }
-    });
-  }
   if (btnScreen) {
     btnScreen.addEventListener('click', async function () {
       showErr('');
@@ -1330,7 +1264,7 @@
         await captureAndAnalyzeFromScreen();
       } catch (e) {
         if (e && (e.name === 'NotAllowedError' || e.name === 'AbortError')) {
-          showErr('Partage annulé. Cliquez « ' + linkTabButtonLabel() + ' » et choisissez l’onglet ' + quizTabName() + ' dans Chrome.');
+          showErr('Partage annulé. Recliquez « Capturer et analyser » et choisissez l’onglet ' + quizTabName() + ' dans Chrome.');
         } else {
           showErr(explainScreenCaptureFailure(e));
         }
