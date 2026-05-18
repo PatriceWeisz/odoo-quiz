@@ -182,8 +182,6 @@
   .capture-odoo-only, .capture-udemy-only { display: none; }
   body.capture-mode-odoo .capture-odoo-only { display: block; }
   body.capture-mode-udemy .capture-udemy-only { display: block; }
-  body.capture-mode-odoo #btn-screen-link,
-  body.capture-mode-odoo #btn-screen-stop { display: none !important; }
 </style>
 </head>
 <body>
@@ -225,7 +223,7 @@
   <div class="steps capture-odoo-only" id="steps-odoo">
     <strong>Étapes — Odoo (odoo.com / eLearning)</strong><br>
     1) Ouvrez la question sur le quiz (ex. <a href="https://www.odoo.com/fr_FR/slides/odoo-certification-sample-test-50" target="_blank" rel="noopener">Certification Sample Test</a>).<br>
-    2) <strong>Capturer et analyser</strong> : Chrome vous demande l’onglet Odoo à chaque fois (normal si vous préférez ainsi).<br>
+    2) <strong>Lier l’onglet Odoo</strong> une fois (ou via « Capturer et analyser »), puis enchaînez les questions sans relier à chaque fois.<br>
     3) Ou capture écran + <strong>coller</strong> dans la zone, puis <strong>Analyser la capture</strong>.<br>
     4) Comparaison banque → Claude si besoin → validation → enregistrement.<br>
     <em>Sur odoo.com, une même capture peut afficher jusqu’à <strong>4 questions</strong> : l’analyse crée <strong>une fiche par question</strong> (bandeaux colorés à la validation).</em>
@@ -330,14 +328,9 @@
     return isOdooCapture() ? 'Lier l’onglet Odoo' : 'Lier l’onglet Udemy';
   }
   function reloadNoticeHtml() {
-    if (isOdooCapture()) {
-      return (
-        '<strong>Page rechargée</strong> : recliquez « Capturer et analyser » — Chrome vous demandera l’onglet ' +
-        '<strong>Odoo</strong> (quiz) à chaque capture.'
-      );
-    }
+    var tab = quizTabName();
     return (
-      '<strong>Page rechargée</strong> : Chrome redemandera l’onglet <strong>Udemy</strong> <em>une fois</em> via « Capturer et analyser ». ' +
+      '<strong>Page rechargée</strong> : Chrome redemandera l’onglet <strong>' + tab + '</strong> <em>une fois</em> via « Capturer et analyser » ou « Lier l’onglet ». ' +
       'Au retour du collage (sans recharger), ce n’est pas nécessaire.'
     );
   }
@@ -366,9 +359,8 @@
     updateScreenShareUi();
     var hint = document.getElementById('screen-share-hint');
     if (hint) {
-      hint.textContent = isOdooCapture()
-        ? '« Capturer et analyser » ouvre Chrome à chaque question : choisissez l’onglet du quiz Odoo.'
-        : 'Liez une fois, puis « Capturer et analyser ». Au retour du collage, gardez le partage actif si possible.';
+      hint.textContent =
+        'Liez une fois l’onglet ' + quizTabName() + ', puis « Capturer et analyser ». Au retour du collage, gardez le partage actif si possible.';
     }
     refreshReloadOrphanNotice();
   }
@@ -597,65 +589,28 @@
     if (!active) {
       if (screenShareStatus) {
         screenShareStatus.style.display = 'block';
-        screenShareStatus.style.color = isOdooCapture() ? '#64748b' : (shareLinkedThisPage ? '#0369a1' : '#64748b');
-        screenShareStatus.textContent = isOdooCapture()
-          ? 'Cliquez « Capturer et analyser » — Chrome vous demandera l’onglet Odoo.'
-          : (shareLinkedThisPage
-            ? 'Partage actif : affichez l’onglet Udemy 2 s si besoin, puis « Capturer et analyser ».'
-            : '« Capturer et analyser » lie l’onglet Udemy au premier clic.');
+        screenShareStatus.style.color = shareLinkedThisPage ? '#0369a1' : '#64748b';
+        screenShareStatus.textContent = shareLinkedThisPage
+          ? 'Partage actif : affichez l’onglet ' + tab + ' 2 s si besoin, puis « Capturer et analyser ».'
+          : '« Capturer et analyser » ou « ' + linkTabButtonLabel() + ' » lie l’onglet ' + tab + ' au premier clic.';
       }
       if (btnScreenStop) btnScreenStop.style.display = 'none';
       if (btnLink) {
-        btnLink.style.display = isOdooCapture() ? 'none' : '';
+        btnLink.style.display = '';
         btnLink.textContent = linkTabButtonLabel();
       }
     } else {
       if (screenShareStatus) {
         screenShareStatus.style.display = 'block';
         screenShareStatus.style.color = live ? '#047857' : '#0369a1';
-        screenShareStatus.textContent = isOdooCapture()
-          ? 'Onglet lié — « Capturer et analyser » pour la question suivante (Chrome peut redemander l’onglet).'
-          : 'Partage actif : « Capturer et analyser » réutilise ce flux.';
+        screenShareStatus.textContent = 'Partage actif : « Capturer et analyser » réutilise ce flux.';
       }
-      if (btnScreenStop) btnScreenStop.style.display = isOdooCapture() ? 'none' : 'block';
+      if (btnScreenStop) btnScreenStop.style.display = 'block';
       if (btnLink) {
-        btnLink.style.display = isOdooCapture() ? 'none' : '';
+        btnLink.style.display = '';
         btnLink.textContent = 'Changer d’onglet lié';
       }
     }
-  }
-  async function odooPickShareTab() {
-    if (!window.isSecureContext) {
-      throw new Error(
-        'Contexte non sécurisé : ouvrez cette page via http://127.0.0.1 ou https (pas une IP réseau en http).'
-      );
-    }
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-      throw new Error('Partage d’onglet non pris en charge (utilisez Chrome ou Edge).');
-    }
-    stopJsCaptureTracks();
-    if (screenShareStatus) {
-      screenShareStatus.style.display = 'block';
-      screenShareStatus.style.color = '#0369a1';
-      screenShareStatus.textContent =
-        'Chrome va s’ouvrir : choisissez l’onglet du quiz Odoo, puis cliquez « Partager » (ou « Share »).';
-    }
-    var stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
-    window.__odooCaptureStream = stream;
-    sharedScreenStream = stream;
-    attachShareEndedHandler(stream);
-    var video = ensureShareVideoElement();
-    video.srcObject = stream;
-    try {
-      await waitVideoFrameReady(video, { relaxedLink: true, maxWaitMs: 12000 });
-    } catch (eDim) {
-      if (!screenShareHasLiveVideoTrack(stream) && !videoHasCaptureFrame(video)) throw eDim;
-    }
-    markShareLinked();
-    hideOrphanNotice();
-    startShareKeepAlive();
-    updateScreenShareUi();
-    return stream;
   }
   function resetStepBar() {
     STEP_KEYS.forEach(function (key) {
@@ -1139,17 +1094,13 @@
   async function captureAndAnalyzeFromScreen() {
     showErr('');
     hideOrphanNotice();
-    if (isOdooCapture()) {
-      await odooPickShareTab();
-    } else {
-      await ensureShareLinkedForCapture();
-    }
+    await ensureShareLinkedForCapture();
     await snapshotSharedTabAndAnalyze();
   }
   async function snapshotSharedTabAndAnalyze() {
     if (!shareSessionActive()) {
       throw new Error(
-        'Partage non actif. En mode Odoo, recliquez « Capturer et analyser » et choisissez l’onglet dans Chrome.'
+        'Partage non actif. Cliquez « Lier l’onglet ' + quizTabName() + ' » ou « Capturer et analyser » et choisissez l’onglet dans Chrome.'
       );
     }
     showErr('');
@@ -1349,22 +1300,12 @@
       showLiveSuccess('');
       if (previewOpenManual) previewOpenManual.style.display = 'none';
       btnScreen.disabled = true;
-      if (isOdooCapture()) {
-        btnScreen.textContent = 'Chrome : choisir l’onglet Odoo…';
-        if (screenShareStatus) {
-          screenShareStatus.style.display = 'block';
-          screenShareStatus.style.color = '#0369a1';
-          screenShareStatus.textContent =
-            'Une fenêtre Chrome doit s’ouvrir pour choisir l’onglet du quiz. Si rien n’apparaît, vérifiez qu’elle n’est pas derrière cette fenêtre.';
-        }
-      } else {
-        btnScreen.textContent = 'Capture en cours…';
-      }
+      btnScreen.textContent = 'Capture en cours…';
       try {
         await captureAndAnalyzeFromScreen();
       } catch (e) {
         if (e && (e.name === 'NotAllowedError' || e.name === 'AbortError')) {
-          showErr('Partage annulé. Cliquez à nouveau « Capturer et analyser » et choisissez l’onglet Odoo dans Chrome.');
+          showErr('Partage annulé. Cliquez à nouveau « Capturer et analyser » et choisissez l’onglet ' + quizTabName() + ' dans Chrome.');
         } else {
           showErr(explainScreenCaptureFailure(e));
         }
