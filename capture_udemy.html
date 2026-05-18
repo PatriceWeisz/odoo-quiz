@@ -465,13 +465,12 @@
     return !!(sharedScreenVideo && sharedScreenVideo.srcObject === sharedScreenStream);
   }
   function shareIsActive() {
-    return shareSessionActive();
+    bindActiveShareStream();
+    if (!shareSessionActive()) return false;
+    return videoFrameHasVisibleContent(sharedScreenVideo);
   }
   function shareUsableForCapture() {
-    bindActiveShareStream();
-    if (!sharedScreenVideo || !sharedScreenVideo.srcObject) return false;
-    if (screenShareHasLiveVideoTrack(sharedScreenStream)) return true;
-    return videoHasCaptureFrame(sharedScreenVideo);
+    return shareIsActive();
   }
   const nodePhases = { vision: 'pending', bank: 'pending', dup: 'pending', enrich: 'pending' };
   function stopJsCaptureTracks() {
@@ -506,6 +505,28 @@
   }
   function videoHasCaptureFrame(video) {
     return !!(video && video.videoWidth >= 8 && video.videoHeight >= 8);
+  }
+  function videoFrameHasVisibleContent(video) {
+    if (!videoHasCaptureFrame(video)) return false;
+    try {
+      var w = Math.min(48, video.videoWidth);
+      var h = Math.min(48, video.videoHeight);
+      var c = document.createElement('canvas');
+      c.width = w;
+      c.height = h;
+      var ctx = c.getContext('2d', { willReadFrequently: true });
+      if (!ctx) return true;
+      ctx.drawImage(video, 0, 0, w, h);
+      var data = ctx.getImageData(0, 0, w, h).data;
+      var sum = 0;
+      var n = data.length / 4;
+      for (var i = 0; i < data.length; i += 4) {
+        sum += data[i] + data[i + 1] + data[i + 2];
+      }
+      return sum / (n * 3) > 14;
+    } catch (eSample) {
+      return videoHasCaptureFrame(video);
+    }
   }
   function recoverStreamFromVideo() {
     if (screenShareHasLiveVideoTrack(sharedScreenStream)) return sharedScreenStream;
@@ -565,16 +586,16 @@
       await video.play();
     } catch (e) { /* ignore */ }
     startShareKeepAlive();
-    if (videoHasCaptureFrame(video)) return true;
+    if (videoFrameHasVisibleContent(video)) return true;
     try {
       await waitVideoDimensions(video, waitMs);
     } catch (e2) { /* ignore */ }
-    if (videoHasCaptureFrame(video)) return true;
+    if (videoFrameHasVisibleContent(video)) return true;
     try {
       await video.play();
       await waitVideoDimensions(video, Math.min(waitMs, 8000));
     } catch (e3) { /* ignore */ }
-    return videoHasCaptureFrame(video);
+    return videoFrameHasVisibleContent(video);
   }
   function restoreShareOnReturnToCollage() {
     hideOrphanNotice();
@@ -591,6 +612,7 @@
   }
   function updateScreenShareUi() {
     recoverStreamFromVideo();
+    var streamOn = shareSessionActive();
     var linked = shareIsActive();
     var live = linked && screenShareHasLiveVideoTrack(sharedScreenStream);
     var tab = quizTabName();
@@ -608,9 +630,10 @@
     if (screenShareStatus) {
       screenShareStatus.style.display = 'block';
       if (!linked) {
-        screenShareStatus.style.color = '#64748b';
-        screenShareStatus.textContent =
-          '« Capturer et analyser » ouvrira Chrome pour choisir l’onglet ' + tab + ' (une fois).';
+        screenShareStatus.style.color = streamOn ? '#92400e' : '#64748b';
+        screenShareStatus.textContent = streamOn
+          ? 'Image noire ou illisible : recliquez « Capturer et analyser » et choisissez l’onglet ' + tab + ' dans Chrome.'
+          : '« Capturer et analyser » ouvrira Chrome pour choisir l’onglet ' + tab + ' (une fois).';
       } else if (!live) {
         screenShareStatus.style.color = '#0369a1';
         screenShareStatus.textContent =
@@ -1022,12 +1045,8 @@
       if (!replaceExisting && shareUsableForCapture()) {
         return sharedScreenStream;
       }
-      if (!replaceExisting && shareSessionActive()) {
-        if (await warmShareVideoForCapture()) return sharedScreenStream;
-        throw new Error(
-          'Partage déjà actif dans Chrome : affichez l’onglet ' + quizTabName() + ', revenez ici, puis « Capturer et analyser ». ' +
-          'Ne relancez pas le partage.'
-        );
+      if (!replaceExisting && shareSessionActive() && !shareUsableForCapture()) {
+        stopJsCaptureTracks();
       }
       if (replaceExisting) stopJsCaptureTracks();
       var stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
@@ -1063,17 +1082,13 @@
     if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
       throw new Error('Votre navigateur ne permet pas le partage d’écran (essayez Chrome ou Edge).');
     }
-    if (!opts.forceNew && shareSessionActive()) {
-      if (await warmShareVideoForCapture()) {
-        hideOrphanNotice();
-        updateScreenShareUi();
-        return sharedScreenStream;
-      }
+    if (!opts.forceNew && shareUsableForCapture()) {
+      hideOrphanNotice();
       updateScreenShareUi();
-      throw new Error(
-        'Le partage Chrome est déjà actif (barre en haut) mais l’image du quiz n’est pas lisible. ' +
-        'Affichez l’onglet ' + quizTabName() + ', revenez ici, puis « Capturer et analyser ».'
-      );
+      return sharedScreenStream;
+    }
+    if (!opts.forceNew && shareSessionActive()) {
+      stopJsCaptureTracks();
     }
     hideOrphanNotice();
     return requestDisplayMediaStream(!!opts.forceNew);
@@ -1081,23 +1096,25 @@
   async function ensureShareLinkedForCapture() {
     recoverStreamFromVideo();
     bindActiveShareStream();
-    if (shareLinkedThisPage && shareSessionActive()) {
-      if (await warmShareVideoForCapture(22000)) return;
-      throw new Error(
-        'Image illisible : affichez l’onglet ' + quizTabName() + ' 2 s, revenez ici, recliquez « Capturer et analyser » ' +
-        '(ne stoppez pas le partage bleu en haut).'
-      );
-    }
-    if (shareSessionActive() && (await warmShareVideoForCapture(8000))) {
+    if (await warmShareVideoForCapture(4000) && shareUsableForCapture()) {
       markShareLinked();
       return;
+    }
+    if (shareSessionActive()) {
+      stopJsCaptureTracks();
     }
     if (screenShareStatus) {
       screenShareStatus.style.display = 'block';
       screenShareStatus.style.color = '#0369a1';
-      screenShareStatus.textContent = 'Chrome : choisissez l’onglet ' + quizTabName() + ', puis Partager…';
+      screenShareStatus.textContent =
+        'Chrome : choisissez l’onglet ' + quizTabName() + ' (quiz visible), puis Partager…';
     }
     await linkSharedScreenTab({ forceNew: false });
+    if (!(await warmShareVideoForCapture(22000)) || !shareUsableForCapture()) {
+      throw new Error(
+        'Image illisible ou noire. Affichez l’onglet ' + quizTabName() + ' 2 s, puis recliquez « Capturer et analyser ».'
+      );
+    }
     markShareLinked();
   }
   async function captureAndAnalyzeFromScreen() {
@@ -1150,6 +1167,13 @@
     var ctx = cap.getContext('2d');
     if (!ctx) throw new Error('Canvas indisponible.');
     ctx.drawImage(sharedScreenVideo, 0, 0);
+    if (!videoFrameHasVisibleContent(sharedScreenVideo)) {
+      stopJsCaptureTracks();
+      updateScreenShareUi();
+      throw new Error(
+        'Capture noire : recliquez « Capturer et analyser » et sélectionnez l’onglet ' + quizTabName() + ' dans Chrome.'
+      );
+    }
     var scaled = downscaleCanvas(cap, 2400);
     var jpegBlob = await canvasToJpegBlob(scaled, 0.88);
     setImageFromBlob(jpegBlob);
