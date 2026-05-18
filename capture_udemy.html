@@ -43,10 +43,16 @@
   .btn-primary:hover:not(:disabled) { background: #5a3a52; }
   .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
   .btn-secondary { background: #e2e8f0; color: #1a1a2e; margin-left: .5rem; }
-  .btn-screen {
-    display: block; width: 100%; margin-top: .75rem;
+  .capture-screen-tools { margin-top: .5rem; }
+  .capture-screen-tools .btn-screen-link {
+    display: block; width: 100%; margin: .5rem 0 0;
+  }
+  .capture-screen-tools .btn-screen {
+    display: block; width: 100%; margin-top: .5rem;
     background: #0f766e; color: #fff;
   }
+  .capture-screen-tools.share-needed .btn-screen-link { margin-top: .75rem; }
+  .capture-screen-tools.share-active .btn-screen { margin-top: .75rem; }
   .btn-screen:hover:not(:disabled) { background: #115e59; }
   .err { background: #fef2f2; color: #b91c1c; padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; }
   .ok { background: #f0fdf4; color: #166534; padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; }
@@ -360,7 +366,7 @@
     var hint = document.getElementById('screen-share-hint');
     if (hint) {
       hint.textContent =
-        'Liez une fois l’onglet ' + quizTabName() + ', puis « Capturer et analyser ». Au retour du collage, gardez le partage actif si possible.';
+        'Commencez par lier l’onglet ' + quizTabName() + ', puis enchaînez avec « Capturer et analyser ». Au retour du collage, gardez le partage actif si possible.';
     }
     refreshReloadOrphanNotice();
   }
@@ -452,6 +458,9 @@
     if (!sharedScreenStream) return false;
     if (screenShareHasLiveVideoTrack(sharedScreenStream)) return true;
     return !!(sharedScreenVideo && sharedScreenVideo.srcObject === sharedScreenStream);
+  }
+  function shareIsActive() {
+    return shareSessionActive();
   }
   function shareUsableForCapture() {
     bindActiveShareStream();
@@ -577,38 +586,41 @@
   }
   function updateScreenShareUi() {
     recoverStreamFromVideo();
-    var active = shareSessionActive();
-    var live = screenShareHasLiveVideoTrack(sharedScreenStream);
+    var linked = shareIsActive();
+    var live = linked && screenShareHasLiveVideoTrack(sharedScreenStream);
+    var tab = quizTabName();
+    var tools = document.getElementById('capture-screen-tools');
     var btnCap = document.getElementById('btn-screen-capture');
     var btnLink = document.getElementById('btn-screen-link');
-    if (btnCap) {
-      btnCap.disabled = false;
-      btnCap.textContent = 'Capturer et analyser';
+    if (tools) {
+      tools.classList.toggle('share-active', linked);
+      tools.classList.toggle('share-needed', !linked);
     }
-    var tab = quizTabName();
-    if (!active) {
-      if (screenShareStatus) {
-        screenShareStatus.style.display = 'block';
-        screenShareStatus.style.color = shareLinkedThisPage ? '#0369a1' : '#64748b';
-        screenShareStatus.textContent = shareLinkedThisPage
-          ? 'Partage actif : affichez l’onglet ' + tab + ' 2 s si besoin, puis « Capturer et analyser ».'
-          : '« Capturer et analyser » ou « ' + linkTabButtonLabel() + ' » lie l’onglet ' + tab + ' au premier clic.';
-      }
-      if (btnScreenStop) btnScreenStop.style.display = 'none';
-      if (btnLink) {
-        btnLink.style.display = '';
-        btnLink.textContent = linkTabButtonLabel();
-      }
-    } else {
-      if (screenShareStatus) {
-        screenShareStatus.style.display = 'block';
-        screenShareStatus.style.color = live ? '#047857' : '#0369a1';
-        screenShareStatus.textContent = 'Partage actif : « Capturer et analyser » réutilise ce flux.';
-      }
-      if (btnScreenStop) btnScreenStop.style.display = 'block';
-      if (btnLink) {
-        btnLink.style.display = '';
-        btnLink.textContent = 'Changer d’onglet lié';
+    if (btnLink) {
+      btnLink.style.display = linked ? 'none' : 'block';
+      btnLink.textContent = linkTabButtonLabel();
+      btnLink.className = 'btn btn-primary btn-screen-link';
+    }
+    if (btnCap) {
+      btnCap.disabled = !linked;
+      btnCap.textContent = 'Capturer et analyser';
+      btnCap.className = linked ? 'btn btn-primary btn-screen' : 'btn btn-secondary btn-screen';
+    }
+    if (btnScreenStop) btnScreenStop.style.display = linked ? 'block' : 'none';
+    if (screenShareStatus) {
+      screenShareStatus.style.display = 'block';
+      if (!linked) {
+        screenShareStatus.style.color = '#92400e';
+        screenShareStatus.textContent =
+          'Étape 1 : cliquez « ' + linkTabButtonLabel() + ' » et choisissez l’onglet ' + tab + ' dans Chrome.';
+      } else if (!live) {
+        screenShareStatus.style.color = '#0369a1';
+        screenShareStatus.textContent =
+          'Partage lié : affichez l’onglet ' + tab + ' 2 s si besoin, puis « Capturer et analyser ».';
+      } else {
+        screenShareStatus.style.color = '#047857';
+        screenShareStatus.textContent =
+          'Onglet ' + tab + ' lié — « Capturer et analyser » réutilise ce partage.';
       }
     }
   }
@@ -1094,13 +1106,26 @@
   async function captureAndAnalyzeFromScreen() {
     showErr('');
     hideOrphanNotice();
-    await ensureShareLinkedForCapture();
+    recoverStreamFromVideo();
+    bindActiveShareStream();
+    if (!shareIsActive()) {
+      updateScreenShareUi();
+      throw new Error(
+        'Onglet non lié. Cliquez d’abord « ' + linkTabButtonLabel() + ' » et choisissez l’onglet ' + quizTabName() + ' dans Chrome.'
+      );
+    }
+    if (!(await warmShareVideoForCapture(22000))) {
+      throw new Error(
+        'Image illisible : affichez l’onglet ' + quizTabName() + ' 2 s, revenez ici, puis « Capturer et analyser ».'
+      );
+    }
+    markShareLinked();
     await snapshotSharedTabAndAnalyze();
   }
   async function snapshotSharedTabAndAnalyze() {
-    if (!shareSessionActive()) {
+    if (!shareIsActive()) {
       throw new Error(
-        'Partage non actif. Cliquez « Lier l’onglet ' + quizTabName() + ' » ou « Capturer et analyser » et choisissez l’onglet dans Chrome.'
+        'Partage non actif. Cliquez « ' + linkTabButtonLabel() + ' » et choisissez l’onglet ' + quizTabName() + ' dans Chrome.'
       );
     }
     showErr('');
@@ -1270,7 +1295,7 @@
       btnScreenLink.textContent = 'Chrome : onglet ' + quizTabName() + ' puis Partager…';
       try {
         await Promise.race([
-          linkSharedScreenTab({ forceNew: shareSessionActive() }),
+          linkSharedScreenTab({ forceNew: false }),
           new Promise(function (_, reject) {
             setTimeout(function () {
               reject(new Error(
@@ -1305,7 +1330,7 @@
         await captureAndAnalyzeFromScreen();
       } catch (e) {
         if (e && (e.name === 'NotAllowedError' || e.name === 'AbortError')) {
-          showErr('Partage annulé. Cliquez à nouveau « Capturer et analyser » et choisissez l’onglet ' + quizTabName() + ' dans Chrome.');
+          showErr('Partage annulé. Cliquez « ' + linkTabButtonLabel() + ' » et choisissez l’onglet ' + quizTabName() + ' dans Chrome.');
         } else {
           showErr(explainScreenCaptureFailure(e));
         }
