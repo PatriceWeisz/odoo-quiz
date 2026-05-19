@@ -21,6 +21,7 @@ Usage :
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import math
 import random
@@ -47,6 +48,7 @@ DEFAULT_MODULE = "inventory_and_mrp/inventory"
 DEFAULT_VERSION = "19.0"
 DEFAULT_COUNT = 50
 DEFAULT_PER_CALL = 4
+DEFAULT_CONCURRENCY = 20
 PENDING_DIR = ROOT / "data" / "generated_pending"
 QUESTIONS_FILE = ROOT / "questions.json"
 MIN_CHUNK_CHARS = 400
@@ -195,11 +197,37 @@ Tâche : produis {per_call} questions QCM distinctes basées sur le texte du chu
 Réponds avec un array JSON de {per_call} questions, conforme au format imposé. Pas de texte hors JSON."""
 
 
+def _system_blocks(system: str) -> list[dict]:
+    """System prompt avec cache_control ephemeral pour bénéficier du prompt
+    caching d'Anthropic (utile sur N appels avec même system).
+
+    Si le system fait < 1024 tokens, le caching est silencieusement ignoré
+    par l'API — pas d'erreur.
+    """
+    return [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
+
+
 def call_claude(client, *, system: str, user: str, model: str, max_tokens: int = 4096) -> str:
     resp = client.messages.create(
         model=model,
         max_tokens=max_tokens,
-        system=system,
+        system=_system_blocks(system),
+        messages=[{"role": "user", "content": user}],
+    )
+    parts = []
+    for block in resp.content or []:
+        btype = getattr(block, "type", None)
+        if btype == "text":
+            parts.append(getattr(block, "text", "") or "")
+    return "".join(parts).strip()
+
+
+async def call_claude_async(aclient, *, system: str, user: str, model: str, max_tokens: int = 4096) -> str:
+    """Variante async — utilisée par le mode parallélisé avec semaphore."""
+    resp = await aclient.messages.create(
+        model=model,
+        max_tokens=max_tokens,
+        system=_system_blocks(system),
         messages=[{"role": "user", "content": user}],
     )
     parts = []
@@ -286,33 +314,37 @@ def assemble_question(
 # --- Run principal -----------------------------------------------------------
 
 
-def run_generation(
+def _setup_run(
     *,
     module: str,
     version: str,
     count: int,
     per_call: int,
-    output_path: Path,
+    output_path: Path | None,
     seed: int | None,
     dry_run: bool,
-) -> int:
+) -> tuple[list[dict], list[dict], int, int, Path, str, str] | int:
+    """Setup commun pour run sync ou async.
+
+    Retourne (chunks, fewshot_pool, next_qid, next_aid, output_path, tier, model)
+    ou un int (exit code) si erreur ou dry-run.
+    """
     tier = tier_of(module) or "?"
     if tier == "?":
         print(f"⚠️  module {module!r} non listé dans STUDY_MODULES — tag tier='?'",
               file=sys.stderr)
 
-    # Connexion DB
     db = db_path()
     if not db.exists():
         print(f"❌ DB doc Odoo introuvable : {db}", file=sys.stderr)
         return 1
     conn = sqlite3.connect(db)
 
-    # Sélection chunks
     n_chunks_needed = math.ceil(count / per_call)
     chunks = select_chunks(
         conn, version=version, module=module, n=n_chunks_needed, seed=seed,
     )
+    conn.close()
     if not chunks:
         print(f"❌ Aucun chunk trouvé pour module={module} version={version}",
               file=sys.stderr)
@@ -323,42 +355,90 @@ def run_generation(
     if dry_run:
         for c in chunks:
             print(f"  - {c['chunk_id']} | {len(c['text'])} chars | {c['url']}")
-        conn.close()
         return 0
 
-    # Few-shot pool
     pool = load_few_shot_pool()
     if not pool:
         print("⚠️  Aucun few-shot Udemy disponible — pool vide", file=sys.stderr)
 
-    # IDs disponibles
     with open(QUESTIONS_FILE, encoding="utf-8") as f:
         bank_data = json.load(f)
     bank_qs = bank_data.get("questions") or []
     next_qid = _next_question_id(bank_qs)
     next_aid = _max_answer_id(bank_qs) + 1
 
-    # Output
     PENDING_DIR.mkdir(parents=True, exist_ok=True)
     batch_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     output_path = output_path or (PENDING_DIR / f"{module.replace('/', '__')}-v{version}-{batch_id}.jsonl")
     output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Client Claude
-    import anthropic
-    client = anthropic.Anthropic(api_key=_anthropic_key())
     model = _answer_model()
     print(f"→ Modèle : {model}")
-    print(f"→ Sortie : {output_path}")
-    print()
+    print(f"→ Sortie : {output_path}\n")
+    return chunks, pool, next_qid, next_aid, output_path, tier, model
 
-    stats = {
-        "n_calls": 0,
-        "n_raw_questions": 0,
-        "n_valid": 0,
-        "n_invalid": 0,
-        "errors": [],
-    }
+
+def _process_raw_questions(
+    *,
+    arr: list[dict],
+    chunk: dict,
+    module: str,
+    tier: str,
+    version: str,
+    next_qid: int,
+    next_aid: int,
+    count_remaining: int,
+) -> tuple[list[dict], int, int, int, list[str]]:
+    """Assemble + valide les questions brutes Claude. Retourne :
+       (questions_valides, new_next_qid, new_next_aid, n_invalid, errors).
+    """
+    out: list[dict] = []
+    errors: list[str] = []
+    n_invalid = 0
+    for raw_q in arr:
+        if len(out) >= count_remaining:
+            break
+        try:
+            q, next_aid = assemble_question(
+                qid=next_qid, answer_id_start=next_aid,
+                raw_q=raw_q, chunk=chunk, module=module,
+                tier=tier, version=version,
+            )
+        except Exception as e:
+            n_invalid += 1
+            errors.append(f"assemble: {e}")
+            continue
+        errs = validate_generated_question(q)
+        if errs:
+            n_invalid += 1
+            errors.append(f"qid={next_qid}: " + "; ".join(errs))
+            continue
+        out.append(q)
+        next_qid += 1
+    return out, next_qid, next_aid, n_invalid, errors
+
+
+def run_generation(
+    *,
+    module: str,
+    version: str,
+    count: int,
+    per_call: int,
+    output_path: Path | None,
+    seed: int | None,
+    dry_run: bool,
+) -> int:
+    setup = _setup_run(
+        module=module, version=version, count=count, per_call=per_call,
+        output_path=output_path, seed=seed, dry_run=dry_run,
+    )
+    if isinstance(setup, int):
+        return setup
+    chunks, pool, next_qid, next_aid, output_path, tier, model = setup
+
+    import anthropic
+    client = anthropic.Anthropic(api_key=_anthropic_key())
+
+    stats = {"n_calls": 0, "n_raw": 0, "n_valid": 0, "n_invalid": 0, "errors": []}
     written = 0
     with open(output_path, "w", encoding="utf-8") as fout:
         for i, chunk in enumerate(chunks, 1):
@@ -376,53 +456,145 @@ def run_generation(
                 arr = _parse_json_array(raw_text)
             except Exception as e:
                 stats["errors"].append(f"chunk {chunk['chunk_id']}: {type(e).__name__}: {e}")
-                print(f"[{i}/{len(chunks)}] ❌ {chunk['chunk_id']} → {type(e).__name__}: {e}")
+                print(f"[{i}/{len(chunks)}] ❌ {chunk['chunk_id']} → {type(e).__name__}: {e}",
+                      flush=True)
                 continue
             stats["n_calls"] += 1
-            stats["n_raw_questions"] += len(arr)
+            stats["n_raw"] += len(arr)
 
-            valid_in_batch = 0
-            for raw_q in arr:
-                if written >= count:
-                    break
-                try:
-                    q, next_aid = assemble_question(
-                        qid=next_qid, answer_id_start=next_aid,
-                        raw_q=raw_q, chunk=chunk, module=module,
-                        tier=tier, version=version,
-                    )
-                except Exception as e:
-                    stats["n_invalid"] += 1
-                    stats["errors"].append(f"assemble: {e}")
-                    continue
-                errs = validate_generated_question(q)
-                if errs:
-                    stats["n_invalid"] += 1
-                    stats["errors"].append(f"qid={next_qid}: " + "; ".join(errs))
-                    continue
+            valid_qs, next_qid, next_aid, n_inv, errs = _process_raw_questions(
+                arr=arr, chunk=chunk, module=module, tier=tier, version=version,
+                next_qid=next_qid, next_aid=next_aid, count_remaining=count - written,
+            )
+            for q in valid_qs:
                 fout.write(json.dumps(q, ensure_ascii=False) + "\n")
                 fout.flush()
                 stats["n_valid"] += 1
-                valid_in_batch += 1
-                next_qid += 1
                 written += 1
+            stats["n_invalid"] += n_inv
+            stats["errors"].extend(errs)
 
             elapsed = time.time() - t0
-            print(f"[{i}/{len(chunks)}] {chunk['chunk_id'][:50]:50}  → {valid_in_batch}/{len(arr)} ok  ({elapsed:.1f}s)")
+            print(f"[{i}/{len(chunks)}] {chunk['chunk_id'][:50]:50}  → "
+                  f"{len(valid_qs)}/{len(arr)} ok  ({elapsed:.1f}s)", flush=True)
 
-    conn.close()
+    _print_summary(stats, output_path)
+    return 0
+
+
+async def run_generation_async(
+    *,
+    module: str,
+    version: str,
+    count: int,
+    per_call: int,
+    output_path: Path | None,
+    seed: int | None,
+    dry_run: bool,
+    concurrency: int,
+) -> int:
+    """Variante async — appels Claude parallélisés sous semaphore."""
+    setup = _setup_run(
+        module=module, version=version, count=count, per_call=per_call,
+        output_path=output_path, seed=seed, dry_run=dry_run,
+    )
+    if isinstance(setup, int):
+        return setup
+    chunks, pool, next_qid_init, next_aid_init, output_path, tier, model = setup
+
+    from anthropic import AsyncAnthropic
+    aclient = AsyncAnthropic(api_key=_anthropic_key())
+
+    sem = asyncio.Semaphore(concurrency)
+    print(f"→ Mode async, concurrency={concurrency}\n")
+
+    async def one_call(idx: int, chunk: dict) -> tuple[int, list[dict] | None, float, str | None]:
+        """Retourne (idx, raw_array_or_None, elapsed_s, error_msg_or_None)."""
+        fewshot = pick_few_shot(pool, k=3, seed=(seed or 0) + idx)
+        fewshot_text = format_few_shot(fewshot)
+        user_prompt = _build_user_prompt(
+            chunk=chunk, module=module, version=version,
+            per_call=per_call, few_shot_text=fewshot_text,
+        )
+        async with sem:
+            t0 = time.time()
+            try:
+                raw_text = await call_claude_async(
+                    aclient, system=SYSTEM_PROMPT, user=user_prompt, model=model,
+                )
+                arr = _parse_json_array(raw_text)
+                elapsed = time.time() - t0
+                return idx, arr, elapsed, None
+            except Exception as e:
+                elapsed = time.time() - t0
+                return idx, None, elapsed, f"{type(e).__name__}: {e}"
+
+    tasks = [asyncio.create_task(one_call(i, c)) for i, c in enumerate(chunks, 1)]
+
+    stats = {"n_calls": 0, "n_raw": 0, "n_valid": 0, "n_invalid": 0, "errors": []}
+    next_qid = next_qid_init
+    next_aid = next_aid_init
+    written = 0
+    t_start = time.time()
+
+    # On itère sur les tasks dans l'ordre de complétion pour afficher la progression.
+    # Mais on traite et écrit en série pour préserver l'ordre des IDs.
+    results: dict[int, tuple[list[dict] | None, float, str | None]] = {}
+    completed_done = 0
+    for fut in asyncio.as_completed(tasks):
+        idx, arr, elapsed, err = await fut
+        results[idx] = (arr, elapsed, err)
+        completed_done += 1
+        chunk_short = chunks[idx - 1]["chunk_id"][:50]
+        if err:
+            print(f"[{completed_done}/{len(chunks)}] ❌ {chunk_short} → {err} ({elapsed:.1f}s)",
+                  flush=True)
+        else:
+            print(f"[{completed_done}/{len(chunks)}] ✓ {chunk_short} → {len(arr)} q brutes ({elapsed:.1f}s)",
+                  flush=True)
+
+    # Maintenant on traite dans l'ordre original (idx croissant) pour garder
+    # des IDs séquentiels et des fichiers déterministes.
+    with open(output_path, "w", encoding="utf-8") as fout:
+        for idx in sorted(results.keys()):
+            if written >= count:
+                break
+            arr, elapsed, err = results[idx]
+            if err is not None:
+                stats["errors"].append(f"chunk {chunks[idx-1]['chunk_id']}: {err}")
+                continue
+            stats["n_calls"] += 1
+            stats["n_raw"] += len(arr)
+            valid_qs, next_qid, next_aid, n_inv, errs = _process_raw_questions(
+                arr=arr, chunk=chunks[idx - 1], module=module, tier=tier, version=version,
+                next_qid=next_qid, next_aid=next_aid, count_remaining=count - written,
+            )
+            for q in valid_qs:
+                fout.write(json.dumps(q, ensure_ascii=False) + "\n")
+                stats["n_valid"] += 1
+                written += 1
+            stats["n_invalid"] += n_inv
+            stats["errors"].extend(errs)
+        fout.flush()
+
+    total_elapsed = time.time() - t_start
+    print(f"\n(temps total async : {total_elapsed:.1f}s)")
+    _print_summary(stats, output_path)
+    return 0
+
+
+def _print_summary(stats: dict, output_path: Path) -> None:
     print()
     print("=== Résumé ===")
-    print(f"  Appels Claude  : {stats['n_calls']}")
-    print(f"  Questions brutes : {stats['n_raw_questions']}")
+    print(f"  Appels Claude    : {stats['n_calls']}")
+    print(f"  Questions brutes : {stats['n_raw']}")
     print(f"  Valides écrites  : {stats['n_valid']}")
     print(f"  Invalides        : {stats['n_invalid']}")
     if stats["errors"]:
-        print(f"\n  Erreurs ({len(stats['errors'])}) :")
+        print(f"\n  Erreurs ({len(stats['errors'])}, 10 premières) :")
         for err in stats["errors"][:10]:
             print(f"    - {err}")
     print(f"\n→ Sortie : {output_path}")
-    return 0
 
 
 # --- Main --------------------------------------------------------------------
@@ -442,9 +614,13 @@ def main() -> int:
                         help="Fichier JSONL de sortie (défaut : data/generated_pending/<auto>.jsonl)")
     parser.add_argument("--dry-run", action="store_true",
                         help="Liste les chunks sélectionnés sans appeler Claude")
+    parser.add_argument("--async", action="store_true", dest="async_mode",
+                        help="Mode asynchrone — appels Claude parallélisés sous semaphore")
+    parser.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY,
+                        help=f"Nombre d'appels Claude simultanés en mode async (défaut : {DEFAULT_CONCURRENCY})")
     args = parser.parse_args()
 
-    return run_generation(
+    common_kwargs = dict(
         module=args.module,
         version=args.version,
         count=args.count,
@@ -453,6 +629,9 @@ def main() -> int:
         seed=args.seed,
         dry_run=args.dry_run,
     )
+    if args.async_mode:
+        return asyncio.run(run_generation_async(**common_kwargs, concurrency=args.concurrency))
+    return run_generation(**common_kwargs)
 
 
 if __name__ == "__main__":
