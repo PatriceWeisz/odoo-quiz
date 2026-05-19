@@ -352,6 +352,15 @@ def ingest(
     pages_skipped = 0
     module_chunks: Counter[str] = Counter()
 
+    from app.doc_images import (
+        download_and_store,
+        extract_image_refs,
+        link_chunk_images,
+    )
+
+    images_done = 0
+    images_skipped = 0
+
     for url in urls:
         time.sleep(THROTTLE_S)
         raw = _fetch(url)
@@ -368,43 +377,74 @@ def ingest(
         print(f"[{pages_done}/{len(urls)}] {url} ({len(text)} chars)")
 
         row = conn.execute("SELECT content_hash FROM pages WHERE url = ?", (url,)).fetchone()
-        if row and row[0] == chash:
+        unchanged = bool(row and row[0] == chash)
+        if unchanged:
             n_existing = conn.execute(
                 "SELECT COUNT(*) FROM chunks WHERE url = ? AND version = ?",
                 (url, version),
             ).fetchone()[0]
             module_chunks[mod] += int(n_existing or 0)
-            continue
-
-        conn.execute("DELETE FROM chunks WHERE url = ? AND version = ?", (url, version))
-        conn.execute(
-            """
-            INSERT OR REPLACE INTO pages (url, title, section, content_hash, updated_at)
-            VALUES (?, ?, ?, ?, datetime('now'))
-            """,
-            (url, title, section_breadcrumb, chash),
-        )
-        parts = _chunk_text(text)
-        if not parts:
-            conn.commit()
-            continue
-        vecs = embed_texts(parts)
-        if vecs is None:
-            print("  ! embeddings indisponibles", file=sys.stderr)
-            conn.commit()
-            continue
-        for i, (part, vec) in enumerate(zip(parts, vecs)):
-            store_chunk(
-                conn,
-                chunk_id=_chunk_id(version, url, i),
-                url=url,
-                title=title,
-                section=section_breadcrumb,
-                text=part,
-                embedding=vec,
-                version=version,
+            chunk_ids: list[str] = [
+                r[0] for r in conn.execute(
+                    "SELECT chunk_id FROM chunks WHERE url = ? AND version = ?",
+                    (url, version),
+                ).fetchall()
+            ]
+        else:
+            conn.execute("DELETE FROM chunks WHERE url = ? AND version = ?", (url, version))
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO pages (url, title, section, content_hash, updated_at)
+                VALUES (?, ?, ?, ?, datetime('now'))
+                """,
+                (url, title, section_breadcrumb, chash),
             )
-            module_chunks[mod] += 1
+            parts = _chunk_text(text)
+            if not parts:
+                conn.commit()
+                continue
+            vecs = embed_texts(parts)
+            if vecs is None:
+                print("  ! embeddings indisponibles", file=sys.stderr)
+                conn.commit()
+                continue
+            chunk_ids = []
+            for i, (part, vec) in enumerate(zip(parts, vecs)):
+                cid = _chunk_id(version, url, i)
+                store_chunk(
+                    conn,
+                    chunk_id=cid,
+                    url=url,
+                    title=title,
+                    section=section_breadcrumb,
+                    text=part,
+                    embedding=vec,
+                    version=version,
+                )
+                chunk_ids.append(cid)
+                module_chunks[mod] += 1
+
+        # Pipeline images (Phase 4) — toutes les images de la page sont liées
+        # à tous les chunks de cette page (approche pragmatique scénario A).
+        try:
+            html_text = raw.decode("utf-8", errors="replace")
+            img_refs = extract_image_refs(
+                html_text, page_url=url, version=version, module=mod,
+            )
+        except Exception as exc:
+            print(f"  ! parse images KO {url}: {exc}", file=sys.stderr)
+            img_refs = []
+
+        page_image_ids: list[str] = []
+        for ref in img_refs:
+            stored = download_and_store(conn, ref, throttle_s=THROTTLE_S)
+            if stored is None:
+                images_skipped += 1
+                continue
+            page_image_ids.append(stored.image_id)
+            images_done += 1
+        if chunk_ids and page_image_ids:
+            link_chunk_images(conn, chunk_ids, page_image_ids)
         conn.commit()
 
     n = conn.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
@@ -424,6 +464,7 @@ def ingest(
         f"{n_ver} chunks v{version} ({n} total en base, {db})"
     )
     print("Chunks par version :", ", ".join(f"{k}={v}" for k, v in by_ver.items()))
+    print(f"Images : {images_done} téléchargées/réutilisées, {images_skipped} ignorées")
     _print_module_table(module_chunks)
     return 0
 

@@ -92,6 +92,40 @@ def migrate_docs_sqlite(conn: sqlite3.Connection) -> dict[str, Any]:
     conn.execute(
         "UPDATE chunks SET version = '18.0' WHERE version IS NULL OR version = ''"
     )
+
+    # Tables images (Phase 4 — pipeline images doc Odoo, scénario A).
+    # `doc_images` : catalogue dédupliqué par hash MD5 du contenu image.
+    # `chunk_images` : relation N-N entre chunks et images (par page).
+    created_images_tables = not _table_exists(conn, "doc_images")
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS doc_images (
+            image_id    TEXT PRIMARY KEY,        -- MD5 du contenu image (hex)
+            source_url  TEXT NOT NULL,           -- URL d'origine (peut varier pour un même contenu)
+            local_path  TEXT NOT NULL,           -- chemin relatif à ROOT (static/doc_media/...)
+            mime        TEXT NOT NULL DEFAULT 'image/webp',
+            width       INTEGER,
+            height      INTEGER,
+            bytes       INTEGER,
+            alt_text    TEXT NOT NULL DEFAULT '',
+            caption     TEXT NOT NULL DEFAULT '',
+            created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_doc_images_source ON doc_images(source_url);
+
+        CREATE TABLE IF NOT EXISTS chunk_images (
+            chunk_id  TEXT NOT NULL,
+            image_id  TEXT NOT NULL,
+            position  INTEGER NOT NULL DEFAULT 0,
+            PRIMARY KEY (chunk_id, image_id),
+            FOREIGN KEY (chunk_id) REFERENCES chunks(chunk_id) ON DELETE CASCADE,
+            FOREIGN KEY (image_id) REFERENCES doc_images(image_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_chunk_images_chunk ON chunk_images(chunk_id);
+        CREATE INDEX IF NOT EXISTS idx_chunk_images_image ON chunk_images(image_id);
+        """
+    )
+
     conn.commit()
     total = conn.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
     by_ver = dict(
@@ -99,10 +133,13 @@ def migrate_docs_sqlite(conn: sqlite3.Connection) -> dict[str, Any]:
             "SELECT version, COUNT(*) FROM chunks GROUP BY version ORDER BY version"
         ).fetchall()
     )
+    images_total = conn.execute("SELECT COUNT(*) FROM doc_images").fetchone()[0]
     return {
         "added_version_column": added_version,
+        "created_images_tables": created_images_tables,
         "chunks_total": int(total),
         "chunks_by_version": {str(k): int(v) for k, v in by_ver.items()},
+        "doc_images_total": int(images_total),
     }
 
 

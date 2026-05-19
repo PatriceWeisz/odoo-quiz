@@ -28,3 +28,9 @@ data/odoo_docs.sqlite.backup-*
 
 # Caches générés (reconstruisables via bank_embeddings)
 # data/bank_embeddings.npz
+
+# Images doc Odoo téléchargées (reconstruisables via scripts/reingest_images)
+static/doc_media/
+
+# Logs runtime (gunicorn, reingest_images, etc.)
+logs/
