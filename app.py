@@ -2040,27 +2040,41 @@ def api_bank_put(q_id):
 
 @app.route("/api/ask", methods=["POST"])
 def api_ask():
-    import subprocess
-    data = request.get_json()
-    question = data.get("question", "").strip()
+    """Q&A libre via API Anthropic.
+
+    Remplace l'ancien appel `subprocess.run(["claude", "-p", ...])` (qui dépendait
+    du CLI Claude Code installé localement) par un appel direct au SDK Python.
+    Cohérent avec /api/suggest-answer : même clé, même modèle (config.json).
+    """
+    data = request.get_json() or {}
+    question = (data.get("question") or "").strip()
     if not question:
         return jsonify({"error": "Question vide"}), 400
-    prompt = (
-        f"Tu es expert certifié Odoo. Réponds en français à cette question "
-        f"de façon claire et pédagogique (8-12 lignes max) :\n\n{question}"
+
+    from app.llm import api_available, _anthropic_key, _answer_model, extract_text_from_content
+    if not api_available():
+        return jsonify({"error": "Clé API Anthropic absente dans config.json."}), 500
+
+    system = (
+        "Tu es expert certifié Odoo. Réponds en français à la question de "
+        "façon claire et pédagogique (8-12 lignes max)."
     )
     try:
-        result = subprocess.run(
-            ["claude", "-p", prompt],
-            capture_output=True, text=True, timeout=60
+        import anthropic
+        client = anthropic.Anthropic(api_key=_anthropic_key())
+        resp = client.messages.create(
+            model=_answer_model(),
+            max_tokens=800,
+            system=system,
+            messages=[{"role": "user", "content": question}],
         )
-        if result.returncode != 0:
-            return jsonify({"error": result.stderr.strip()}), 500
-        return jsonify({"answer": result.stdout.strip()})
-    except subprocess.TimeoutExpired:
-        return jsonify({"error": "Timeout — Claude n'a pas répondu à temps."}), 504
-    except FileNotFoundError:
-        return jsonify({"error": "CLI claude introuvable."}), 500
+        return jsonify({"answer": extract_text_from_content(resp.content).strip()})
+    except anthropic.APIConnectionError as e:
+        return jsonify({"error": f"Connexion API Anthropic impossible : {e}"}), 502
+    except anthropic.RateLimitError:
+        return jsonify({"error": "Quota API Anthropic dépassé."}), 429
+    except anthropic.APIError as e:
+        return jsonify({"error": f"Erreur API Anthropic : {e}"}), 500
 
 
 @app.route("/api/questions")
