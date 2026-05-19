@@ -23,43 +23,20 @@ DEFAULT_REPORT = ROOT / "data" / "doc_coverage_report.md"
 MIN_TOTAL_CHUNKS = 6000
 MIN_MODULE_CHUNKS = 150
 
-CERT_FUNCTIONAL_MODULES = [
-    "crm",
-    "sales",
-    "purchase",
-    "accounting",
-    "inventory_and_mrp/inventory",
-    "inventory_and_mrp/manufacturing",
-    "services/project",
-    "services/timesheets",
-    "hr",
-    "websites/website",
-    "websites/ecommerce",
-    "marketing/email_marketing",
-    "marketing/marketing_automation",
-    "marketing/sms_marketing",
-    "marketing/surveys",
-    "sales/point_of_sale",
-    "productivity/spreadsheet",
-    "studio",
-    # v19 only (0 chunk v18 attendu)
-    "productivity/ai",
-    "productivity/knowledge",
-]
-
-V19_ONLY_MODULES = frozenset({"productivity/ai", "productivity/knowledge"})
-
-# Chemins réels sous /applications/ (Odoo doc) quand le libellé cert ≠ segment URL.
-MODULE_URL_PATHS: dict[str, list[str]] = {
-    "crm": ["sales/crm"],
-    "accounting": ["finance/accounting"],
-    "purchase": ["inventory_and_mrp/purchase"],
-}
+# Source de vérité — périmètre des modules à étudier (3 tiers).
+from app.study_modules import (  # noqa: E402
+    MODULE_URL_PATHS,
+    STUDY_MODULES,
+    V19_ONLY_MODULES,
+    all_modules,
+    tier_of,
+)
 
 
 @dataclass
 class ModuleRow:
     module: str
+    tier: str
     v18: int
     v19: int
     status: str
@@ -134,12 +111,13 @@ def run_audit(conn: sqlite3.Connection) -> tuple[dict[str, int], list[ModuleRow]
         null_emb[ver] = _count_null_embeddings(conn, ver)
 
     modules: list[ModuleRow] = []
-    for mod in CERT_FUNCTIONAL_MODULES:
+    for mod in all_modules():
         v18 = _count_chunks(conn, "18.0", mod)
         v19 = _count_chunks(conn, "19.0", mod)
         modules.append(
             ModuleRow(
                 module=mod,
+                tier=tier_of(mod) or "?",
                 v18=v18,
                 v19=v19,
                 status=_status_for_module(mod, v18, v19),
@@ -190,13 +168,13 @@ def _build_markdown(
         "",
         f"Seuil par module : **≥ {MIN_MODULE_CHUNKS}** chunks (sauf modules v19-only : 0 attendu en v18).",
         "",
-        "| Module | v18 chunks | v19 chunks | Statut |",
-        "|---|---:|---:|---|",
+        "| Tier | Module | v18 chunks | v19 chunks | Statut |",
+        "|---|---|---:|---:|---|",
     ]
 
     for m in modules:
         v18_disp = "—" if m.module in V19_ONLY_MODULES and m.v18 == 0 else str(m.v18)
-        lines.append(f"| `{m.module}` | {v18_disp} | {m.v19} | {m.status} |")
+        lines.append(f"| `{m.tier}` | `{m.module}` | {v18_disp} | {m.v19} | {m.status} |")
 
     lines.extend(["", "## Recommandation", ""])
 

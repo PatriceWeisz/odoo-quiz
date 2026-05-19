@@ -19,11 +19,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from scripts.audit_doc_coverage import (  # noqa: E402
-    CERT_FUNCTIONAL_MODULES,
+from app.study_modules import (  # noqa: E402
     MODULE_URL_PATHS,
     V19_ONLY_MODULES,
+    all_modules,
 )
+
+# Liste plate (cert + tier1 + tier2) — utilisée comme l'ancien
+# CERT_FUNCTIONAL_MODULES mais étend désormais le diagnostic à tous les tiers.
+CERT_FUNCTIONAL_MODULES = all_modules()
 
 SITEMAP_VS_REPORT = ROOT / "data" / "sitemap_vs_ingestion.md"
 DIAGNOSTIC_REPORT = ROOT / "data" / "diagnostic_recommendation.md"
