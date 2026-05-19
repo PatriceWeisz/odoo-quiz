@@ -28,7 +28,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 240,
@@ -57,7 +58,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 241,
@@ -86,7 +88,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 242,
@@ -115,7 +118,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 243,
@@ -144,7 +148,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 244,
@@ -173,7 +178,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 245,
@@ -202,7 +208,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 246,
@@ -230,7 +237,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 247,
@@ -258,7 +266,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 248,
@@ -287,7 +296,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 249,
@@ -315,7 +325,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 250,
@@ -344,7 +355,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 251,
@@ -373,7 +385,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 252,
@@ -402,7 +415,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 253,
@@ -430,7 +444,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 254,
@@ -459,7 +474,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 255,
@@ -487,7 +503,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 256,
@@ -515,7 +532,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 257,
@@ -543,7 +561,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 258,
@@ -571,7 +590,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 259,
@@ -600,7 +620,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 260,
@@ -635,7 +656,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 261,
@@ -669,7 +691,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 262,
@@ -704,7 +727,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 263,
@@ -733,7 +757,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 264,
@@ -768,7 +793,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 265,
@@ -802,7 +828,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 266,
@@ -836,7 +863,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 267,
@@ -871,7 +899,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 268,
@@ -906,7 +935,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 269,
@@ -941,7 +971,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 270,
@@ -976,7 +1007,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 271,
@@ -1005,7 +1037,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 272,
@@ -1034,7 +1067,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 273,
@@ -1057,7 +1091,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 274,
@@ -1086,7 +1121,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 275,
@@ -1115,7 +1151,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 276,
@@ -1144,7 +1181,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 277,
@@ -1173,7 +1211,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 283,
@@ -1195,7 +1234,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 284,
@@ -1224,7 +1264,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 285,
@@ -1253,7 +1294,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 286,
@@ -1281,7 +1323,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 287,
@@ -1309,7 +1352,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 288,
@@ -1337,7 +1381,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 289,
@@ -1366,7 +1411,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 290,
@@ -1389,7 +1435,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 291,
@@ -1418,7 +1465,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 292,
@@ -1446,7 +1494,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 293,
@@ -1474,7 +1523,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 294,
@@ -1503,7 +1553,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 295,
@@ -1532,7 +1583,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 296,
@@ -1561,7 +1613,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 297,
@@ -1590,7 +1643,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 301,
@@ -1625,7 +1679,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 302,
@@ -1660,7 +1715,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 303,
@@ -1695,7 +1751,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 304,
@@ -1730,7 +1787,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 305,
@@ -1765,7 +1823,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 306,
@@ -1800,7 +1859,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 307,
@@ -1835,7 +1895,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 308,
@@ -1870,7 +1931,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 309,
@@ -1905,7 +1967,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 310,
@@ -1940,7 +2003,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 311,
@@ -1969,7 +2033,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 312,
@@ -1998,7 +2063,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 313,
@@ -2027,7 +2093,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 314,
@@ -2050,7 +2117,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 315,
@@ -2079,7 +2147,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 316,
@@ -2108,7 +2177,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 317,
@@ -2137,7 +2207,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 318,
@@ -2166,7 +2237,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 319,
@@ -2195,7 +2267,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 320,
@@ -2224,7 +2297,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 321,
@@ -2253,7 +2327,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 322,
@@ -2282,7 +2357,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 323,
@@ -2311,7 +2387,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 324,
@@ -2340,7 +2417,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 325,
@@ -2369,7 +2447,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 326,
@@ -2398,7 +2477,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 327,
@@ -2427,7 +2507,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 328,
@@ -2456,7 +2537,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 329,
@@ -2485,7 +2567,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 330,
@@ -2514,7 +2597,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 331,
@@ -2543,7 +2627,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 332,
@@ -2572,7 +2657,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 333,
@@ -2601,7 +2687,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 334,
@@ -2630,7 +2717,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 335,
@@ -2659,7 +2747,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 336,
@@ -2688,7 +2777,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 337,
@@ -2717,7 +2807,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 338,
@@ -2746,7 +2837,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 339,
@@ -2775,7 +2867,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 340,
@@ -2804,7 +2897,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 341,
@@ -2833,7 +2927,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 342,
@@ -2862,7 +2957,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 343,
@@ -2891,7 +2987,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 344,
@@ -2920,7 +3017,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 345,
@@ -2949,7 +3047,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 346,
@@ -2978,7 +3077,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 347,
@@ -3007,7 +3107,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 348,
@@ -3036,7 +3137,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 349,
@@ -3065,7 +3167,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 350,
@@ -3094,7 +3197,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 351,
@@ -3123,7 +3227,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 352,
@@ -3152,7 +3257,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 353,
@@ -3181,7 +3287,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 354,
@@ -3210,7 +3317,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 355,
@@ -3239,7 +3347,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 356,
@@ -3268,7 +3377,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 357,
@@ -3297,7 +3407,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 358,
@@ -3326,7 +3437,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 359,
@@ -3355,7 +3467,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 360,
@@ -3384,7 +3497,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 361,
@@ -3413,7 +3527,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 362,
@@ -3442,7 +3557,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 363,
@@ -3471,7 +3587,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 364,
@@ -3500,7 +3617,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 365,
@@ -3529,7 +3647,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 366,
@@ -3564,7 +3683,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 367,
@@ -3593,7 +3713,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 368,
@@ -3622,7 +3743,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 369,
@@ -3651,7 +3773,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 370,
@@ -3680,7 +3803,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 371,
@@ -3709,7 +3833,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 372,
@@ -3738,7 +3863,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 373,
@@ -3767,7 +3893,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 374,
@@ -3796,7 +3923,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 375,
@@ -3825,7 +3953,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 376,
@@ -3854,7 +3983,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 377,
@@ -3883,7 +4013,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 378,
@@ -3912,7 +4043,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 379,
@@ -3941,7 +4073,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 380,
@@ -3970,7 +4103,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 381,
@@ -3999,7 +4133,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 382,
@@ -4028,7 +4163,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 383,
@@ -4057,7 +4193,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 384,
@@ -4086,7 +4223,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 385,
@@ -4115,7 +4253,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 386,
@@ -4150,7 +4289,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 387,
@@ -4185,7 +4325,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 388,
@@ -4220,7 +4361,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 389,
@@ -4255,7 +4397,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 390,
@@ -4290,7 +4433,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 391,
@@ -4325,7 +4469,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 392,
@@ -4360,7 +4505,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 393,
@@ -4395,7 +4541,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 394,
@@ -4430,7 +4577,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 395,
@@ -4465,7 +4613,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 396,
@@ -4500,7 +4649,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 397,
@@ -4535,7 +4685,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 398,
@@ -4570,7 +4721,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 399,
@@ -4605,7 +4757,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 401,
@@ -4640,7 +4793,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 402,
@@ -4669,7 +4823,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 403,
@@ -4710,7 +4865,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 404,
@@ -4739,7 +4895,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 405,
@@ -4774,7 +4931,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 406,
@@ -4809,7 +4967,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 407,
@@ -4844,7 +5003,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 408,
@@ -4873,7 +5033,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 409,
@@ -4908,7 +5069,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 410,
@@ -4937,7 +5099,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 411,
@@ -4972,7 +5135,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 412,
@@ -5007,7 +5171,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 413,
@@ -5030,7 +5195,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 414,
@@ -5058,7 +5224,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 415,
@@ -5087,7 +5254,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 416,
@@ -5116,7 +5284,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 417,
@@ -5145,7 +5314,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 418,
@@ -5168,7 +5338,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 419,
@@ -5197,7 +5368,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 420,
@@ -5226,7 +5398,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 421,
@@ -5255,7 +5428,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 422,
@@ -5284,7 +5458,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 423,
@@ -5313,7 +5488,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 424,
@@ -5342,7 +5518,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 425,
@@ -5371,7 +5548,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 426,
@@ -5400,7 +5578,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 427,
@@ -5429,7 +5608,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 428,
@@ -5464,7 +5644,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 429,
@@ -5493,7 +5674,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 430,
@@ -5522,7 +5704,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 431,
@@ -5557,7 +5740,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 432,
@@ -5592,7 +5776,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 433,
@@ -5627,7 +5812,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 434,
@@ -5662,7 +5848,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 435,
@@ -5697,7 +5884,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 436,
@@ -5732,7 +5920,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 437,
@@ -5767,7 +5956,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 438,
@@ -5802,7 +5992,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 439,
@@ -5837,7 +6028,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 440,
@@ -5872,7 +6064,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 441,
@@ -5907,7 +6100,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 442,
@@ -5936,7 +6130,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 443,
@@ -5971,7 +6166,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 444,
@@ -6000,7 +6196,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 445,
@@ -6035,7 +6232,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 446,
@@ -6070,7 +6268,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 447,
@@ -6105,7 +6304,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 448,
@@ -6140,7 +6340,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 449,
@@ -6175,7 +6376,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 450,
@@ -6210,7 +6412,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 451,
@@ -6251,7 +6454,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 452,
@@ -6286,7 +6490,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 453,
@@ -6321,7 +6526,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 454,
@@ -6356,7 +6562,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 455,
@@ -6391,7 +6598,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 456,
@@ -6426,7 +6634,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 457,
@@ -6461,7 +6670,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 458,
@@ -6496,7 +6706,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 459,
@@ -6531,7 +6742,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 460,
@@ -6566,7 +6778,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 461,
@@ -6601,7 +6814,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 462,
@@ -6642,7 +6856,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 463,
@@ -6677,7 +6892,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 464,
@@ -6712,7 +6928,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 465,
@@ -6741,7 +6958,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 466,
@@ -6776,7 +6994,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 467,
@@ -6811,7 +7030,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 468,
@@ -6846,7 +7066,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 469,
@@ -6881,7 +7102,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 470,
@@ -6916,7 +7138,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 471,
@@ -6951,7 +7174,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 472,
@@ -6980,7 +7204,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 473,
@@ -7015,7 +7240,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 474,
@@ -7050,7 +7276,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 475,
@@ -7085,7 +7312,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 476,
@@ -7120,7 +7348,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 477,
@@ -7161,7 +7390,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 478,
@@ -7190,7 +7420,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 479,
@@ -7225,7 +7456,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 480,
@@ -7254,7 +7486,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 481,
@@ -7289,7 +7522,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 482,
@@ -7324,7 +7558,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 483,
@@ -7359,7 +7594,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 484,
@@ -7388,7 +7624,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 485,
@@ -7423,7 +7660,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 486,
@@ -7452,7 +7690,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 487,
@@ -7487,7 +7726,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 488,
@@ -7522,7 +7762,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 489,
@@ -7551,7 +7792,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 490,
@@ -7586,7 +7828,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 491,
@@ -7615,7 +7858,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 492,
@@ -7644,7 +7888,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 493,
@@ -7673,7 +7918,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 494,
@@ -7708,7 +7954,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 495,
@@ -7743,7 +7990,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 496,
@@ -7778,7 +8026,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 497,
@@ -7813,7 +8062,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 498,
@@ -7848,7 +8098,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 499,
@@ -7883,7 +8134,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 500,
@@ -7912,7 +8164,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 501,
@@ -7947,7 +8200,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 502,
@@ -7982,7 +8236,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 503,
@@ -8017,7 +8272,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 505,
@@ -8052,7 +8308,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 506,
@@ -8075,7 +8332,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 507,
@@ -8110,7 +8368,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 508,
@@ -8145,7 +8404,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 509,
@@ -8180,7 +8440,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 510,
@@ -8215,7 +8476,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 511,
@@ -8250,7 +8512,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 512,
@@ -8285,7 +8548,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 513,
@@ -8320,7 +8584,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 514,
@@ -8355,7 +8620,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 515,
@@ -8390,7 +8656,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 516,
@@ -8425,7 +8692,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 517,
@@ -8460,7 +8728,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 518,
@@ -8495,7 +8764,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 519,
@@ -8530,7 +8800,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 520,
@@ -8565,7 +8836,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 522,
@@ -8594,7 +8866,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 523,
@@ -8623,7 +8896,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 524,
@@ -8652,7 +8926,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 525,
@@ -8681,7 +8956,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 526,
@@ -8704,7 +8980,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 527,
@@ -8733,7 +9010,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 528,
@@ -8762,7 +9040,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 529,
@@ -8791,7 +9070,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 530,
@@ -8820,7 +9100,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 531,
@@ -8843,7 +9124,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 532,
@@ -8872,7 +9154,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 533,
@@ -8901,7 +9184,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 534,
@@ -8924,7 +9208,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 535,
@@ -8953,7 +9238,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 536,
@@ -8982,7 +9268,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 537,
@@ -9011,7 +9298,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 538,
@@ -9040,7 +9328,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 539,
@@ -9069,7 +9358,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 540,
@@ -9098,7 +9388,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 541,
@@ -9127,7 +9418,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 542,
@@ -9156,7 +9448,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 543,
@@ -9185,7 +9478,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 544,
@@ -9214,7 +9508,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 545,
@@ -9243,7 +9538,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 546,
@@ -9272,7 +9568,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 547,
@@ -9307,7 +9604,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 548,
@@ -9342,7 +9640,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 549,
@@ -9377,7 +9676,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 550,
@@ -9406,7 +9706,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 551,
@@ -9435,7 +9736,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 552,
@@ -9464,7 +9766,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 553,
@@ -9493,7 +9796,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 554,
@@ -9522,7 +9826,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 555,
@@ -9551,7 +9856,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 556,
@@ -9580,7 +9886,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 557,
@@ -9609,7 +9916,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 558,
@@ -9638,7 +9946,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 559,
@@ -9667,7 +9976,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 560,
@@ -9696,7 +10006,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 561,
@@ -9725,7 +10036,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 562,
@@ -9754,7 +10066,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 563,
@@ -9783,7 +10096,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 564,
@@ -9812,7 +10126,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 565,
@@ -9841,7 +10156,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 566,
@@ -9870,7 +10186,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 567,
@@ -9899,7 +10216,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 568,
@@ -9928,7 +10246,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 569,
@@ -9957,7 +10276,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 570,
@@ -9986,7 +10306,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 571,
@@ -10015,7 +10336,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 572,
@@ -10044,7 +10366,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 573,
@@ -10073,7 +10396,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 574,
@@ -10102,7 +10426,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 575,
@@ -10131,7 +10456,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 576,
@@ -10160,7 +10486,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 577,
@@ -10189,7 +10516,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 578,
@@ -10218,7 +10546,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 579,
@@ -10247,7 +10576,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 580,
@@ -10276,7 +10606,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 581,
@@ -10305,7 +10636,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 582,
@@ -10334,7 +10666,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 583,
@@ -10363,7 +10696,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 584,
@@ -10392,7 +10726,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 585,
@@ -10421,7 +10756,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 586,
@@ -10450,7 +10786,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 587,
@@ -10485,7 +10822,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 588,
@@ -10514,7 +10852,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 589,
@@ -10543,7 +10882,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 590,
@@ -10572,7 +10912,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 591,
@@ -10601,7 +10942,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 592,
@@ -10630,7 +10972,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 593,
@@ -10659,7 +11002,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 594,
@@ -10687,7 +11031,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 595,
@@ -10716,7 +11061,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 596,
@@ -10745,7 +11091,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 597,
@@ -10774,7 +11121,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 598,
@@ -10803,7 +11151,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 599,
@@ -10832,7 +11181,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 600,
@@ -10861,7 +11211,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 601,
@@ -10890,7 +11241,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 602,
@@ -10919,7 +11271,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 603,
@@ -10948,7 +11301,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 604,
@@ -10977,7 +11331,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 605,
@@ -11006,7 +11361,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 606,
@@ -11035,7 +11391,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 607,
@@ -11064,7 +11421,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 608,
@@ -11093,7 +11451,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 609,
@@ -11122,7 +11481,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 610,
@@ -11151,7 +11511,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 611,
@@ -11180,7 +11541,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 612,
@@ -11209,7 +11571,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 613,
@@ -11238,7 +11601,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 614,
@@ -11267,7 +11631,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 615,
@@ -11296,7 +11661,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 616,
@@ -11325,7 +11691,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 617,
@@ -11354,7 +11721,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 618,
@@ -11383,7 +11751,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 619,
@@ -11412,7 +11781,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 620,
@@ -11441,7 +11811,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 621,
@@ -11470,7 +11841,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 622,
@@ -11499,7 +11871,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 623,
@@ -11528,7 +11901,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 624,
@@ -11557,7 +11931,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 625,
@@ -11586,7 +11961,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 626,
@@ -11615,7 +11991,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 627,
@@ -11644,7 +12021,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 628,
@@ -11673,7 +12051,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 629,
@@ -11702,7 +12081,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 630,
@@ -11731,7 +12111,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 631,
@@ -11760,7 +12141,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 632,
@@ -11783,7 +12165,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 633,
@@ -11812,7 +12195,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 634,
@@ -11841,7 +12225,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 635,
@@ -11870,7 +12255,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 636,
@@ -11899,7 +12285,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 637,
@@ -11928,7 +12315,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 638,
@@ -11957,7 +12345,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 639,
@@ -11986,7 +12375,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 640,
@@ -12015,7 +12405,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 641,
@@ -12044,7 +12435,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 642,
@@ -12073,7 +12465,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 643,
@@ -12102,7 +12495,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 644,
@@ -12131,7 +12525,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 645,
@@ -12160,7 +12555,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 646,
@@ -12189,7 +12585,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 647,
@@ -12218,7 +12615,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 648,
@@ -12247,7 +12645,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 649,
@@ -12276,7 +12675,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 650,
@@ -12305,7 +12705,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 651,
@@ -12334,7 +12735,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 652,
@@ -12363,7 +12765,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 653,
@@ -12392,7 +12795,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 655,
@@ -12421,7 +12825,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 656,
@@ -12450,7 +12855,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 657,
@@ -12479,7 +12885,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 658,
@@ -12508,7 +12915,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 659,
@@ -12537,7 +12945,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 660,
@@ -12566,7 +12975,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 661,
@@ -12595,7 +13005,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 662,
@@ -12624,7 +13035,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 663,
@@ -12653,7 +13065,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 664,
@@ -12682,7 +13095,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 665,
@@ -12711,7 +13125,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 666,
@@ -12740,7 +13155,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 667,
@@ -12769,7 +13185,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 668,
@@ -12798,7 +13215,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 669,
@@ -12827,7 +13245,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 670,
@@ -12856,7 +13275,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 671,
@@ -12885,7 +13305,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 672,
@@ -12914,7 +13335,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 673,
@@ -12943,7 +13365,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 674,
@@ -12972,7 +13395,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 675,
@@ -13001,7 +13425,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 676,
@@ -13030,7 +13455,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 677,
@@ -13059,7 +13485,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 678,
@@ -13088,7 +13515,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 679,
@@ -13117,7 +13545,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 680,
@@ -13146,7 +13575,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 681,
@@ -13175,7 +13605,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 682,
@@ -13204,7 +13635,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 683,
@@ -13233,7 +13665,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 684,
@@ -13262,7 +13695,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 685,
@@ -13291,7 +13725,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 686,
@@ -13320,7 +13755,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 687,
@@ -13349,7 +13785,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 688,
@@ -13378,7 +13815,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 689,
@@ -13407,7 +13845,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 690,
@@ -13436,7 +13875,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 691,
@@ -13465,7 +13905,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 692,
@@ -13494,7 +13935,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 693,
@@ -13523,7 +13965,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 694,
@@ -13552,7 +13995,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 695,
@@ -13575,7 +14019,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 696,
@@ -13604,7 +14049,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 697,
@@ -13627,7 +14073,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 698,
@@ -13662,7 +14109,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 699,
@@ -13691,7 +14139,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 700,
@@ -13720,7 +14169,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 701,
@@ -13755,7 +14205,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 702,
@@ -13790,7 +14241,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 703,
@@ -13825,7 +14277,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 704,
@@ -13860,7 +14313,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 705,
@@ -13889,7 +14343,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 706,
@@ -13924,7 +14379,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 707,
@@ -13947,7 +14403,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 708,
@@ -13982,7 +14439,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 709,
@@ -14017,7 +14475,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 710,
@@ -14052,7 +14511,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 711,
@@ -14075,7 +14535,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 712,
@@ -14104,7 +14565,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 713,
@@ -14139,7 +14601,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 714,
@@ -14168,7 +14631,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 715,
@@ -14197,7 +14661,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 716,
@@ -14226,7 +14691,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 717,
@@ -14255,7 +14721,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 718,
@@ -14284,7 +14751,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 719,
@@ -14313,7 +14781,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 720,
@@ -14342,7 +14811,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 721,
@@ -14371,7 +14841,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 722,
@@ -14400,7 +14871,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 723,
@@ -14429,7 +14901,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 724,
@@ -14458,7 +14931,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 725,
@@ -14487,7 +14961,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 726,
@@ -14516,7 +14991,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 727,
@@ -14545,7 +15021,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 728,
@@ -14574,7 +15051,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 729,
@@ -14603,7 +15081,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 730,
@@ -14632,7 +15111,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 731,
@@ -14661,7 +15141,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 732,
@@ -14690,7 +15171,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 733,
@@ -14719,7 +15201,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 734,
@@ -14748,7 +15231,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 735,
@@ -14777,7 +15261,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 736,
@@ -14806,7 +15291,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 737,
@@ -14829,7 +15315,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 738,
@@ -14858,7 +15345,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 739,
@@ -14887,7 +15375,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 740,
@@ -14916,7 +15405,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 741,
@@ -14945,7 +15435,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 742,
@@ -14974,7 +15465,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 743,
@@ -15009,7 +15501,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 744,
@@ -15044,7 +15537,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 745,
@@ -15067,7 +15561,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 746,
@@ -15096,7 +15591,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 747,
@@ -15131,7 +15627,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 748,
@@ -15160,7 +15657,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 749,
@@ -15195,7 +15693,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 750,
@@ -15230,7 +15729,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 751,
@@ -15265,7 +15765,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 752,
@@ -15300,7 +15801,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 753,
@@ -15335,7 +15837,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 754,
@@ -15370,7 +15873,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 755,
@@ -15405,7 +15909,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 756,
@@ -15440,7 +15945,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 757,
@@ -15475,7 +15981,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 758,
@@ -15510,7 +16017,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 759,
@@ -15545,7 +16053,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 760,
@@ -15580,7 +16089,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 761,
@@ -15615,7 +16125,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 762,
@@ -15650,7 +16161,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 763,
@@ -15685,7 +16197,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 764,
@@ -15714,7 +16227,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 765,
@@ -15749,7 +16263,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 766,
@@ -15784,7 +16299,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 767,
@@ -15819,7 +16335,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 768,
@@ -15854,7 +16371,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 769,
@@ -15889,7 +16407,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 770,
@@ -15924,7 +16443,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 771,
@@ -15947,7 +16467,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 772,
@@ -15982,7 +16503,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 773,
@@ -16017,7 +16539,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 775,
@@ -16046,7 +16569,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 776,
@@ -16075,7 +16599,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 777,
@@ -16104,7 +16629,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 778,
@@ -16133,7 +16659,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 779,
@@ -16162,7 +16689,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 780,
@@ -16191,7 +16719,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 781,
@@ -16220,7 +16749,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 782,
@@ -16249,7 +16779,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 783,
@@ -16278,7 +16809,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 784,
@@ -16307,7 +16839,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 785,
@@ -16336,7 +16869,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 786,
@@ -16365,7 +16899,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 787,
@@ -16400,7 +16935,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 788,
@@ -16429,7 +16965,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 789,
@@ -16458,7 +16995,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 790,
@@ -16487,7 +17025,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 791,
@@ -16516,7 +17055,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 792,
@@ -16545,7 +17085,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 793,
@@ -16580,7 +17121,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 794,
@@ -16609,7 +17151,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 795,
@@ -16638,7 +17181,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 796,
@@ -16667,7 +17211,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 797,
@@ -16696,7 +17241,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 798,
@@ -16725,7 +17271,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 799,
@@ -16754,7 +17301,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 800,
@@ -16783,7 +17331,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 801,
@@ -16812,7 +17361,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 802,
@@ -16841,7 +17391,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 803,
@@ -16876,7 +17427,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 804,
@@ -16905,7 +17457,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 805,
@@ -16934,7 +17487,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 806,
@@ -16963,7 +17517,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 807,
@@ -16992,7 +17547,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 808,
@@ -17021,7 +17577,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 809,
@@ -17056,7 +17613,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 810,
@@ -17091,7 +17649,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 811,
@@ -17126,7 +17685,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 812,
@@ -17161,7 +17721,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 813,
@@ -17196,7 +17757,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 814,
@@ -17231,7 +17793,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 815,
@@ -17260,7 +17823,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 816,
@@ -17289,7 +17853,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 817,
@@ -17324,7 +17889,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 818,
@@ -17359,7 +17925,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 819,
@@ -17382,7 +17949,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 820,
@@ -17411,7 +17979,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 821,
@@ -17440,7 +18009,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 822,
@@ -17469,7 +18039,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 823,
@@ -17504,7 +18075,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 824,
@@ -17539,7 +18111,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 825,
@@ -17574,7 +18147,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 826,
@@ -17603,7 +18177,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 827,
@@ -17632,7 +18207,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 828,
@@ -17655,7 +18231,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 829,
@@ -17690,7 +18267,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 830,
@@ -17713,7 +18291,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 831,
@@ -17736,7 +18315,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 832,
@@ -17759,7 +18339,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 833,
@@ -17788,7 +18369,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 834,
@@ -17811,7 +18393,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 835,
@@ -17840,7 +18423,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 836,
@@ -17875,7 +18459,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 837,
@@ -17910,7 +18495,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 838,
@@ -17945,7 +18531,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 839,
@@ -17980,7 +18567,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 840,
@@ -18009,7 +18597,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 841,
@@ -18038,7 +18627,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 842,
@@ -18067,7 +18657,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 843,
@@ -18096,7 +18687,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 844,
@@ -18125,7 +18717,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 845,
@@ -18154,7 +18747,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 846,
@@ -18183,7 +18777,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 847,
@@ -18212,7 +18807,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 848,
@@ -18241,7 +18837,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 849,
@@ -18270,7 +18867,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 850,
@@ -18299,7 +18897,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 851,
@@ -18328,7 +18927,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 852,
@@ -18357,7 +18957,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 853,
@@ -18386,7 +18987,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 854,
@@ -18415,7 +19017,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 855,
@@ -18444,7 +19047,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 856,
@@ -18473,7 +19077,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 857,
@@ -18502,7 +19107,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 858,
@@ -18531,7 +19137,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 859,
@@ -18560,7 +19167,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 860,
@@ -18589,7 +19197,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 861,
@@ -18618,7 +19227,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 862,
@@ -18647,7 +19257,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 863,
@@ -18676,7 +19287,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 864,
@@ -18705,7 +19317,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 865,
@@ -18734,7 +19347,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 866,
@@ -18769,7 +19383,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 867,
@@ -18803,7 +19418,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 868,
@@ -18838,7 +19454,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 869,
@@ -18873,7 +19490,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 870,
@@ -18908,7 +19526,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 871,
@@ -18943,7 +19562,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 872,
@@ -18978,7 +19598,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 873,
@@ -19013,7 +19634,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 874,
@@ -19048,7 +19670,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 875,
@@ -19083,7 +19706,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 876,
@@ -19118,7 +19742,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 877,
@@ -19153,7 +19778,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 878,
@@ -19188,7 +19814,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 879,
@@ -19217,7 +19844,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 880,
@@ -19252,7 +19880,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 881,
@@ -19281,7 +19910,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 882,
@@ -19310,7 +19940,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 883,
@@ -19345,7 +19976,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 884,
@@ -19380,7 +20012,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 885,
@@ -19415,7 +20048,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 886,
@@ -19450,7 +20084,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 887,
@@ -19485,7 +20120,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 888,
@@ -19520,7 +20156,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 889,
@@ -19555,7 +20192,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 890,
@@ -19590,7 +20228,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 891,
@@ -19625,7 +20264,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 892,
@@ -19660,7 +20300,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 893,
@@ -19695,7 +20336,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 894,
@@ -19724,7 +20366,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "18.0"
     },
     {
       "id": 895,
@@ -19753,7 +20396,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 896,
@@ -19782,7 +20426,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 897,
@@ -19817,7 +20462,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 898,
@@ -19852,7 +20498,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 899,
@@ -19887,7 +20534,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 900,
@@ -19916,7 +20564,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 901,
@@ -19945,7 +20594,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 902,
@@ -19974,7 +20624,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 903,
@@ -20009,7 +20660,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 904,
@@ -20038,7 +20690,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 905,
@@ -20067,7 +20720,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 906,
@@ -20096,7 +20750,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 907,
@@ -20125,7 +20780,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 908,
@@ -20154,7 +20810,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 909,
@@ -20183,7 +20840,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 278,
@@ -20212,7 +20870,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 279,
@@ -20241,7 +20900,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 280,
@@ -20269,7 +20929,8 @@
       ],
       "is_scored": false,
       "explication_senedoo": "",
-      "explication_claude": ""
+      "explication_claude": "",
+      "target_version": null
     },
     {
       "id": 281,
@@ -20298,7 +20959,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": "both"
     },
     {
       "id": 282,
@@ -20333,7 +20995,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": 504,
@@ -20368,7 +21031,8 @@
       "is_scored": true,
       "explication_senedoo": "",
       "explication_claude": "",
-      "correct_answer_source": "udemy"
+      "correct_answer_source": "udemy",
+      "target_version": null
     },
     {
       "id": -1,
@@ -20411,7 +21075,8 @@
         }
       ],
       "question_image": "question_media/q_-1.webp",
-      "correct_answer_source": "claude"
+      "correct_answer_source": "claude",
+      "target_version": "both"
     },
     {
       "id": -2,
@@ -20454,7 +21119,8 @@
         }
       ],
       "question_image": "",
-      "correct_answer_source": "claude"
+      "correct_answer_source": "claude",
+      "target_version": null
     },
     {
       "id": -3,
@@ -20497,7 +21163,8 @@
         }
       ],
       "question_image": "",
-      "correct_answer_source": "claude"
+      "correct_answer_source": "claude",
+      "target_version": "both"
     },
     {
       "id": -4,
@@ -20540,7 +21207,8 @@
         }
       ],
       "question_image": "question_media/q_-4.webp",
-      "correct_answer_source": "claude"
+      "correct_answer_source": "claude",
+      "target_version": null
     },
     {
       "id": -5,
@@ -20583,7 +21251,52 @@
         }
       ],
       "question_image": "",
-      "correct_answer_source": "claude"
+      "correct_answer_source": "claude",
+      "target_version": null
+    },
+    {
+      "id": -6,
+      "title": "What is the visual impact of setting a high priority on an opportunity?",
+      "title_fr": "Quel est l'impact visuel de définir une haute priorité sur une opportunité ?",
+      "type": "simple_choice",
+      "is_scored": true,
+      "source": "udemy",
+      "topic": "",
+      "explication_senedoo": "",
+      "explication_claude": "Dans Odoo CRM, la priorité d'une opportunité est représentée par des étoiles (0 à 3 étoiles selon la version). Lorsqu'on définit une haute priorité (étoiles remplies/colorées), l'impact visuel se traduit par une mise en évidence de la carte de l'opportunité dans la vue Kanban : les étoiles apparaissent en jaune/doré, ce qui distingue visuellement l'opportunité des autres. L'option 1 est incorrecte car la priorité ne réordonne pas les cartes dans la colonne Kanban. L'option 2 est manifestement fausse : la priorité n'a aucun lien avec le passage à l'étape suivante, qui dépend du glisser-déposer ou d'automatisations. L'option 3 est la plus cohérente avec le comportement réel d'Odoo : les étoiles colorées sur la carte constituent bien une mise en évidence visuelle (highlight) dans la vue Kanban, permettant d'identifier rapidement les opportunités importantes.",
+      "answers": [
+        {
+          "id": 2241,
+          "value": "The opportunity will move to the top of the stage in the Kanban view next time the CRM pipeline page is loaded.",
+          "value_fr": "L'opportunité se déplacera en haut de l'étape dans la vue Kanban la prochaine fois que la page du pipeline CRM sera chargée.",
+          "is_correct": true,
+          "score": 0.0
+        },
+        {
+          "id": 2242,
+          "value": "The opportunity will move to the next stage",
+          "value_fr": "L'opportunité passera à l'étape suivante",
+          "is_correct": false,
+          "score": 0.0
+        },
+        {
+          "id": 2243,
+          "value": "The opportunity label is highlighted in the Kanban view",
+          "value_fr": "Le libellé de l'opportunité est mis en évidence dans la vue Kanban",
+          "is_correct": false,
+          "score": 0.0
+        },
+        {
+          "id": 2244,
+          "value": "I don't know",
+          "value_fr": "Je ne sais pas",
+          "is_correct": false,
+          "score": 0.0
+        }
+      ],
+      "question_image": "",
+      "correct_answer_source": "user",
+      "target_version": null
     }
   ]
 }

@@ -187,8 +187,10 @@ def _row_from_question(
             v = (a.get("value") or "").strip()
             if v:
                 opts.append(v)
+    tv = q.get("target_version")
     return {
         "id": q.get("id"),
+        "target_version": str(tv).strip() if tv is not None and str(tv).strip() else None,
         "score": round(score, 3),
         "score_vector": round(score_vector, 3) if score_vector is not None else None,
         "score_keyword": round(score_keyword, 3) if score_keyword is not None else None,

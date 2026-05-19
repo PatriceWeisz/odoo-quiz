@@ -26,5 +26,10 @@
     "min_cosine": 0.28,
     "duplicate_score_threshold": 0.98,
     "rag_prompt_min_score": 0.45
+  },
+  "odoo_docs": {
+    "sqlite_path": "data/odoo_docs.sqlite",
+    "min_similarity": 0.35,
+    "top_n": 5
   }
 }

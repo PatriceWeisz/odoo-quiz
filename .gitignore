@@ -1,5 +1,6 @@
 # Secrets et config locale
 config.json
+.env
 
 # Python
 .venv/
@@ -11,6 +12,14 @@ __pycache__/
 # Runtime / logs
 .gen_pid
 *.log
+data/suggestions.log
+data/odoo_docs.sqlite
+data/app_settings.sqlite
+data/odoo_docs.sqlite.backup-*
+
+# Snapshots SQLite versionnés (commits manuels)
+# → data/backups/odoo_docs-*.sqlite
+
 
 # OS / IDE
 .DS_Store

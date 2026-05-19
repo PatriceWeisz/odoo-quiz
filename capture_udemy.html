@@ -44,6 +44,20 @@
   .steps { background: #faf5ff; border-radius: 8px; padding: 1rem; margin: 1rem 0;
            font-size: .88rem; color: #334155; line-height: 1.5; }
   .steps strong { color: #714B67; }
+  .capture-scroll-tip { margin-top: .85rem; padding: .65rem .75rem; background: #fff7ed;
+    border: 1px solid #fdba74; border-radius: 6px; font-size: .84rem; }
+  .capture-scroll-tip ul { margin: .4rem 0 0 1.1rem; padding: 0; }
+  .capture-scroll-tip li { margin: .25rem 0; }
+  .capture-fullpage-box { margin: 1rem 0; padding: .75rem; background: #eff6ff; border: 1px solid #93c5fd; border-radius: 8px; font-size: .84rem; }
+  .capture-fullpage-box strong { color: #1e40af; }
+  .capture-fullpage-box ol { margin: .45rem 0 0 1.1rem; padding: 0; }
+  .capture-fullpage-box li { margin: .3rem 0; }
+  .bookmarklet-link { display: inline-block; margin: .5rem 0 .35rem; padding: .45rem .75rem; background: #714B67; color: #fff !important;
+    border-radius: 6px; font-weight: 600; font-size: .82rem; text-decoration: none; cursor: grab; }
+  .bookmarklet-link:active { cursor: grabbing; }
+  .btn-odoo-open { margin-top: .35rem; font-size: .82rem; padding: .4rem .65rem; border-radius: 6px; border: 1px solid #93c5fd;
+    background: #fff; color: #1e40af; cursor: pointer; font-weight: 600; }
+  .btn-odoo-open:hover { background: #dbeafe; }
   kbd { font-size: .78em; padding: .1rem .35rem; border-radius: 4px; background: #e2e8f0; }
   #pastezone { border: 2px dashed #c4b5d0; border-radius: 12px; min-height: 160px;
                display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -197,9 +211,6 @@
   .source-pick label:has(input:checked) {
     border-color: #714B67; background: #faf5ff; box-shadow: 0 0 0 2px rgba(113,75,103,.15);
   }
-  .capture-odoo-only, .capture-udemy-only { display: none; }
-  body.capture-mode-odoo .capture-odoo-only { display: block; }
-  body.capture-mode-udemy .capture-udemy-only { display: block; }
 </style>
 </head>
 <body>
@@ -220,31 +231,33 @@
 <main>
 <div class="box" id="capture-hub-main">
   <h2>Coller une capture</h2>
-  <p class="muted" style="font-size:.88rem;margin-bottom:.5rem">Même flux pour Udemy et pour le quiz sur <strong>odoo.com</strong> (eLearning) : vision → comparaison banque → Claude si besoin → validation. La capture doit montrer <strong>l’énoncé et les options de réponse</strong> — sinon l’analyse vous l’indiquera.</p>
-  <div class="source-pick" role="radiogroup" aria-label="Source de la capture">
-    <label><input type="radio" name="capture-source" value="udemy" {% if default_capture_source != 'odoo' %}checked{% endif %}><span>Udemy</span></label>
-    <label><input type="radio" name="capture-source" value="odoo" {% if default_capture_source == 'odoo' %}checked{% endif %}><span>Odoo (site web)</span></label>
-  </div>
+  <p class="muted" style="font-size:.88rem;margin-bottom:.5rem">Quiz <strong>Udemy</strong> ou <strong>odoo.com</strong> : même analyse (page web ou Claude Vision) → banque → validation. Montrez <strong>l’énoncé et les options</strong>.</p>
   {% if error %}<div class="err">{{ error }}</div>{% endif %}
   {% if notice %}<div class="notice">{{ notice }}</div>{% endif %}
   {% if success %}<div class="ok">{{ success }}</div>{% endif %}
   <div id="capture-live-success" class="ok" style="display:none" role="status"></div>
   <div id="capture-orphan-notice" class="notice" style="display:none" role="status"></div>
   <div id="js-err"></div>
-  <div class="steps capture-udemy-only" id="steps-udemy">
-    <strong>Étapes — Udemy</strong><br>
-    1) Ouvrez la question sur Udemy.<br>
-    2) <strong>Capturer et analyser</strong> : au premier clic, Chrome demande l’onglet Udemy ; ensuite les captures s’enchaînent sans redemander.<br>
-    3) Ou capture écran + <strong>coller</strong> dans la zone, puis <strong>Analyser la capture</strong>.<br>
-    4) Vision → banque → Claude si besoin → validation → enregistrement.
+  <div class="steps" id="steps-quiz">
+    <strong>Étapes</strong><br>
+    1) Ouvrez le quiz sur <strong>Udemy</strong> ou <strong>odoo.com</strong> (ex. <a href="https://www.odoo.com/fr_FR/slides/odoo-certification-sample-test-50" target="_blank" rel="noopener">certification Odoo</a>).<br>
+    2) <strong>Capturer et analyser</strong> : Chrome demande l’onglet du quiz une fois, puis réutilise le partage.<br>
+    3) Page longue ou plusieurs questions : favori <strong>pleine page</strong> ci-dessous (jusqu’à <strong>4 questions</strong> sur odoo.com).<br>
+    4) Sinon <strong>coller</strong> une image → <strong>Analyser la capture</strong> → validation.
+    <div class="capture-scroll-tip">
+      <strong>Page qui dépasse l’écran</strong> — le partage d’onglet ne montre que le visible ; le favori pleine page inclut le scroll.
+    </div>
   </div>
-  <div class="steps capture-odoo-only" id="steps-odoo">
-    <strong>Étapes — Odoo (odoo.com / eLearning)</strong><br>
-    1) Ouvrez la question sur le quiz (ex. <a href="https://www.odoo.com/fr_FR/slides/odoo-certification-sample-test-50" target="_blank" rel="noopener">Certification Sample Test</a>).<br>
-    2) <strong>Capturer et analyser</strong> : au premier clic, Chrome demande l’onglet Odoo ; ensuite les captures s’enchaînent sans redemander.<br>
-    3) Ou capture écran + <strong>coller</strong> dans la zone, puis <strong>Analyser la capture</strong>.<br>
-    4) Comparaison banque → Claude si besoin → validation → enregistrement.<br>
-    <em>Sur odoo.com, une même capture peut afficher jusqu’à <strong>4 questions</strong> : l’analyse crée <strong>une fiche par question</strong> (bandeaux colorés à la validation).</em>
+  <div class="capture-fullpage-box" id="capture-fullpage-box">
+    <strong id="fullpage-box-title">Capture pleine page</strong>
+    <span id="fullpage-box-sub"> (contenu sous le scroll inclus)</span>
+    <ol>
+      <li>Glissez ce lien dans la barre de favoris (une fois, Udemy ou Odoo) :<br>
+        <a class="bookmarklet-link" id="bookmarklet-fullpage" href="#" title="Glisser vers la barre de favoris">📷 Quiz — pleine page odoo-quiz</a>
+      </li>
+      <li><button type="button" class="btn-odoo-open" id="btn-open-quiz-linked">Ouvrir l’onglet quiz (lié à cette page)</button></li>
+      <li id="fullpage-step-3">Sur l’onglet quiz, cliquez le favori → l’image revient ici et l’analyse démarre.</li>
+    </ol>
   </div>
   <div id="pastezone" tabindex="0" title="Cliquez puis collez la capture">
     <span class="hint">Zone de collage — cliquez ici puis Cmd+V / Ctrl+V</span>
@@ -314,35 +327,19 @@
 <script>
 (function(){
   if (!window.name) window.name = 'odoo_capture_udemy';
-  var SS_CAPTURE_SOURCE = 'odoo_capture_source';
-  function getCaptureSource() {
-    var r = document.querySelector('input[name="capture-source"]:checked');
-    return r && r.value === 'odoo' ? 'odoo' : 'udemy';
+  var SS_PAGE_HOST = 'odoo_quiz_page_host';
+  var SS_LAST_QUIZ_URL = 'odoo_quiz_last_quiz_url';
+  function getPageHost() {
+    try { return sessionStorage.getItem(SS_PAGE_HOST) || ''; } catch (e) { return ''; }
   }
-  function readUrlCaptureSource() {
-    try {
-      var s = (new URLSearchParams(window.location.search).get('source') || '').toLowerCase();
-      if (s === 'odoo' || s === 'udemy') return s;
-    } catch (eUrl) { /* ignore */ }
-    return null;
+  function setPageHost(host) {
+    if (!host) return;
+    try { sessionStorage.setItem(SS_PAGE_HOST, String(host).slice(0, 200)); } catch (e) { /* ignore */ }
   }
-  function setCaptureSourceRadio(src) {
-    var inp = document.querySelector('input[name="capture-source"][value="' + src + '"]');
-    if (inp) inp.checked = true;
-  }
-  function initCaptureSourceFromMemory() {
-    var urlSrc = readUrlCaptureSource();
-    var stored = null;
-    try { stored = sessionStorage.getItem(SS_CAPTURE_SOURCE); } catch (eSt) { /* ignore */ }
-    var src = urlSrc || (stored === 'odoo' || stored === 'udemy' ? stored : null);
-    if (src) setCaptureSourceRadio(src);
-  }
-  function isOdooCapture() { return getCaptureSource() === 'odoo'; }
-  function quizTabName() { return isOdooCapture() ? 'Odoo' : 'Udemy'; }
+  function quizTabName() { return 'du quiz'; }
   function reloadNoticeHtml() {
-    var tab = quizTabName();
     return (
-      '<strong>Page rechargée</strong> : Chrome redemandera l’onglet <strong>' + tab + '</strong> <em>une fois</em> via « Capturer et analyser ». ' +
+      '<strong>Page rechargée</strong> : Chrome redemandera l’onglet du quiz <em>une fois</em> via « Capturer et analyser ». ' +
       'Au retour du collage (sans recharger), ce n’est pas nécessaire.'
     );
   }
@@ -355,30 +352,16 @@
       }
     } catch (eRn) { /* ignore */ }
   }
-  function persistCaptureSourcePreference(src) {
-    try { sessionStorage.setItem(SS_CAPTURE_SOURCE, src); } catch (e) { /* ignore */ }
-    try {
-      var fd = new FormData();
-      fd.append('source', src);
-      fetch('/import-capture/preference', { method: 'POST', body: fd, credentials: 'same-origin' }).catch(function () {});
-    } catch (eF) { /* ignore */ }
-  }
   function applyCaptureMode() {
-    var src = getCaptureSource();
-    document.body.classList.remove('capture-mode-udemy', 'capture-mode-odoo');
-    document.body.classList.add(src === 'odoo' ? 'capture-mode-odoo' : 'capture-mode-udemy');
-    persistCaptureSourcePreference(src);
     updateScreenShareUi();
     var hint = document.getElementById('screen-share-hint');
     if (hint) {
       hint.textContent =
-        '« Capturer et analyser » lie l’onglet ' + quizTabName() + ' au premier clic (Chrome), puis réutilise le partage. Au retour du collage, gardez le partage actif si possible.';
+        '« Capturer et analyser » lie l’onglet du quiz au premier clic (Chrome), puis réutilise le partage.';
     }
     refreshReloadOrphanNotice();
+    updateFullPageUi();
   }
-  document.querySelectorAll('input[name="capture-source"]').forEach(function (inp) {
-    inp.addEventListener('change', applyCaptureMode);
-  });
   let file = null;
   const zone = document.getElementById('pastezone');
   const preview = document.getElementById('preview');
@@ -810,10 +793,6 @@
     }
   }
   function appendProgress(ev) {
-    if (ev && ev.code === 'auto_odoo') {
-      setCaptureSourceRadio('odoo');
-      applyCaptureMode();
-    }
     updateStepBar(ev);
     if (!progressLog) return;
     const li = document.createElement('li');
@@ -1195,7 +1174,10 @@
     setProgressVisible(true);
     var fd = new FormData();
     fd.append('screenshot', uploadFile, uploadFile.name);
-    fd.append('source', getCaptureSource());
+    fd.append('page_host', getPageHost());
+    if (uploadFile.__domJson) {
+      fd.append('dom_json', uploadFile.__domJson);
+    }
     try {
       var res = await fetch('/import-capture/pipeline', { method: 'POST', body: fd });
       if (!res.ok) {
@@ -1316,9 +1298,190 @@
       }
     });
   }
+  var quizLinkedTab = null;
+
+  function buildFullPageBookmarkletHref() {
+    var origin = window.location.origin;
+    var scriptUrl = origin + '/static/odoo_fullpage_capture.js?v={{ app_version }}';
+    var payload =
+      "(function(){var s=document.createElement('script');s.src='" +
+      scriptUrl.replace(/'/g, '%27') +
+      "';s.dataset.odooQuizOrigin='" +
+      origin.replace(/'/g, '%27') +
+      "';document.head.appendChild(s);})();";
+    return 'javascript:' + payload;
+  }
+
+  function getQuizLinkedOpenUrl() {
+    try {
+      var last = sessionStorage.getItem(SS_LAST_QUIZ_URL);
+      if (last && /^https:\/\//i.test(last)) return last;
+    } catch (eUd) { /* ignore */ }
+    var entered = window.prompt(
+      'URL de la page du quiz (Udemy ou odoo.com) :',
+      'https://www.odoo.com/fr_FR/slides/odoo-certification-sample-test-50'
+    );
+    if (!entered || !String(entered).trim()) return '';
+    var url = String(entered).trim();
+    if (!/^https:\/\//i.test(url)) {
+      showErr('URL invalide — utilisez https://…');
+      return '';
+    }
+    try { sessionStorage.setItem(SS_LAST_QUIZ_URL, url); } catch (eSt) { /* ignore */ }
+    return url;
+  }
+
+  function updateFullPageUi() {
+    var bm = document.getElementById('bookmarklet-fullpage');
+    if (bm) bm.href = buildFullPageBookmarkletHref();
+  }
+
+  function focusCaptureHub() {
+    try { window.focus(); } catch (eF) { /* ignore */ }
+    hidePreviewFrame();
+    if (captureHubMain) captureHubMain.style.display = '';
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (eS) { /* ignore */ }
+  }
+
+  function initFullPageTools() {
+    var bm = document.getElementById('bookmarklet-fullpage');
+    if (bm && !bm.__fpBound) {
+      bm.__fpBound = true;
+      bm.href = buildFullPageBookmarkletHref();
+      bm.addEventListener('click', function (e) {
+        e.preventDefault();
+        showErr('Glissez ce lien vers la barre de favoris (ne cliquez pas ici).');
+      });
+    } else if (bm) {
+      bm.href = buildFullPageBookmarkletHref();
+    }
+    var btnOpen = document.getElementById('btn-open-quiz-linked');
+    if (btnOpen && !btnOpen.__fpBound) {
+      btnOpen.__fpBound = true;
+      btnOpen.addEventListener('click', function () {
+        var url = getQuizLinkedOpenUrl();
+        if (!url) return;
+        quizLinkedTab = window.open(url, 'odoo_quiz_capture_tab');
+        if (!quizLinkedTab) {
+          showErr('Pop-up bloquée — autorisez les fenêtres pour ce site.');
+          return;
+        }
+        showErr('');
+        var tab = quizTabName();
+        showLiveSuccess(
+          'Onglet quiz ouvert.',
+          'Cliquez le favori « pleine page odoo-quiz » sur cette page.'
+        );
+      });
+    }
+    updateFullPageUi();
+  }
+
+  function dataUrlToBlob(dataUrl) {
+    var parts = dataUrl.split(',');
+    var mime = (parts[0].match(/:(.*?);/) || [])[1] || 'image/png';
+    var bin = atob(parts[1] || '');
+    var len = bin.length;
+    var u8 = new Uint8Array(len);
+    while (len--) u8[len] = bin.charCodeAt(len);
+    return new Blob([u8], { type: mime });
+  }
+
+  function isTrustedFullPageMessageOrigin(origin) {
+    try {
+      var u = new URL(origin);
+      var h = (u.hostname || '').toLowerCase();
+      if (u.protocol !== 'https:' && u.protocol !== 'http:') return false;
+      if (h === '127.0.0.1' || h === 'localhost') return true;
+      return h === 'odoo.com' || h.endsWith('.odoo.com') ||
+        h === 'udemy.com' || h.endsWith('.udemy.com');
+    } catch (eO) {
+      return false;
+    }
+  }
+
+  async function runFullPageCaptureBlob(blob, meta) {
+    if (!blob) return;
+    meta = meta || {};
+    if (meta.page_host) setPageHost(meta.page_host);
+    applyCaptureMode();
+    focusCaptureHub();
+    showErr('');
+    showLiveSuccess('Capture pleine page reçue — analyse en cours…', '');
+    if (meta.dom && meta.dom.length) {
+      blob.__domJson = JSON.stringify(meta.dom);
+    }
+    setImageFromBlob(blob);
+    if (!file) {
+      showErr('Image reçue mais non lisible — réessayez ou collez (Cmd+V).');
+      return;
+    }
+    try {
+      await runPipelineFromFile(file);
+    } catch (ePipe) {
+      showErr((ePipe && ePipe.message) ? ePipe.message : String(ePipe));
+    }
+  }
+
+  async function handleFullPageCaptureMessage(dataUrl) {
+    if (!dataUrl || typeof dataUrl !== 'string') return;
+    await runFullPageCaptureBlob(dataUrlToBlob(dataUrl), {});
+  }
+
+  async function handleFullPageCaptureUpload(uploadId) {
+    var id = (uploadId || '').trim().toLowerCase();
+    if (!/^[0-9a-f]{32}$/.test(id)) {
+      showErr('Identifiant de capture pleine page invalide.');
+      return;
+    }
+    var metaRes = await fetch('/import-capture/fullpage/' + encodeURIComponent(id) + '/meta', {
+      credentials: 'same-origin',
+    });
+    if (!metaRes.ok) {
+      showErr('Capture expirée — réessayez le favori.');
+      return;
+    }
+    var meta = await metaRes.json();
+    var imgRes = await fetch('/import-capture/fullpage/' + encodeURIComponent(id) + '/image', {
+      credentials: 'same-origin',
+    });
+    if (!imgRes.ok) {
+      showErr('Impossible de récupérer l’image.');
+      return;
+    }
+    await runFullPageCaptureBlob(await imgRes.blob(), meta);
+  }
+
+  function tryAutoFullpageFromUrl() {
+    try {
+      var fp = new URLSearchParams(window.location.search).get('fullpage');
+      if (!fp || !/^[0-9a-f]{32}$/i.test(fp)) return;
+      var src = new URLSearchParams(window.location.search);
+      if (src.get('source') === 'odoo') setPageHost('www.odoo.com');
+      history.replaceState(null, '', '/import-capture');
+      handleFullPageCaptureUpload(fp).catch(function (e) {
+        showErr((e && e.message) ? e.message : String(e));
+      });
+    } catch (eUrl) { /* ignore */ }
+  }
+
   applyCaptureMode();
   window.addEventListener('message', function (ev) {
     if (!ev.data || !ev.data.type) return;
+    if (ev.data.type === 'odoo-quiz-fullpage-capture') {
+      if (!isTrustedFullPageMessageOrigin(ev.origin)) return;
+      if (ev.data.uploadId) {
+        focusCaptureHub();
+        handleFullPageCaptureUpload(ev.data.uploadId).catch(function (eUp) {
+          showErr((eUp && eUp.message) ? eUp.message : String(eUp));
+        });
+      } else if (ev.data.dataUrl) {
+        handleFullPageCaptureMessage(ev.data.dataUrl);
+      } else {
+        showErr('Message de capture pleine page incomplet — réessayez le favori.');
+      }
+      return;
+    }
     if (ev.data.type === 'odoo-capture-partial-done') {
       markShareLinked();
       showLiveSuccess(ev.data.success || 'Question enregistrée.', ev.data.notice || '');
@@ -1392,8 +1555,9 @@
     refreshReloadOrphanNotice();
   } catch (eLoad) { /* ignore */ }
   installCapturePageGuards();
-  initCaptureSourceFromMemory();
+  initFullPageTools();
   applyCaptureMode();
+  tryAutoFullpageFromUrl();
 })();
 </script>
 </body>

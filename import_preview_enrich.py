@@ -562,10 +562,24 @@ def _answer_image_paths(item: dict, screenshot_path: str | None) -> list[str]:
 
 
 def _apply_confidence_gate(item: dict, out: dict[str, Any]) -> None:
+    """Legacy low confidence annule l'index ; confiance « basse » (nouveau schéma) garde la proposition."""
+    sugg_conf = (out.get("suggestion_confiance") or "").strip().lower()
+    if sugg_conf == "basse":
+        out["match_source"] = "claude_api"
+        return
     conf = (out.get("confidence") or "").strip().lower()
     if conf == "low":
         out["correct_index"] = None
         out["match_source"] = "claude_incertain"
+
+
+def _confiance_to_legacy_confidence(confiance: str) -> str:
+    c = (confiance or "").strip().lower()
+    if c == "haute":
+        return "high"
+    if c == "basse":
+        return "low"
+    return "medium"
 
 
 def _api_enrich(
@@ -573,9 +587,17 @@ def _api_enrich(
     screenshot_path: str | None = None,
     all_questions: list[dict] | None = None,
 ) -> dict[str, Any]:
-    from quiz_llm import ANTHROPIC_REQUEST_TIMEOUT_S, api_available, parse_json_value, run_answer_prompt
+    from app.llm import (
+        api_available,
+        reponse_to_correct_index,
+        suggest_answer_with_web_tools,
+        translate_item_fr,
+    )
+    from app.config import get_target_certification
+    from app.rag import build_context
 
     ANSWER_TIMEOUT = 60
+    cert = get_target_certification()
 
     n = len(item["answers"])
     seed_afr = item.get("answers_fr")
@@ -595,56 +617,70 @@ def _api_enrich(
         return out
     img_paths = _answer_image_paths(item, screenshot_path)
     try:
-        raw = run_answer_prompt(
-            _build_api_prompt(item, all_questions),
-            image_paths=img_paths,
-            timeout=ANSWER_TIMEOUT,
+        ctx = build_context(
+            item.get("title") or "",
+            list(item.get("answers") or []),
+            question_bank=all_questions or [],
+            target_version=cert,
         )
-        data = parse_json_value(raw)
-        if not isinstance(data, dict):
-            raise ValueError("réponse non objet")
-        out["confidence"] = (data.get("confidence") or "").strip().lower()
-        tf = (data.get("title_fr") or "").strip()
-        if tf:
-            out["title_fr"] = tf
-        frs = data.get("answers_fr")
-        if isinstance(frs, list):
-            for j in range(len(item["answers"])):
-                if j < len(frs) and str(frs[j] or "").strip():
-                    out["answers_fr"][j] = str(frs[j] or "").strip()
-        ci = data.get("correct_index")
-        if isinstance(ci, int) and 1 <= ci <= len(item["answers"]):
+        suggestion, call_meta = suggest_answer_with_web_tools(
+            item.get("title") or "",
+            list(item.get("answers") or []),
+            ctx,
+            image_paths=img_paths,
+            question_id=item.get("id"),
+            target_version=cert,
+        )
+        out["suggestion_confiance"] = suggestion.confiance
+        out["suggestion_sources"] = [s.model_dump() for s in suggestion.sources]
+        out["suggestion_alerte_version"] = suggestion.alerte_version
+        out["suggestion_divergence_versions"] = suggestion.divergence_versions
+        out["suggestion_target_cert"] = cert
+        out["suggestion_reponse"] = suggestion.reponse
+        out["suggestion_call_meta"] = call_meta
+        out["confidence"] = _confiance_to_legacy_confidence(suggestion.confiance)
+        out["explication_claude"] = (suggestion.justification or "").strip()
+        ci = reponse_to_correct_index(suggestion.reponse, n)
+        if ci is not None and not correct_index_points_to_idk(item, ci):
             out["correct_index"] = ci
         else:
             out["correct_index"] = None
-        if correct_index_points_to_idk(item, out.get("correct_index")):
-            out["correct_index"] = None
         _apply_confidence_gate(item, out)
-        expl = (data.get("explication_claude") or "").strip()
-        if expl:
-            out["explication_claude"] = expl
+
+        try:
+            tr = translate_item_fr(
+                item.get("title") or "",
+                list(item.get("answers") or []),
+                image_paths=img_paths,
+                timeout=ANSWER_TIMEOUT,
+            )
+            tf = (tr.get("title_fr") or "").strip()
+            if tf:
+                out["title_fr"] = tf
+            frs = tr.get("answers_fr")
+            if isinstance(frs, list):
+                for j in range(n):
+                    if j < len(frs) and str(frs[j] or "").strip():
+                        out["answers_fr"][j] = str(frs[j] or "").strip()
+        except Exception:
+            pass
+
         if out.get("match_source") == "claude_api" and _title_fr_seems_incomplete(
             item.get("title", ""), out.get("title_fr", "")
         ):
             try:
-                raw2 = run_answer_prompt(
-                    _build_api_prompt(item, all_questions)
-                    + "\n\nLa traduction FR du titre était trop courte : retraduis le titre EN **en entier**, sans le résumer.",
+                tr2 = translate_item_fr(
+                    item.get("title") or "",
+                    list(item.get("answers") or []),
                     image_paths=img_paths,
                     timeout=ANSWER_TIMEOUT,
                 )
-                data2 = parse_json_value(raw2)
-                if isinstance(data2, dict):
-                    tf2 = (data2.get("title_fr") or "").strip()
-                    if tf2 and not _title_fr_seems_incomplete(item.get("title", ""), tf2):
-                        out["title_fr"] = tf2
-                    frs2 = data2.get("answers_fr")
-                    if isinstance(frs2, list):
-                        for j in range(len(item["answers"])):
-                            if j < len(frs2) and str(frs2[j] or "").strip():
-                                out["answers_fr"][j] = str(frs2[j] or "").strip()
+                tf2 = (tr2.get("title_fr") or "").strip()
+                if tf2 and not _title_fr_seems_incomplete(item.get("title", ""), tf2):
+                    out["title_fr"] = tf2
             except Exception:
                 pass
+
         if out.get("match_source") in ("claude_api", "claude_incertain") and out.get("correct_index") is None:
             picked = _api_pick_correct_index(item, screenshot_path, all_questions)
             if picked is not None:
@@ -886,6 +922,12 @@ def merge_item_prefill_fields(item: dict) -> dict:
             "bank_duplicate_reason",
             "bank_prior_correct_index",
             "bank_answer_agrees_claude",
+            "suggestion_confiance",
+            "suggestion_sources",
+            "suggestion_alerte_version",
+            "suggestion_divergence_versions",
+            "suggestion_target_cert",
+            "suggestion_reponse",
         )
         if k in item
     }

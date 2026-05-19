@@ -148,6 +148,22 @@ def _get_embed_model():
         return _model
 
 
+def embed_texts(texts: list[str]) -> np.ndarray | None:
+    """Embeddings L2-normalisés (batch) — partagé banque + doc Odoo."""
+    return _embed_texts(texts)
+
+
+def embed_query_text(text: str, *, timeout_s: float | None = None) -> np.ndarray | None:
+    """Vecteur requête ; timeout_s=None → pas de limite (ingestion / scripts)."""
+    if timeout_s is None:
+        title = (text or "").strip()
+        if not title:
+            return None
+        mat = _embed_texts([title])
+        return mat[0] if mat is not None and mat.shape[0] else None
+    return _embed_query(text)
+
+
 def _embed_texts(texts: list[str]) -> np.ndarray | None:
     if not texts:
         return None

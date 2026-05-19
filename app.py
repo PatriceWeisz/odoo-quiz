@@ -25,6 +25,7 @@ from flask import (
     redirect,
     render_template_string,
     request,
+    send_file,
     session,
     stream_with_context,
     url_for,
@@ -36,7 +37,7 @@ from import_preview_enrich import (
     bank_identical_meta,
     enrich_item_for_preview,
 )
-from import_screenshot import CaptureNoQuizContentError, vision_extract_items_from_capture
+from import_screenshot import CaptureNoQuizContentError, extract_items_from_capture
 from import_udemy import (
     apply_capture_items_to_bank,
     manual_vision_fallback_udemy_item,
@@ -54,7 +55,7 @@ from quiz_llm import api_available, parse_json_value, run_prompt_with_images
 
 CONFIG_FILE = Path(__file__).parent / "config.json"
 # Incrémenter à chaque livraison (affichée dans l’UI : en-tête, onglet, pied de page ; F5 si auto_reload).
-APP_VERSION = "1.12.97"
+APP_VERSION = "1.15.1"
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12 Mo (captures)
@@ -94,6 +95,13 @@ def load_questions(cfg):
 
 CFG = load_config()
 ALL_QUESTIONS = load_questions(CFG)
+
+try:
+    from app.settings_db import init_settings_db
+
+    init_settings_db()
+except Exception:
+    pass
 
 try:
     from bank_embeddings import schedule_bank_embedding_warmup
@@ -196,6 +204,14 @@ def _find_question_index(data: dict, q_id: int):
         except (TypeError, ValueError):
             continue
     return None
+
+
+def _parse_question_id_param(raw: str) -> Optional[int]:
+    """Parse id URL (positif ou négatif — ex. sondages Senedoo id -1…-6)."""
+    try:
+        return int(str(raw).strip())
+    except (TypeError, ValueError):
+        return None
 
 
 def _correct_1based_from_answers(answers: Optional[list]) -> Optional[int]:
@@ -425,6 +441,14 @@ HTML = """<!DOCTYPE html>
     <span class="app-version" title="Version de l'application">v{{ app_version }}</span>
   </div>
   <nav class="header-nav" aria-label="Navigation principale">
+    <div class="cert-bar" style="display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .55rem;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);border-radius:8px;padding:.35rem .5rem;font-size:.78rem;grid-column:1/-1">
+      <label for="quiz-cert-select" style="font-weight:600;margin:0">Certif.</label>
+      <select id="quiz-cert-select" style="background:#fff;color:#1a1a2e;border:none;border-radius:6px;padding:.25rem .4rem;font:inherit;font-weight:600">
+        <option value="18.0"{% if target_certification == '18.0' %} selected{% endif %}>v18</option>
+        <option value="19.0"{% if target_certification == '19.0' %} selected{% endif %}>v19</option>
+      </select>
+      <span id="quiz-cert-count">{{ total }} questions pour la cert v{{ target_certification|replace('.0','') }}</span>
+    </div>
     <a class="header-btn" href="/" title="Accueil quiz" aria-current="page">🎓 Quiz</a>
     <a class="header-btn" href="/banque">📋 Banque</a>
     <a class="header-btn" href="/import-capture">📷 Capture</a>
@@ -450,7 +474,7 @@ HTML = """<!DOCTYPE html>
     <p style="margin-top:1.5rem;font-size:.9rem">
       <a href="/banque" style="color:#714B67;font-weight:600">📋 Banque de questions</a>
       <span style="color:#64748b"> — consulter ou modifier les entrées de <code>questions.json</code></span><br>
-      <a href="/import-capture?source=odoo" style="color:#714B67;font-weight:600">📷 Capture quiz (Udemy / Odoo)</a>
+      <a href="/import-capture" style="color:#714B67;font-weight:600">📷 Capture quiz (Udemy / Odoo)</a>
       <span style="color:#64748b"> — importer une question depuis une capture (API Anthropic)</span>
     </p>
   </div>
@@ -504,6 +528,29 @@ document.getElementById('start-info').innerHTML =
   `${total} questions disponibles.<br>` +
   `💡 ${withClaude} explications Claude · 📚 ${withSenedoo} explications Senedoo/Udemy<br>` +
   `Scoring : +1 bonne / −1 mauvaise / 0 saut.`;
+
+const quizCertSelect = document.getElementById('quiz-cert-select');
+const quizCertCount = document.getElementById('quiz-cert-count');
+if (quizCertSelect) {
+  quizCertSelect.addEventListener('change', async function() {
+    const res = await fetch('/api/settings/target_certification', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target_certification: quizCertSelect.value })
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error || 'Erreur'); return; }
+    const n = data.cert_question_count || 0;
+    const v = String(data.target_certification || '19.0').replace('.0', '');
+    if (quizCertCount) quizCertCount.textContent = n + ' questions pour la cert v' + v;
+    const qc = document.getElementById('q-count');
+    if (qc) { qc.max = Math.max(1, n); if (parseInt(qc.value, 10) > n) qc.value = n; }
+    document.getElementById('start-info').innerHTML =
+      `${n} questions disponibles.<br>` +
+      `💡 ${withClaude} explications Claude · 📚 ${withSenedoo} explications Senedoo/Udemy<br>` +
+      `Scoring : +1 bonne / −1 mauvaise / 0 saut.`;
+  });
+}
 
 async function startQuiz() {
   const count = Math.min(parseInt(document.getElementById('q-count').value) || 20, total);
@@ -728,11 +775,64 @@ CAPTURE_PREVIEW_HTML = (Path(__file__).parent / "capture_preview.html").read_tex
 
 ALLOWED_CAPTURE_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
 PENDING_CAPTURE_ROOT = Path(tempfile.gettempdir()) / "odoo_quiz_capture_pending"
+FULLPAGE_INBOX = PENDING_CAPTURE_ROOT / "fullpage_inbox"
+FULLPAGE_MAX_BYTES = 12 * 1024 * 1024
 
 
 def _valid_pending_token(tid: str) -> bool:
     t = (tid or "").strip().lower()
     return len(t) == 32 and all(c in "0123456789abcdef" for c in t)
+
+
+def _allowed_fullpage_cors_origin(origin: str) -> bool:
+    """Origines autorisées pour l’upload depuis le favori (Odoo / Udemy → localhost)."""
+    o = (origin or "").strip()
+    if not o:
+        return False
+    try:
+        from urllib.parse import urlparse
+
+        p = urlparse(o)
+        host = (p.hostname or "").lower()
+        if p.scheme not in ("http", "https"):
+            return False
+        if host in ("127.0.0.1", "localhost"):
+            return True
+        if host == "odoo.com" or host.endswith(".odoo.com"):
+            return p.scheme == "https"
+        if host == "udemy.com" or host.endswith(".udemy.com"):
+            return p.scheme == "https"
+    except (ValueError, TypeError):
+        return False
+    return False
+
+
+def _fullpage_cors(resp: Response) -> Response:
+    origin = request.headers.get("Origin")
+    if origin and _allowed_fullpage_cors_origin(origin):
+        resp.headers["Access-Control-Allow-Origin"] = origin
+        resp.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        resp.headers["Vary"] = "Origin"
+    return resp
+
+
+def _fullpage_inbox_path(tid: str) -> Path:
+    return FULLPAGE_INBOX / f"{tid}.bin"
+
+
+def _prune_stale_fullpage_inbox(max_age_s: float = 3600) -> None:
+    import time
+
+    if not FULLPAGE_INBOX.is_dir():
+        return
+    now = time.time()
+    for p in FULLPAGE_INBOX.glob("*.bin"):
+        try:
+            if now - p.stat().st_mtime > max_age_s:
+                p.unlink(missing_ok=True)
+        except OSError:
+            pass
 
 
 def _pending_path(tid: str) -> Path:
@@ -1095,43 +1195,52 @@ def _build_preview_blocks_from_saved_items(items: list[dict], tmp_path: str) -> 
 
 
 def _iter_capture_pipeline_ndjson_from_path(
-    tmp_path: str, ext: str, capture_source: str = "udemy"
+    tmp_path: str,
+    ext: str,
+    capture_source: str = "udemy",
+    *,
+    dom_payload: Any = None,
+    page_host: str = "",
 ) -> Iterator[bytes]:
     """Événements NDJSON ; l’image doit déjà être sur disque (évite fichier upload fermé en streaming)."""
     cap_src = _normalize_capture_source(capture_source)
-    vision_label = "Odoo (site / eLearning)" if cap_src == "odoo" else "Udemy"
     try:
         yield _capture_progress_line(
             "vision",
             "running",
-            "1 · Vision (Claude)",
-            f"Lecture de la capture {vision_label} via l’API Anthropic (modèle vision).",
+            "1 · Extraction",
+            "Lecture de la capture (DOM si disponible, sinon Claude Vision).",
         )
 
         vision_notice = ""
         try:
-            items, cap_src, auto_odoo = vision_extract_items_from_capture(tmp_path, cap_src)
-            if auto_odoo:
-                _save_capture_source_preference("odoo")
-                yield _capture_progress_line(
-                    "vision",
-                    "warn",
-                    "Mode Odoo appliqué",
-                    "Capture multi-questions détectée : analyse relancée en mode Odoo (une fiche par question).",
-                    code="auto_odoo",
-                )
+            items, cap_src, extract_method = extract_items_from_capture(
+                tmp_path,
+                dom_payload=dom_payload,
+                page_host=page_host,
+                capture_source=capture_source,
+            )
             n_vision = len(items)
-            if n_vision > 1:
+            if extract_method == "dom":
                 vision_done_detail = (
-                    f"{n_vision} questions distinctes extraites de la même capture "
-                    f"(ordre haut → bas). Une fiche de validation par question."
+                    f"{n_vision} question(s) lue(s) depuis la page (DOM)."
+                    if n_vision > 1
+                    else "Texte lu depuis la page (DOM) ; suite : banque puis complément."
                 )
+                done_title = "1 · Extraction DOM terminée"
             else:
-                vision_done_detail = "Texte extrait ; suite : banque puis complément."
+                if n_vision > 1:
+                    vision_done_detail = (
+                        f"{n_vision} questions distinctes extraites de la même capture "
+                        f"(ordre haut → bas). Une fiche de validation par question."
+                    )
+                else:
+                    vision_done_detail = "Texte extrait ; suite : banque puis complément."
+                done_title = "1 · Vision terminée"
             yield _capture_progress_line(
                 "vision",
                 "done",
-                "1 · Vision terminée",
+                done_title,
                 vision_done_detail,
             )
         except CaptureNoQuizContentError as e:
@@ -1308,16 +1417,36 @@ def _render_capture(error="", notice="", success="", default_source="udemy"):
 
 @app.route("/")
 def index():
-    with_claude   = sum(1 for q in ALL_QUESTIONS if q.get("explication_claude"))
-    with_senedoo  = sum(1 for q in ALL_QUESTIONS if q.get("explication_senedoo"))
-    return render_template_string(HTML, total=len(ALL_QUESTIONS),
-                                  with_claude=with_claude, with_senedoo=with_senedoo,
-                                  app_version=APP_VERSION)
+    from app.config import count_questions_for_cert, get_target_certification
+
+    with_claude = sum(1 for q in ALL_QUESTIONS if q.get("explication_claude"))
+    with_senedoo = sum(1 for q in ALL_QUESTIONS if q.get("explication_senedoo"))
+    cert = get_target_certification()
+    cert_counts = count_questions_for_cert(ALL_QUESTIONS, cert)
+    return render_template_string(
+        HTML,
+        total=cert_counts["matched"],
+        total_bank=cert_counts["total_bank"],
+        target_certification=cert,
+        with_claude=with_claude,
+        with_senedoo=with_senedoo,
+        app_version=APP_VERSION,
+    )
 
 
 @app.route("/banque")
 def banque():
-    return render_template_string(BANK_HTML, app_version=APP_VERSION)
+    from app.config import count_questions_for_cert, get_target_certification
+
+    cert = get_target_certification()
+    cert_counts = count_questions_for_cert(ALL_QUESTIONS, cert)
+    return render_template_string(
+        BANK_HTML,
+        app_version=APP_VERSION,
+        target_certification=cert,
+        cert_question_count=cert_counts["matched"],
+        total_bank=cert_counts["total_bank"],
+    )
 
 
 @app.route("/import-capture/preference", methods=["POST"])
@@ -1326,6 +1455,120 @@ def import_capture_preference():
     src = _normalize_capture_source(request.form.get("source") or "")
     _save_capture_source_preference(src)
     return jsonify({"ok": True, "source": src})
+
+
+@app.route("/import-capture/fullpage", methods=["POST", "OPTIONS"])
+def import_capture_fullpage_upload():
+    """Réception image depuis le favori pleine page (Odoo / Udemy) — évite postMessage volumineux."""
+    if request.method == "OPTIONS":
+        return _fullpage_cors(Response("", status=204))
+
+    upload = request.files.get("image")
+    if not upload or not upload.filename:
+        resp = jsonify({"error": "Aucune image reçue."})
+        resp.status_code = 400
+        return _fullpage_cors(resp)
+
+    raw = upload.read()
+    if len(raw) > FULLPAGE_MAX_BYTES:
+        resp = jsonify({"error": "Image trop volumineuse (max 12 Mo)."})
+        resp.status_code = 413
+        return _fullpage_cors(resp)
+    if len(raw) < 32:
+        resp = jsonify({"error": "Fichier image invalide."})
+        resp.status_code = 400
+        return _fullpage_cors(resp)
+
+    tid = uuid.uuid4().hex
+    FULLPAGE_INBOX.mkdir(parents=True, exist_ok=True)
+    _prune_stale_fullpage_inbox()
+    page_host = (request.form.get("page_host") or "").strip()[:200]
+    dom_raw = (request.form.get("dom_json") or "").strip()
+    dom_stored = None
+    if dom_raw:
+        try:
+            dom_stored = json.loads(dom_raw)
+        except json.JSONDecodeError:
+            dom_stored = None
+    meta = {
+        "source": _normalize_capture_source(
+            request.form.get("source") or ""
+        ),
+        "mime": (upload.mimetype or "image/png").split(";")[0].strip() or "image/png",
+        "page_host": page_host,
+        "dom": dom_stored,
+    }
+    try:
+        path = _fullpage_inbox_path(tid)
+        path.write_bytes(raw)
+        (FULLPAGE_INBOX / f"{tid}.json").write_text(
+            json.dumps(meta, ensure_ascii=False), encoding="utf-8"
+        )
+    except OSError as e:
+        resp = jsonify({"error": f"Enregistrement impossible : {e}"})
+        resp.status_code = 500
+        return _fullpage_cors(resp)
+
+    resp = jsonify({"ok": True, "id": tid, "source": meta["source"]})
+    return _fullpage_cors(resp)
+
+
+@app.route("/import-capture/fullpage/<tid>/meta", methods=["GET"])
+def import_capture_fullpage_meta(tid: str):
+    """Métadonnées (DOM, hôte) avant téléchargement de l’image pleine page."""
+    t = (tid or "").strip().lower()
+    if not _valid_pending_token(t):
+        return jsonify({"error": "Identifiant invalide."}), 400
+    meta_path = FULLPAGE_INBOX / f"{t}.json"
+    if not meta_path.is_file() or not _fullpage_inbox_path(t).is_file():
+        return jsonify({"error": "Capture expirée ou introuvable."}), 404
+    try:
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return jsonify({"error": "Métadonnées invalides."}), 500
+    return jsonify(
+        {
+            "ok": True,
+            "id": t,
+            "source": meta.get("source") or "udemy",
+            "page_host": meta.get("page_host") or "",
+            "dom": meta.get("dom"),
+            "mime": meta.get("mime") or "image/png",
+        }
+    )
+
+
+@app.route("/import-capture/fullpage/<tid>/image", methods=["GET"])
+def import_capture_fullpage_image(tid: str):
+    """Image déposée par le favori pleine page."""
+    t = (tid or "").strip().lower()
+    if not _valid_pending_token(t):
+        return jsonify({"error": "Identifiant invalide."}), 400
+    path = _fullpage_inbox_path(t)
+    if not path.is_file():
+        return jsonify({"error": "Capture expirée ou introuvable."}), 404
+    meta_path = FULLPAGE_INBOX / f"{t}.json"
+    mime = "image/png"
+    if meta_path.is_file():
+        try:
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            mime = (meta.get("mime") or mime).strip() or mime
+        except (json.JSONDecodeError, OSError):
+            pass
+    try:
+        return send_file(path, mimetype=mime, max_age=0)
+    finally:
+        try:
+            path.unlink(missing_ok=True)
+            meta_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+@app.route("/import-capture/fullpage/<tid>", methods=["GET"])
+def import_capture_fullpage_download(tid: str):
+    """Rétrocompatibilité : renvoie l’image (préférer /meta puis /image)."""
+    return import_capture_fullpage_image(tid)
 
 
 @app.route("/import-capture/pipeline", methods=["POST"])
@@ -1350,7 +1593,14 @@ def import_capture_pipeline():
         )
 
     cap_src = _normalize_capture_source(request.form.get("source") or request.args.get("source"))
-    _save_capture_source_preference(cap_src)
+    page_host = (request.form.get("page_host") or "").strip()[:200]
+    dom_payload = None
+    dom_raw = (request.form.get("dom_json") or "").strip()
+    if dom_raw:
+        try:
+            dom_payload = json.loads(dom_raw)
+        except json.JSONDecodeError:
+            dom_payload = None
     fd, tmp_path = tempfile.mkstemp(suffix="." + ext, prefix="quiz_cap_")
     os.close(fd)
     try:
@@ -1364,7 +1614,13 @@ def import_capture_pipeline():
 
     def gen():
         try:
-            yield from _iter_capture_pipeline_ndjson_from_path(tmp_path, ext, capture_source=cap_src)
+            yield from _iter_capture_pipeline_ndjson_from_path(
+                tmp_path,
+                ext,
+                capture_source=cap_src,
+                dom_payload=dom_payload,
+                page_host=page_host,
+            )
         finally:
             if tmp_path and os.path.isfile(tmp_path):
                 try:
@@ -1569,8 +1825,45 @@ def api_odoo_extract():
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
+@app.route("/api/settings/target_certification", methods=["GET", "PATCH"])
+def api_settings_target_certification():
+    from app.config import count_questions_for_cert, get_target_certification, set_target_certification
+
+    if request.method == "GET":
+        cert = get_target_certification()
+        counts = count_questions_for_cert(ALL_QUESTIONS, cert)
+        return jsonify(
+            {
+                "target_certification": cert,
+                "cert_question_count": counts["matched"],
+                "total_bank": counts["total_bank"],
+                "by_target_version": counts["by_target_version"],
+            }
+        )
+    payload = request.get_json(silent=True) or {}
+    raw = payload.get("target_certification") or payload.get("value")
+    if not raw:
+        return jsonify({"error": "Champ target_certification ou value requis."}), 400
+    try:
+        cert = set_target_certification(str(raw).strip())
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    counts = count_questions_for_cert(ALL_QUESTIONS, cert)
+    return jsonify(
+        {
+            "ok": True,
+            "target_certification": cert,
+            "cert_question_count": counts["matched"],
+            "total_bank": counts["total_bank"],
+            "by_target_version": counts["by_target_version"],
+        }
+    )
+
+
 @app.route("/api/bank")
 def api_bank_list():
+    from app.config import count_questions_for_cert, filter_questions_for_cert, get_target_certification
+
     search = (request.args.get("q") or "").strip().lower()
     topic_filter = (request.args.get("topic") or "").strip()
     try:
@@ -1581,7 +1874,9 @@ def api_bank_list():
         lim = min(500, max(5, int(request.args.get("limit", 40))))
     except ValueError:
         lim = 40
-    sorted_q = _sort_questions_bank(ALL_QUESTIONS)
+    cert = get_target_certification()
+    cert_counts = count_questions_for_cert(ALL_QUESTIONS, cert)
+    sorted_q = _sort_questions_bank(filter_questions_for_cert(ALL_QUESTIONS, cert))
     topics_set = set()
     for q in sorted_q:
         disp, _ = _display_topic(q)
@@ -1596,6 +1891,7 @@ def api_bank_list():
                 continue
         if topic_filter and topic_filter != "__all__" and disp != topic_filter:
             continue
+        tv = (q.get("target_version") or "").strip() or None
         filtered_rows.append(
             {
                 "num": num,
@@ -1603,6 +1899,7 @@ def api_bank_list():
                 "title": title,
                 "topic": disp,
                 "topic_auto": inferred,
+                "target_version": tv,
                 "correct_answer_source": _normalized_answer_source(q),
                 "has_question_image": bool(normalize_question_media_rel(q.get("question_image")))
                 and has_valid_question_image(q),
@@ -1610,12 +1907,27 @@ def api_bank_list():
         )
     total = len(filtered_rows)
     page = filtered_rows[offset : offset + lim]
-    return jsonify({"items": page, "total": total, "topics": sorted(topics_set)})
+    return jsonify(
+        {
+            "items": page,
+            "total": total,
+            "topics": sorted(topics_set),
+            "target_certification": cert,
+            "cert_question_count": cert_counts["matched"],
+            "total_bank": cert_counts["total_bank"],
+        }
+    )
 
 
-@app.route("/api/bank/<int:q_id>")
+@app.route("/api/bank/<q_id>")
 def api_bank_get(q_id):
-    sorted_q = _sort_questions_bank(ALL_QUESTIONS)
+    from app.config import filter_questions_for_cert, get_target_certification
+
+    q_id = _parse_question_id_param(q_id)
+    if q_id is None:
+        return jsonify({"error": "Identifiant question invalide."}), 400
+    cert = get_target_certification()
+    sorted_q = _sort_questions_bank(filter_questions_for_cert(ALL_QUESTIONS, cert))
     num = None
     q = None
     for i, row in enumerate(sorted_q, start=1):
@@ -1627,6 +1939,24 @@ def api_bank_get(q_id):
         except (TypeError, ValueError):
             continue
     if not q:
+        if 1 <= q_id <= len(sorted_q):
+            candidate = sorted_q[q_id - 1]
+            try:
+                real_id = int(candidate.get("id"))
+            except (TypeError, ValueError):
+                real_id = None
+            if real_id is not None and real_id != q_id:
+                return jsonify(
+                    {
+                        "error": (
+                            f"Aucune question avec l'id {q_id}. "
+                            f"Le n° #{q_id} dans la liste correspond à l'id {real_id}."
+                        ),
+                        "hint": "num_not_id",
+                        "bank_id": real_id,
+                        "num": q_id,
+                    }
+                ), 404
         return jsonify({"error": "Question introuvable."}), 404
     stored = (q.get("topic") or "").strip()
     inferred = _infer_odoo_topic(q)
@@ -1646,14 +1976,18 @@ def api_bank_get(q_id):
             "explication_senedoo": q.get("explication_senedoo") or "",
             "explication_claude": q.get("explication_claude") or "",
             "correct_answer_source": _normalized_answer_source(q),
+            "target_version": (q.get("target_version") or "").strip() or None,
             "question_image": qi,
             "question_image_file_ok": bool(qi) and has_valid_question_image(q),
         }
     )
 
 
-@app.route("/api/bank/<int:q_id>", methods=["PUT"])
+@app.route("/api/bank/<q_id>", methods=["PUT"])
 def api_bank_put(q_id):
+    q_id = _parse_question_id_param(q_id)
+    if q_id is None:
+        return jsonify({"error": "Identifiant question invalide."}), 400
     payload = request.get_json(silent=True)
     if not isinstance(payload, dict):
         return jsonify({"error": "JSON attendu."}), 400
@@ -1684,6 +2018,14 @@ def api_bank_put(q_id):
     merged["answers"] = new_answers
     merged["explication_senedoo"] = (payload.get("explication_senedoo") or "").strip()
     merged["explication_claude"] = (payload.get("explication_claude") or "").strip()
+    if "target_version" in payload:
+        from app.doc_schema import normalize_target_version
+
+        raw_tv = payload.get("target_version")
+        if raw_tv is None or (isinstance(raw_tv, str) and not str(raw_tv).strip()):
+            merged["target_version"] = None
+        else:
+            merged["target_version"] = normalize_target_version(str(raw_tv).strip())
     if new_ci != old_ci:
         merged["correct_answer_source"] = "user"
     elif new_ci is not None:
@@ -1723,8 +2065,13 @@ def api_ask():
 
 @app.route("/api/questions")
 def api_questions():
-    n = min(int(request.args.get("n", 20)), len(ALL_QUESTIONS))
-    sample = random.sample(ALL_QUESTIONS, n) if n <= len(ALL_QUESTIONS) else ALL_QUESTIONS[:]
+    from app.config import filter_questions_for_cert, get_target_certification
+
+    pool = filter_questions_for_cert(ALL_QUESTIONS)
+    if not pool:
+        return jsonify([])
+    n = min(int(request.args.get("n", 20)), len(pool))
+    sample = random.sample(pool, n) if n <= len(pool) else pool[:]
     return jsonify(sample)
 
 

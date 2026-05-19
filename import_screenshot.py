@@ -89,6 +89,67 @@ VISION_PROMPT = VISION_PROMPT_UDEMY  # rétrocompatibilité
 
 MAX_QUESTIONS_PER_CAPTURE = 4
 
+VISION_PROMPT_QUIZ = """Tu analyses une capture d'écran d'un **quiz en ligne** (Udemy, odoo.com eLearning / certification, ou interface équivalente à choix multiples).
+
+**Format de sortie (sans markdown) :**
+- **Une seule** question visible → un **objet JSON**.
+- **Plusieurs** questions distinctes sur la **même** capture (souvent **2 à 4** sur odoo.com, parfois 1 sur Udemy) → un **tableau JSON** d'objets, **un objet par question**, ordre **haut → bas**.
+- Ne fusionne **jamais** deux questions : chaque objet n'a que **ses** options.
+
+Chaque objet a exactement ces clés :
+{
+  "no_quiz_content": false ou true,
+  "no_quiz_reason": "phrase courte en français si no_quiz_content est true, sinon chaîne vide",
+  "title": "texte exact de la question en anglais (comme sur l'écran)",
+  "answers": ["option1", "option2", ...],
+  "correct_index": null ou entier 1-based (1 = première option) — voir règles avec correct_index_visible,
+  "correct_index_visible": true ou false,
+  "explication_udemy": "texte d'explication ou de feedback visible sous la question, sinon chaîne vide",
+  "needs_question_image": false ou true,
+  "crop_rel": null ou {"left": 0.0, "top": 0.0, "width": 0.0, "height": 0.0}
+}
+
+Si la capture ne montre **aucune** question de quiz (accueil, catalogue, lecteur vidéo sans quiz, connexion, chargement, etc.) :
+- renvoie **un seul objet** avec **"no_quiz_content": true**, **"no_quiz_reason"**, **"title": ""**, **"answers": []**.
+
+**INTERDIT** : ne mets **jamais** no_quiz_content à true parce qu'il y a **plusieurs** questions sur la même page — renvoie un **tableau** avec un objet par question (max **4**).
+
+Sinon extrais **chaque** question visible. Sur odoo.com, parcourez **toute** la capture jusqu'au bouton « Soumettre » / « Continuer ».
+
+Règles (pour chaque objet) :
+- "title" : l'intitulé de **cette** question uniquement (pas le menu, pas le titre du cours).
+- "answers" : options de **cette** question, ordre affiché, texte exact (pas Submit / Continue / Continuer / Retry).
+- "correct_index_visible" : **true** seulement si la capture montre clairement la bonne option **de cette question** (coche, surlignage, ✓, correction après soumission).
+- "correct_index" : si correct_index_visible **true**, numéro 1-based de l'option indiquée ; sinon **null** — **ne devine pas** avant notation Udemy.
+- "explication_udemy" : feedback visible **sous cette question** seulement.
+- "needs_question_image" : **true** si répondre exige un visuel non décrit dans le titre (tableau comptable, capture UI Odoo, warning/dialog « shown below », icône, bouton montré).
+- "crop_rel" : si needs_question_image, rectangle **normalisé (0–1)** sur toute la capture pour le bloc utile **de cette question** ; sinon null. Si plusieurs questions, crop_rel **disjoints** par question.
+- Guillemets dans le titre : apostrophes ' ou \\" échappés dans le JSON.
+- Pas de markdown, pas de commentaires JSON, pas de virgule finale avant ] ou }.
+"""
+
+VISION_PROMPT_QUIZ_MULTI_RETRY = """La capture est une page de quiz (Udemy ou odoo.com) avec **plusieurs questions empilées** (souvent **3 ou 4**, parfois 2).
+
+Relis **toute** l'image du haut jusqu'au bouton « Soumettre » / « Continuer ». Tu as peut-être omis des questions en bas.
+
+Si tu as mis no_quiz_content parce qu'il n'y a pas « une seule » question : erreur — renvoie un **tableau** avec **toutes** les questions visibles (max 4).
+
+Renvoie UNIQUEMENT un **tableau JSON** (sans markdown), un objet par question (ordre haut → bas). Chaque objet :
+{
+  "no_quiz_content": false,
+  "no_quiz_reason": "",
+  "title": "énoncé exact en anglais",
+  "answers": ["option1", "option2", ...],
+  "correct_index": null ou entier 1-based,
+  "correct_index_visible": true ou false,
+  "explication_udemy": "",
+  "needs_question_image": false ou true,
+  "crop_rel": null ou {"left": 0.0, "top": 0.0, "width": 0.0, "height": 0.0}
+}
+
+Règles : uniquement les options de **cette** question ; pas de bouton Continuer ; no_quiz_content true **uniquement** si aucune question n'est visible.
+"""
+
 VISION_PROMPT_ODOO_MULTI_RETRY = """La capture est une page de quiz **Odoo** (odoo.com eLearning) avec **plusieurs questions empilées** sur le même écran (souvent **3 ou 4**, parfois 2).
 
 Relis **toute** l'image du haut jusqu'au bouton « Soumettre » / « Continuer ». Tu as peut-être omis des questions en bas de page.
@@ -113,10 +174,16 @@ Règles : uniquement les options de **cette** question ; pas de bouton Continuer
 
 
 def get_vision_prompt(capture_source: str = "udemy") -> str:
-    """capture_source : 'udemy' | 'odoo' (site web / eLearning)."""
-    if (capture_source or "").strip().lower() in ("odoo", "odoo_web", "website"):
-        return VISION_PROMPT_ODOO
-    return VISION_PROMPT_UDEMY
+    """Prompt unique Udemy + Odoo (capture_source ignoré, rétrocompatibilité)."""
+    return VISION_PROMPT_QUIZ
+
+
+def infer_provenance_from_host(page_host: str = "") -> str:
+    """Provenance banque : odoo si l'hôte indique odoo.com, sinon udemy."""
+    h = (page_host or "").strip().lower()
+    if "odoo" in h:
+        return "odoo"
+    return "udemy"
 
 
 class CaptureMultiQuestionMisreadError(Exception):
@@ -128,9 +195,8 @@ class CaptureMultiQuestionMisreadError(Exception):
 
     def user_message(self) -> str:
         return (
-            "La capture contient plusieurs questions Odoo sur la même page. "
-            "Sélectionnez « Odoo (site web) » si besoin, puis relancez « Analyser la capture » — "
-            "une fiche sera créée par question (2 ou 3)."
+            "La capture contient plusieurs questions sur la même page. "
+            "Relancez « Analyser la capture » — une fiche sera créée par question."
         )
 
 
@@ -143,11 +209,10 @@ class CaptureNoQuizContentError(Exception):
         super().__init__(self.user_message())
 
     def user_message(self) -> str:
-        is_odoo = self.capture_source in ("odoo", "odoo_web", "website", "elearning", "slides")
-        where = "le quiz Odoo (odoo.com / eLearning)" if is_odoo else "le quiz Udemy"
         base = (
-            f"Cette capture ne contient pas de question à choix multiples visible pour {where}. "
-            f"Affichez l’écran avec l’énoncé et au moins deux options de réponse, puis recapturez ou recollez l’image."
+            "Cette capture ne contient pas de question à choix multiples visible "
+            "(quiz Udemy, odoo.com eLearning, etc.). "
+            "Affichez l’énoncé et au moins deux options de réponse, puis recapturez ou recollez l’image."
         )
         if self.reason:
             return f"{base}\n\nCe que montre la capture : {self.reason}"
@@ -281,40 +346,73 @@ def items_from_vision_payload(parsed, capture_source: str = "udemy") -> list[dic
 
 
 def vision_extract_items_from_capture(
-    image_path: str, capture_source: str = "udemy"
+    image_path: str, capture_source: str = "udemy", page_host: str = ""
 ) -> tuple[list[dict], str, bool]:
     """
-    Extrait les questions via vision. Retourne (items, source_effective, auto_switched).
-    Réessaie en mode Odoo si le modèle refuse une page multi-questions.
+    Extrait les questions via vision (prompt unique Udemy + Odoo).
+    Retourne (items, provenance banque, False) — le 3e booléen est conservé pour compatibilité.
     """
+    items, prov, _method = extract_items_from_capture(
+        image_path,
+        dom_payload=None,
+        page_host=page_host,
+        capture_source=capture_source,
+    )
+    return items, prov, False
+
+
+def extract_items_from_capture(
+    image_path: str,
+    *,
+    dom_payload=None,
+    page_host: str = "",
+    capture_source: str = "",
+) -> tuple[list[dict], str, str]:
+    """
+    DOM d'abord si fourni, sinon Vision. Retourne (items, provenance, méthode dom|vision).
+    """
+    from import_dom_extract import dom_items_need_vision_fallback, items_from_dom_payload
     from quiz_llm import parse_json_value, run_prompt_with_images
 
-    cap_src = (capture_source or "udemy").strip().lower()
-    cap_src = "odoo" if cap_src in ("odoo", "odoo_web", "website", "elearning", "slides") else "udemy"
-    auto_switched = False
+    prov = infer_provenance_from_host(page_host)
+    if not (page_host or "").strip():
+        s = (capture_source or "").strip().lower()
+        prov = "odoo" if s in ("odoo", "odoo_web", "website", "elearning", "slides") else "udemy"
 
-    def _run(prompt: str, src: str) -> list[dict]:
+    if dom_payload is not None:
+        try:
+            dom_items = items_from_dom_payload(dom_payload, prov)
+            need_fb, _reason = dom_items_need_vision_fallback(dom_items)
+            if not need_fb:
+                return dom_items, prov, "dom"
+        except (ValueError, TypeError):
+            pass
+
+    def _run(prompt: str) -> list[dict]:
         raw = run_prompt_with_images(prompt, [image_path])
-        return items_from_vision_payload(parse_json_value(raw), src)
+        return items_from_vision_payload(parse_json_value(raw), prov)
 
     try:
-        items = _run(get_vision_prompt(cap_src), cap_src)
-        if cap_src == "odoo" and len(items) < MAX_QUESTIONS_PER_CAPTURE:
+        items = _run(VISION_PROMPT_QUIZ)
+        if len(items) < MAX_QUESTIONS_PER_CAPTURE:
             try:
-                more = _run(VISION_PROMPT_ODOO_MULTI_RETRY, "odoo")
+                more = _run(VISION_PROMPT_QUIZ_MULTI_RETRY)
                 if len(more) > len(items):
                     items = more
-            except (CaptureNoQuizContentError, CaptureMultiQuestionMisreadError, ValueError, RuntimeError, OSError):
+            except (
+                CaptureNoQuizContentError,
+                CaptureMultiQuestionMisreadError,
+                ValueError,
+                RuntimeError,
+                OSError,
+            ):
                 pass
-        return items, cap_src, False
+        return items, prov, "vision"
     except CaptureMultiQuestionMisreadError:
-        pass
+        items = _run(VISION_PROMPT_QUIZ_MULTI_RETRY)
+        return items, prov, "vision"
     except CaptureNoQuizContentError as e:
-        if not no_quiz_reason_indicates_multi_question_misread(e.reason):
-            raise
-
-    if cap_src != "odoo":
-        items = _run(get_vision_prompt("odoo"), "odoo")
-        return items, "odoo", True
-    items = _run(VISION_PROMPT_ODOO_MULTI_RETRY, "odoo")
-    return items, "odoo", False
+        if no_quiz_reason_indicates_multi_question_misread(e.reason):
+            items = _run(VISION_PROMPT_QUIZ_MULTI_RETRY)
+            return items, prov, "vision"
+        raise

@@ -170,6 +170,28 @@
   .err { background: #fef2f2; color: #b91c1c; padding: .65rem; border-radius: 8px; font-size: .88rem; margin: .5rem 0; }
   .ok { background: #f0fdf4; color: #166534; padding: .65rem; border-radius: 8px; font-size: .88rem; margin: .5rem 0; }
   .pager { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin-top: .5rem; font-size: .85rem; }
+  .cert-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .55rem;
+    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.28);
+    border-radius: 8px; padding: .35rem .5rem; font-size: clamp(.68rem, 1.8vw, .78rem);
+    grid-column: 1 / -1;
+  }
+  .cert-bar label { font-weight: 600; opacity: .95; margin: 0; }
+  .cert-bar select {
+    background: rgba(255,255,255,.95); color: #1a1a2e; border: none; border-radius: 6px;
+    padding: .25rem .4rem; font: inherit; font-weight: 600;
+  }
+  .cert-count { opacity: .92; font-variant-numeric: tabular-nums; }
+  .badge-tv-v18 { background: #fef3c7; color: #92400e; }
+  .badge-tv-v19 { background: #ede9fe; color: #5b21b6; }
+  .tv-tags-edit { display: flex; gap: .65rem; flex-wrap: wrap; margin-top: .25rem; }
+  .tv-tags-edit label {
+    display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; font-weight: 600;
+    padding: .35rem .55rem; border-radius: 8px; cursor: pointer; border: 2px solid transparent;
+  }
+  .tv-tags-edit label.tv-v18 { background: #fef3c7; color: #92400e; }
+  .tv-tags-edit label.tv-v19 { background: #ede9fe; color: #5b21b6; }
+  .tv-tags-edit input { accent-color: currentColor; }
 </style>
 </head>
 <body>
@@ -179,6 +201,14 @@
     <span class="app-version">v{{ app_version }}</span>
   </div>
   <nav class="header-nav" aria-label="Navigation principale">
+    <div class="cert-bar" aria-label="Certification cible">
+      <label for="cert-select">Certif.</label>
+      <select id="cert-select" title="Version Odoo visée pour l'entraînement">
+        <option value="18.0"{% if target_certification == '18.0' %} selected{% endif %}>v18</option>
+        <option value="19.0"{% if target_certification == '19.0' %} selected{% endif %}>v19</option>
+      </select>
+      <span class="cert-count" id="cert-count">{{ cert_question_count }} questions pour la cert v{{ target_certification|replace('.0','') }}</span>
+    </div>
     <a class="header-btn" href="/">🎓 Quiz</a>
     <a class="header-btn" href="/banque" aria-current="page">📋 Banque</a>
     <a class="header-btn" href="/import-capture">📷 Capture</a>
@@ -234,6 +264,13 @@
           <span>Bonne réponse : <strong id="ed-answer-src">—</strong></span>
         </div>
       </div>
+      <div class="row"><label>Versions cibles</label>
+        <div class="tv-tags-edit" id="ed-target-versions">
+          <label class="tv-v18" for="ed-tv-v18"><input type="checkbox" id="ed-tv-v18"> v18</label>
+          <label class="tv-v19" for="ed-tv-v19"><input type="checkbox" id="ed-tv-v19"> v19</label>
+        </div>
+        <span class="muted">Cochez une ou les deux. Visible dans la liste si la certif. (header) correspond.</span>
+      </div>
       <div class="row"><label for="ed-topic">Thème / module</label>
         <div style="display:flex;gap:.35rem;flex-wrap:wrap">
           <input type="text" id="ed-topic" placeholder="Ex. Stock / Inventaire" style="flex:1;min-width:12rem">
@@ -281,7 +318,94 @@
   const qEl = document.getElementById('q');
   const topicf = document.getElementById('topicf');
   const msg = document.getElementById('msg');
+  const certSelect = document.getElementById('cert-select');
+  const certCountEl = document.getElementById('cert-count');
   const escDiv = document.createElement('div');
+
+  function updateCertCount(data) {
+    if (!certCountEl || !data) return;
+    var v = String(data.target_certification || '19.0').replace('.0', '');
+    certCountEl.textContent = (data.cert_question_count || 0) + ' questions pour la cert v' + v;
+  }
+
+  function targetVersionBadge(tv) {
+    if (!tv) return '';
+    var s = String(tv).trim();
+    if (s === 'both') {
+      return ' <span class="badge badge-tv-v18" title="Valide v18 et v19">v18</span>' +
+        ' <span class="badge badge-tv-v19" title="Valide v18 et v19">v19</span>';
+    }
+    if (s === '19.0') {
+      return ' <span class="badge badge-tv-v19" title="Version cible v19">v19</span>';
+    }
+    if (s === '18.0') {
+      return ' <span class="badge badge-tv-v18" title="Version cible v18">v18</span>';
+    }
+    return ' <span class="badge" title="Version cible">' + esc(s) + '</span>';
+  }
+
+  function readTargetVersionFromEditor() {
+    var v18 = document.getElementById('ed-tv-v18');
+    var v19 = document.getElementById('ed-tv-v19');
+    var on18 = v18 && v18.checked;
+    var on19 = v19 && v19.checked;
+    if (on18 && on19) return 'both';
+    if (on18) return '18.0';
+    if (on19) return '19.0';
+    return null;
+  }
+
+  function setTargetVersionEditor(tv) {
+    var v18El = document.getElementById('ed-tv-v18');
+    var v19El = document.getElementById('ed-tv-v19');
+    if (!v18El || !v19El) return;
+    var s = String(tv || '').trim();
+    if (s === 'both') {
+      v18El.checked = true;
+      v19El.checked = true;
+    } else if (s === '19.0') {
+      v18El.checked = false;
+      v19El.checked = true;
+    } else if (s === '18.0') {
+      v18El.checked = true;
+      v19El.checked = false;
+    } else {
+      v18El.checked = false;
+      v19El.checked = false;
+    }
+  }
+
+  function resetEditor() {
+    selectedId = null;
+    current = null;
+    document.getElementById('ed-hint').style.display = 'block';
+    document.getElementById('form').style.display = 'none';
+  }
+
+  async function patchTargetCertification(val) {
+    var res = await fetch('/api/settings/target_certification', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target_certification: val })
+    });
+    var data = {};
+    try { data = await res.json(); } catch (e) {}
+    if (!res.ok) throw new Error(data.error || 'Erreur réglage certification');
+    updateCertCount(data);
+    offset = 0;
+    resetEditor();
+    showMsg('', '');
+    await loadList();
+    return data;
+  }
+
+  if (certSelect) {
+    certSelect.addEventListener('change', function() {
+      patchTargetCertification(certSelect.value).catch(function(e) {
+        showMsg(e.message || 'Erreur', 'err');
+      });
+    });
+  }
 
   function showMsg(html, cls) {
     msg.innerHTML = html ? '<div class="' + cls + '">' + html + '</div>' : '';
@@ -312,8 +436,17 @@
     const q = encodeURIComponent(qEl.value.trim());
     const t = encodeURIComponent(topicf.value);
     const res = await fetch('/api/bank?q=' + q + '&topic=' + t + '&offset=' + offset + '&limit=' + limit);
-    const data = await res.json();
+    var data = {};
+    try { data = await res.json(); } catch (e) { data = {}; }
+    if (!res.ok) {
+      showMsg((data.error || 'Liste indisponible') + ' (HTTP ' + res.status + ')', 'err');
+      listEl.innerHTML = '';
+      total = 0;
+      document.getElementById('pginfo').textContent = '0 / 0';
+      return;
+    }
     total = data.total || 0;
+    updateCertCount(data);
     document.getElementById('pginfo').textContent =
       (total === 0 ? '0' : (offset + 1) + '–' + Math.min(offset + limit, total)) + ' / ' + total;
     if (data.topics && topicf.options.length === 1) {
@@ -327,36 +460,70 @@
     (data.items || []).forEach(function(item) {
       var b = document.createElement('button');
       b.type = 'button';
-      b.dataset.id = item.id;
+      b.dataset.bankId = String(item.id);
       var auto = item.topic_auto ? ' <span class="badge">auto</span>' : '';
       var src = item.correct_answer_source || '';
       var srcBadge = src ? '<span class="' + answerSourceBadgeClass(src) + '" title="Provenance de la bonne réponse">' +
         esc(answerSourceLabel(src)) + '</span>' : '';
       var title = item.title == null ? '' : String(item.title);
       var imgMark = item.has_question_image ? ' <span title="Image de question enregistrée">📷</span>' : '';
-      b.innerHTML = '<strong>#' + item.num + '</strong> ' + esc(title.slice(0, 120)) +
-        (title.length > 120 ? '…' : '') + imgMark + srcBadge +
+      b.innerHTML = '<strong>#' + item.num + '</strong><span class="muted" style="margin-left:.25rem">id ' +
+        esc(item.id) + '</span> ' + esc(title.slice(0, 120)) +
+        (title.length > 120 ? '…' : '') + imgMark + targetVersionBadge(item.target_version) + srcBadge +
         '<div class="muted">' + esc(item.topic) + auto + '</div>';
-      b.onclick = function() { select(item.id); };
-      if (selectedId === item.id) b.classList.add('active');
+      b.onclick = function() { select(Number(item.id), false); };
+      if (Number(selectedId) === Number(item.id)) b.classList.add('active');
       listEl.appendChild(b);
     });
   }
 
-  async function select(id) {
-    selectedId = id;
+  async function select(id, autoRetry) {
+    if (autoRetry === undefined) autoRetry = false;
+    var qid = Number(id);
+    if (Number.isNaN(qid) || qid !== Math.trunc(qid)) {
+      showMsg('Identifiant question invalide.', 'err');
+      return;
+    }
+    selectedId = qid;
     Array.from(listEl.querySelectorAll('button')).forEach(function(b) {
-      b.classList.toggle('active', parseInt(b.dataset.id, 10) === id);
+      b.classList.toggle('active', Number(b.dataset.bankId) === qid);
     });
-    showMsg('', '');
-    var res = await fetch('/api/bank/' + id);
-    if (!res.ok) { showMsg('Erreur chargement', 'err'); return; }
-    current = await res.json();
+    if (!autoRetry) showMsg('', '');
+    var res;
+    try {
+      res = await fetch('/api/bank/' + qid);
+    } catch (e) {
+      resetEditor();
+      showMsg('Erreur réseau : ' + (e.message || e), 'err');
+      return;
+    }
+    var raw = await res.text();
+    var payload = {};
+    try { payload = raw ? JSON.parse(raw) : {}; } catch (e) {
+      var snippet = raw ? ' — ' + raw.replace(/\s+/g, ' ').trim().slice(0, 120) : '';
+      resetEditor();
+      showMsg(
+        'Réponse serveur illisible (HTTP ' + res.status + ').' + snippet +
+          ' Rechargez la page (Ctrl+Shift+R) si le problème persiste.',
+        'err'
+      );
+      return;
+    }
+    if (!res.ok) {
+      if (!autoRetry && payload.hint === 'num_not_id' && payload.bank_id) {
+        return select(Number(payload.bank_id), true);
+      }
+      resetEditor();
+      showMsg((payload.error || 'Erreur chargement') + ' (HTTP ' + res.status + ')', 'err');
+      return;
+    }
+    current = payload;
     document.getElementById('ed-hint').style.display = 'none';
     document.getElementById('form').style.display = 'block';
     document.getElementById('ed-num').textContent = '#' + current.num;
     document.getElementById('ed-id').textContent = current.id;
     document.getElementById('ed-answer-src').textContent = answerSourceLabel(current.correct_answer_source || '');
+    setTargetVersionEditor(current.target_version);
     document.getElementById('ed-topic').value = current.topic || '';
     document.getElementById('topic-hint').textContent = current.topic_is_auto_display
       ? ('Suggestion auto : ' + (current.topic_inferred || '') + ' — modifiable puis enregistrer.')
@@ -439,6 +606,11 @@
 
   document.getElementById('btn-save').onclick = async function() {
     if (!current) return;
+    var tv = readTargetVersionFromEditor();
+    if (!tv) {
+      showMsg('Cochez au moins v18 ou v19 pour la version cible.', 'err');
+      return;
+    }
     var rows = document.querySelectorAll('#ed-answers .ans-block');
     var answers = [];
     rows.forEach(function(row, i) {
@@ -456,6 +628,7 @@
       title: document.getElementById('ed-title').value,
       title_fr: document.getElementById('ed-titlefr').value,
       topic: document.getElementById('ed-topic').value,
+      target_version: tv,
       explication_senedoo: document.getElementById('ed-exs').value,
       explication_claude: document.getElementById('ed-exc').value,
       answers: answers
