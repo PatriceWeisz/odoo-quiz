@@ -39,18 +39,42 @@ from scripts.ingest_odoo_docs import _fetch, THROTTLE_S, top_level_module  # noq
 def _pages_for_version(
     conn: sqlite3.Connection,
     version: str,
+    *,
+    skip_done: bool = False,
 ) -> list[tuple[str, list[str], str]]:
     """Retourne [(url, [chunk_ids], section), …] pour les pages ayant
-    au moins 1 chunk dans `version`."""
-    rows = conn.execute(
-        """
-        SELECT p.url, p.section
-        FROM pages p
-        WHERE p.url IN (SELECT DISTINCT url FROM chunks WHERE version = ?)
-        ORDER BY p.url
-        """,
-        (version,),
-    ).fetchall()
+    au moins 1 chunk dans `version`.
+
+    Si `skip_done=True`, exclut les pages dont au moins un chunk a déjà
+    une entrée dans `chunk_images` — pour reprendre un run interrompu.
+    """
+    if skip_done:
+        # Pages dont AUCUN chunk de cette version n'a encore d'image associée.
+        rows = conn.execute(
+            """
+            SELECT p.url, p.section
+            FROM pages p
+            WHERE p.url IN (SELECT DISTINCT url FROM chunks WHERE version = ?)
+              AND p.url NOT IN (
+                SELECT DISTINCT ch.url
+                FROM chunks ch
+                JOIN chunk_images ci ON ci.chunk_id = ch.chunk_id
+                WHERE ch.version = ?
+              )
+            ORDER BY p.url
+            """,
+            (version, version),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            """
+            SELECT p.url, p.section
+            FROM pages p
+            WHERE p.url IN (SELECT DISTINCT url FROM chunks WHERE version = ?)
+            ORDER BY p.url
+            """,
+            (version,),
+        ).fetchall()
     out: list[tuple[str, list[str], str]] = []
     for url, section in rows:
         cids = [
@@ -100,11 +124,21 @@ def main() -> int:
     parser.add_argument(
         "--no-throttle",
         action="store_true",
-        help="Désactive le throttle 1 req/s (à utiliser avec précaution).",
+        help="Désactive le throttle sur les pages HTML (à utiliser avec précaution — "
+             "le throttle images CDN est déjà à 0).",
+    )
+    parser.add_argument(
+        "--skip-done",
+        action="store_true",
+        help="Skip les pages dont au moins un chunk a déjà une entrée dans chunk_images "
+             "(pour reprendre un run interrompu sans tout refaire).",
     )
     args = parser.parse_args()
 
-    throttle = 0.0 if args.no_throttle else THROTTLE_S
+    # Throttle séparé : 1s entre pages HTML (respect odoo.com),
+    # 0s pour images (CDN statique).
+    page_throttle = 0.0 if args.no_throttle else THROTTLE_S
+    image_throttle = 0.0
     versions = args.version or ["18.0", "19.0"]
     wanted_modules = (
         {m.strip() for m in args.modules.split(",") if m.strip()}
@@ -125,18 +159,18 @@ def main() -> int:
     grand_total_links = 0
 
     for ver in versions:
-        pages = _pages_for_version(conn, ver)
+        pages = _pages_for_version(conn, ver, skip_done=args.skip_done)
         if wanted_modules:
             pages = [(u, cids, s) for (u, cids, s) in pages
                      if _module_of(u, ver) in wanted_modules]
         if args.limit is not None and args.limit > 0:
             pages = pages[: args.limit]
-        print(f"\n=== Version {ver} : {len(pages)} pages à traiter ===")
+        print(f"\n=== Version {ver} : {len(pages)} pages à traiter ===", flush=True)
 
         for idx, (url, chunk_ids, section) in enumerate(pages, 1):
             module = _module_of(url, ver)
-            if throttle > 0:
-                time.sleep(throttle)
+            if page_throttle > 0:
+                time.sleep(page_throttle)
             raw = _fetch(url)
             if raw is None:
                 print(f"  ! fetch KO : {url}")
@@ -155,7 +189,7 @@ def main() -> int:
             page_imgs_skip = 0
             page_image_ids: list[str] = []
             for ref in refs:
-                stored = download_and_store(conn, ref, throttle_s=throttle)
+                stored = download_and_store(conn, ref, throttle_s=image_throttle)
                 if stored is None:
                     page_imgs_skip += 1
                     continue
@@ -174,7 +208,8 @@ def main() -> int:
 
             print(
                 f"[{idx}/{len(pages)}] {url}  "
-                f"→ {page_imgs_new} img, {page_imgs_skip} skip, {links_added} liens"
+                f"→ {page_imgs_new} img, {page_imgs_skip} skip, {links_added} liens",
+                flush=True,
             )
 
     print()

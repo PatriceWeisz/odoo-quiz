@@ -214,7 +214,7 @@ def download_and_store(
     conn: sqlite3.Connection,
     ref: ImageRef,
     *,
-    throttle_s: float = 1.0,
+    throttle_s: float = 0.0,
 ) -> StoredImage | None:
     """Télécharge ref.source_url, convertit, dédup et stocke.
 
