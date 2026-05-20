@@ -63,11 +63,11 @@ Tu produis EXCLUSIVEMENT du JSON strict, aucun texte hors JSON, aucune balise ma
 
 - **Titre EN** : anglais, 10 à 25 mots typiques (jamais > 50). Style cert officielle : interrogatif ou impératif, vocabulaire métier Odoo.
 - **Titre FR** : traduction française fidèle du titre EN. Pas une paraphrase libre, pas d'ajout d'info.
-- **3 OU 4 options** : alterner — choisir 3 si la nuance est binaire+1, 4 si plusieurs concepts proches existent.
+- **4 options par défaut** — utilise 3 options UNIQUEMENT si tu ne trouves pas un 4ᵉ distracteur vraiment plausible (3 c'est l'exception, pas la règle). Une question avec 4 options est plus robuste pour un QCM de certification.
 - **EXACTEMENT 1 option** avec `is_correct=true`. Jamais 0, jamais 2.
-- **Distracteurs PLAUSIBLES** : concepts adjacents du même module Odoo, erreurs courantes des utilisateurs débutants, ou comportements de modules voisins (ex. confondre Sales et Purchase). Pas de distracteur absurde, pas de distracteur hors-sujet.
+- **Distracteurs PLAUSIBLES — TRÈS IMPORTANT** : chaque distracteur doit représenter une réponse qu'un utilisateur Odoo non-expert pourrait raisonnablement choisir. Chaque distracteur doit demander une RÉFLEXION pour être écarté. PAS de distracteur trivialement éliminable (ex. "Set quantity to zero" ne marche pas dans une question sur les niveaux de stock). PAS de distracteur hors-sujet par rapport au scénario de la question (ex. "Inventory Adjustments" ne va pas dans une question sur les livraisons). Les distracteurs DOIVENT être des concepts du MÊME module/chapitre que la bonne réponse, et avoir une logique cohérente avec le scénario posé.
 - **Longueur équilibrée** : la bonne réponse NE doit PAS être plus longue ni plus détaillée que les distracteurs. Sinon le candidat triche par comptage de mots. Vise des options de longueur comparable (±5 mots).
-- **Niveau cert FONCTIONNELLE** : compréhension métier/configuration UI Odoo. Pas de code Python, pas de XML, pas de méthodes ORM, pas de noms techniques de classes (`res.partner`, `account.move`) sauf si la question porte explicitement sur Studio ou developer mode.
+- **Niveau cert FONCTIONNELLE — PAS DE TRIVIA NI DE CALCUL** : compréhension métier/configuration UI Odoo. PAS de code Python, XML, ORM. PAS de noms techniques de classes (`res.partner`, `account.move`) sauf Studio. PAS de calculs arithmétiques (ex. "Si on a 18 unités et des packs de 6, combien de packs ?" — 18/6=3 = trivial, hors scope cert). PAS de questions anecdotiques basées sur un exemple isolé de la doc (ex. "Combien d'articles dans l'exemple Grape Soda ?" — sans valeur pédagogique).
 - **Langue interne** : les `value`/`value_fr` reflètent la même réalité métier. Pas de traduction libre qui change le sens.
 - **`evidence_snippet`** : OBLIGATOIREMENT entre **50 et 150 mots** d'extrait textuel pris **MOT POUR MOT** dans le chunk fourni. C'est le passage qui prouve que la bonne réponse est juste. Inclus 2-3 phrases complètes contextuelles, pas seulement la phrase-clé isolée. Une question avec un `evidence_snippet` < 50 mots est INVALIDE — recommence si tu n'en trouves pas assez (élargis le contexte autour du passage clé). Si tu ne trouves pas 50 mots dans le chunk qui justifient la réponse, n'invente PAS la question : passe à un autre angle du chunk.
 - **`explication_claude`** : 2 à 4 phrases en français. Explique POURQUOI la bonne réponse est juste, en référant au comportement Odoo concret. Pas de méta-blabla "C'est la bonne réponse car..." — donne l'info utile.
@@ -81,6 +81,10 @@ Tu produis EXCLUSIVEMENT du JSON strict, aucun texte hors JSON, aucune balise ma
 - ❌ Question dont la réponse est dans la formulation même du titre (auto-révélation).
 - ❌ Question sur une fonctionnalité qui n'apparaît PAS dans le chunk fourni (hallucination).
 - ❌ Distracteurs négatifs faciles ("Odoo doesn't support this feature") quand la bonne réponse est positive — déséquilibre.
+- ❌ Distracteurs absurdes ou trivialement éliminables ("Set quantity to zero", "Delete the product"). Si tu n'as pas 3 vrais distracteurs solides, descends à 2 distracteurs (3 options total) mais NE bouche PAS un trou avec une option idiote.
+- ❌ Distracteurs hors-contexte par rapport au scénario (ex. évoquer Inventory Adjustments dans une question sur les livraisons de colis). Tous les distracteurs doivent appartenir au MÊME scope/écran/module Odoo que la bonne réponse.
+- ❌ Questions de calcul trivial (multiplications/divisions élémentaires basées sur un exemple de la doc). La cert est fonctionnelle, pas mathématique.
+- ❌ Questions anecdotiques basées sur un exemple précis de la doc (noms de produits/clients fictifs). On veut tester la compréhension du COMPORTEMENT Odoo, pas la mémoire d'un exemple.
 - ❌ Référence à une version spécifique d'Odoo dans le titre si la fonctionnalité existe dans les deux versions (sauf module v19-only explicite).
 - ❌ Acronymes non développés au premier usage (ex. "RFQ" → "Request for Quotation (RFQ)" la première fois).
 
