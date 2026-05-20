@@ -79,6 +79,32 @@ Pour réactiver (rollback) : `sudo systemctl enable --now odoo-quiz.service` + r
 
 ---
 
+## ⚡ AMÉLIORATION FILTRE BANQUE — session 20 mai 2026 (soir) — v2.1.0
+
+Refonte du **filtre thématique** de la page `/banque` (avant : inférence par mots-clés
+qui ignorait le champ `module`, tout retombait sur « Général / Odoo »).
+
+- **Nouveau module `bank_topics.py`** : catalogue catégorie→module (libellés FR),
+  inférence de module pour les 670 questions sans `module` (Udemy/anciennes) via **kNN
+  sur les embeddings déjà calculés** (fallback mots-clés), arbre thématique + compteurs.
+  → **667/670** désormais classées, 11 catégories à 2 niveaux.
+- **`/api/bank`** : filtre par `mod:<module>` / `cat:<catégorie>` + filtres combinés
+  `source` / `version` / `status` / `tier` ; renvoie `topic_tree` (avec compteurs).
+- **`/api/bank/modules`** : catalogue complet pour le sélecteur de l'éditeur.
+- **`/api/bank/<id>`** GET/PUT : exposent + enregistrent le champ `module`.
+- **`banque.html`** : menu déroulant à 2 niveaux (optgroups + compteurs) qui se
+  rafraîchit au changement de cert ; 4 filtres combinés ; affichage « Catégorie › Module » ;
+  **sélecteur de module dans l'éditeur** (remplace l'ancien champ texte « topic »).
+- **Panneau « Importer depuis Odoo » supprimé** (remplaçait questions.json — devenu
+  inutile/risqué avec 3251 questions). Le backend `/api/odoo/*` reste mais n'est plus exposé.
+- **APP_VERSION → 2.1.0**. Déployé sur le VPS dédié, commits poussés.
+
+À considérer plus tard : l'inférence de module est cachée en mémoire (recalcul si
+`questions.json` change) ; on pourrait la persister. Le champ legacy `topic` n'est plus
+utilisé par le filtre.
+
+---
+
 ## État courant des phases — fin session 20 mai 2026
 
 | Phase | État | Détail |
