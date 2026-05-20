@@ -49,7 +49,7 @@
   textarea {
     width: 100%; padding: .55rem .7rem; border: 1px solid #e2e8f0; border-radius: 8px; font: inherit;
     min-height: 4rem; resize: vertical; line-height: 1.45; font-size: .9rem; word-wrap: break-word; }
-  #ed-title, #ed-titlefr { min-height: 3.25rem; }
+  #ed-title, #ed-titlefr { min-height: 7rem; font-size: .92rem; line-height: 1.5; }
   #ed-exc { min-height: 14rem; }
   #ed-exs { min-height: 5rem; }
   .list { max-height: calc(100vh - 220px); overflow-y: auto; margin-top: .5rem; }
@@ -300,21 +300,19 @@
         <div class="title-lang-grid">
           <div class="lang-cell">
             <span class="lang-tag">EN</span>
-            <textarea id="ed-title" rows="2"></textarea>
+            <textarea id="ed-title" rows="4"></textarea>
           </div>
           <div class="lang-cell">
             <span class="lang-tag">FR</span>
-            <textarea id="ed-titlefr" rows="2"></textarea>
+            <textarea id="ed-titlefr" rows="4"></textarea>
           </div>
         </div>
       </div>
-      <div class="row ed-qimg-row" id="ed-qimg-row">
-        <span class="label-like" style="font-size:.78rem;font-weight:600;color:#475569;display:block;margin-bottom:.25rem">Image de question (banque)</span>
+      <div class="row ed-qimg-row" id="ed-qimg-row" style="display:none">
         <div class="ed-qimg-frame" id="ed-qimg-frame" style="display:none">
           <img id="ed-qimg" alt="Illustration enregistrée pour cette question" loading="lazy">
         </div>
         <p class="muted" id="ed-qimg-meta"></p>
-        <p class="muted" id="ed-qimg-hint" style="font-size:.78rem;line-height:1.45">Pour ajouter ou remplacer une image : <a href="/import-capture">Capture Udemy</a> — même intitulé (doublon), cochez l’option image puis validez avec « Mettre à jour la banque ».</p>
       </div>
       <div class="row"><label>Réponses</label><div id="ed-answers"></div></div>
       <div class="row"><label for="ed-exc">Explication Claude</label><textarea id="ed-exc" rows="12"></textarea></div>
@@ -616,37 +614,33 @@
     document.getElementById('ed-title').value = current.title || '';
     document.getElementById('ed-titlefr').value = current.title_fr || '';
     (function renderQImg() {
+      var row = document.getElementById('ed-qimg-row');
       var frame = document.getElementById('ed-qimg-frame');
       var im = document.getElementById('ed-qimg');
       var meta = document.getElementById('ed-qimg-meta');
       var rel = (current.question_image || '').trim();
       im.onerror = null;
-      if (rel && rel.indexOf('..') < 0 && rel.indexOf(':') < 0 && rel.indexOf('question_media/') === 0) {
+      if (rel && rel.indexOf('..') < 0 && rel.indexOf(':') < 0 && rel.indexOf('question_media/') === 0
+          && current.question_image_file_ok) {
+        row.style.display = 'block';
         frame.style.display = 'block';
         im.style.display = 'block';
         im.onerror = function() {
           im.removeAttribute('src');
           im.removeAttribute('title');
-          frame.style.display = 'none';
-          meta.textContent = 'Référence « ' + rel + ' » : chargement impossible (fichier manquant ?).';
-          meta.style.color = '#b91c1c';
+          row.style.display = 'none';
         };
-        if (current.question_image_file_ok) {
-          meta.textContent = 'Fichier : ' + rel + ' — cliquer l’image pour agrandir.';
-          meta.style.color = '#64748b';
-        } else {
-          meta.textContent = 'Référence enregistrée mais fichier absent sur le serveur : ' + rel;
-          meta.style.color = '#b45309';
-        }
+        meta.textContent = 'Cliquer l’image pour agrandir.';
+        meta.style.color = '#64748b';
         im.alt = 'Illustration enregistrée pour cette question';
         im.title = 'Cliquer pour agrandir';
         im.src = '/static/' + rel + '?t=' + Date.now();
       } else {
         im.removeAttribute('src');
         im.removeAttribute('title');
+        row.style.display = 'none';
         frame.style.display = 'none';
-        meta.textContent = 'Aucune image enregistrée pour cette question.';
-        meta.style.color = '#64748b';
+        meta.textContent = '';
       }
     })();
     document.getElementById('ed-exs').value = current.explication_senedoo || '';
