@@ -169,13 +169,23 @@ Le chunk fourni parle de pipeline CRM, pas de credit limit (qui n'existe d'aille
 # --- Lecture pending --------------------------------------------------------
 
 
-def load_pending_files(pending_dir: Path) -> list[tuple[Path, list[dict]]]:
-    """Liste les .jsonl pending et leurs questions. Path résolu absolu."""
+def load_pending_files(pending_dir: Path, *, only_fresh: bool = True) -> list[tuple[Path, list[dict]]]:
+    """Liste les .jsonl pending et leurs questions.
+
+    Si `only_fresh=True` (défaut) : ne retient que les questions PAS encore jugées
+    (`judge_score is None`). Idempotent — re-lancer le judge ne re-jugera pas les
+    questions déjà notées.
+    """
     out: list[tuple[Path, list[dict]]] = []
     pending_dir = pending_dir.resolve()
     for p in sorted(pending_dir.glob("*.jsonl")):
-        qs = [json.loads(line) for line in open(p, encoding="utf-8") if line.strip()]
-        out.append((p.resolve(), qs))
+        all_qs = [json.loads(line) for line in open(p, encoding="utf-8") if line.strip()]
+        if only_fresh:
+            fresh = [q for q in all_qs if q.get("judge_score") is None]
+            if fresh:
+                out.append((p.resolve(), fresh))
+        else:
+            out.append((p.resolve(), all_qs))
     return out
 
 
