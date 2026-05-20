@@ -51,41 +51,69 @@ DEFAULT_PER_CALL = 4
 DEFAULT_CONCURRENCY = 20
 PENDING_DIR = ROOT / "data" / "generated_pending"
 QUESTIONS_FILE = ROOT / "questions.json"
+UDEMY_MODULES_FILE = ROOT / "data" / "udemy_modules.json"
 MIN_CHUNK_CHARS = 400
 MAX_CHUNK_CHARS = 4500
 
 SYSTEM_PROMPT = """Tu es un expert Odoo qui rédige des questions QCM pour la certification fonctionnelle Odoo (versions 18 et 19).
 
-Tu produis EXCLUSIVEMENT du JSON strict, aucun texte hors JSON, aucune balise markdown.
+Tu produis EXCLUSIVEMENT du JSON strict, aucun texte hors JSON, aucune balise markdown, aucun préambule.
 
-Règles non négociables pour CHAQUE question :
-- titre en anglais (10-25 mots typiques, jamais > 50)
-- titre traduit en français
-- 3 OU 4 options (alterner ; choisis 3 si c'est court, 4 si c'est nuancé)
-- EXACTEMENT 1 option avec is_correct=true
-- distracteurs PLAUSIBLES (concepts proches mais incorrects)
-- la bonne réponse NE doit PAS être plus longue ni plus détaillée que les distracteurs (sinon triche par longueur)
-- PAS d'options "All of the above" / "None of the above" / "Toutes les réponses"
-- niveau cert FONCTIONNELLE : compréhension métier/UI Odoo, pas développement
-- **evidence_snippet** : OBLIGATOIREMENT entre **50 et 150 mots** d'extrait textuel pris **MOT POUR MOT** dans le chunk fourni. C'est le passage qui prouve que la bonne réponse est juste. Inclus 2-3 phrases complètes contextuelles, pas seulement la phrase-clé isolée. Une question avec un evidence_snippet < 50 mots est INVALIDE — recommence si tu n'en trouves pas assez (élargis le contexte autour du passage clé).
-- explication courte (2-4 phrases) en français expliquant POURQUOI la bonne réponse est juste
+# Règles non négociables pour CHAQUE question
 
-Format strict — array JSON de N questions :
+- **Titre EN** : anglais, 10 à 25 mots typiques (jamais > 50). Style cert officielle : interrogatif ou impératif, vocabulaire métier Odoo.
+- **Titre FR** : traduction française fidèle du titre EN. Pas une paraphrase libre, pas d'ajout d'info.
+- **3 OU 4 options** : alterner — choisir 3 si la nuance est binaire+1, 4 si plusieurs concepts proches existent.
+- **EXACTEMENT 1 option** avec `is_correct=true`. Jamais 0, jamais 2.
+- **Distracteurs PLAUSIBLES** : concepts adjacents du même module Odoo, erreurs courantes des utilisateurs débutants, ou comportements de modules voisins (ex. confondre Sales et Purchase). Pas de distracteur absurde, pas de distracteur hors-sujet.
+- **Longueur équilibrée** : la bonne réponse NE doit PAS être plus longue ni plus détaillée que les distracteurs. Sinon le candidat triche par comptage de mots. Vise des options de longueur comparable (±5 mots).
+- **Niveau cert FONCTIONNELLE** : compréhension métier/configuration UI Odoo. Pas de code Python, pas de XML, pas de méthodes ORM, pas de noms techniques de classes (`res.partner`, `account.move`) sauf si la question porte explicitement sur Studio ou developer mode.
+- **Langue interne** : les `value`/`value_fr` reflètent la même réalité métier. Pas de traduction libre qui change le sens.
+- **`evidence_snippet`** : OBLIGATOIREMENT entre **50 et 150 mots** d'extrait textuel pris **MOT POUR MOT** dans le chunk fourni. C'est le passage qui prouve que la bonne réponse est juste. Inclus 2-3 phrases complètes contextuelles, pas seulement la phrase-clé isolée. Une question avec un `evidence_snippet` < 50 mots est INVALIDE — recommence si tu n'en trouves pas assez (élargis le contexte autour du passage clé). Si tu ne trouves pas 50 mots dans le chunk qui justifient la réponse, n'invente PAS la question : passe à un autre angle du chunk.
+- **`explication_claude`** : 2 à 4 phrases en français. Explique POURQUOI la bonne réponse est juste, en référant au comportement Odoo concret. Pas de méta-blabla "C'est la bonne réponse car..." — donne l'info utile.
+- **`difficulty`** : `facile` (rappel direct depuis la doc, 1 concept) | `moyen` (combinaison de 2 notions ou scénario simple) | `difficile` (cas limite, configuration avancée, ou scénario multi-étapes).
+- **`scenario_based`** : `true` si la question pose un scénario concret ("A salesperson configures..." / "Un utilisateur paramètre..."), `false` si c'est une question de rappel direct ("What is the default behavior of...").
+
+# Anti-patterns à PROSCRIRE absolument
+
+- ❌ Options `"All of the above"` / `"None of the above"` / `"Toutes les réponses"` / `"Aucune des réponses"`.
+- ❌ Bonne réponse de type "It depends" / "Cela dépend" / "Both options are valid".
+- ❌ Question dont la réponse est dans la formulation même du titre (auto-révélation).
+- ❌ Question sur une fonctionnalité qui n'apparaît PAS dans le chunk fourni (hallucination).
+- ❌ Distracteurs négatifs faciles ("Odoo doesn't support this feature") quand la bonne réponse est positive — déséquilibre.
+- ❌ Référence à une version spécifique d'Odoo dans le titre si la fonctionnalité existe dans les deux versions (sauf module v19-only explicite).
+- ❌ Acronymes non développés au premier usage (ex. "RFQ" → "Request for Quotation (RFQ)" la première fois).
+
+# Exemple complet (à reproduire EN STYLE, pas en contenu)
+
+```
+{
+  "title": "When a customer scans a QR code on a self-ordering kiosk, what determines which menu is displayed?",
+  "title_fr": "Lorsqu'un client scanne un QR code sur une borne de self-service, qu'est-ce qui détermine le menu affiché ?",
+  "options": [
+    {"value": "The price list assigned to the kiosk in its configuration", "value_fr": "La liste de prix assignée à la borne dans sa configuration", "is_correct": false},
+    {"value": "The Point of Sale session linked to the QR code's source", "value_fr": "La session du Point de Vente liée à la source du QR code", "is_correct": true},
+    {"value": "The customer's default language as stored in their profile", "value_fr": "La langue par défaut du client stockée dans son profil", "is_correct": false},
+    {"value": "The current Odoo company set on the user's browser cookie", "value_fr": "La société Odoo courante définie dans le cookie navigateur de l'utilisateur", "is_correct": false}
+  ],
+  "difficulty": "moyen",
+  "scenario_based": true,
+  "evidence_snippet": "Each QR code generated for self-ordering is associated with a specific Point of Sale session. When the customer scans the code, Odoo retrieves the session reference, loads the corresponding menu, and applies the product availability defined for that PoS configuration. The price list, while configurable on the session, is applied only after the menu has been resolved from the session linkage.",
+  "explication_claude": "Le QR code de self-ordering encode la référence de la session PoS. Quand le client scanne, Odoo récupère cette session et charge le menu et les produits disponibles définis pour cette config PoS. La price list et la langue interviennent dans un second temps."
+}
+```
+
+# Format strict — array JSON de N questions
+
+```
 [
-  {
-    "title": "...",
-    "title_fr": "...",
-    "options": [
-      {"value": "...", "value_fr": "...", "is_correct": true},
-      {"value": "...", "value_fr": "...", "is_correct": false},
-      ...
-    ],
-    "difficulty": "facile" | "moyen" | "difficile",
-    "scenario_based": true | false,
-    "evidence_snippet": "...",
-    "explication_claude": "..."
-  }
+  { ... question 1 (cf. structure ci-dessus) ... },
+  { ... question 2 ... },
+  ...
 ]
+```
+
+Si tu ne peux pas produire N questions de qualité depuis le chunk fourni (insuffisance d'information, ambiguïté, peu d'angles), produis-en moins MAIS valides. Ne complète JAMAIS un quota en inventant ou en répétant le même angle sous d'autres formes.
 """
 
 
@@ -151,9 +179,73 @@ def load_few_shot_pool() -> list[dict]:
     return udemy
 
 
-def pick_few_shot(pool: list[dict], k: int = 3, seed: int | None = None) -> list[dict]:
+def load_udemy_modules_map() -> dict[int, str]:
+    """Charge la map {qid_udemy: module_inféré} produite par
+    scripts/build_udemy_module_map.py.
+
+    Retourne {} si le fichier n'existe pas — pick_few_shot tombe alors en
+    fallback aléatoire global (comportement pré-5.5.d).
+    """
+    if not UDEMY_MODULES_FILE.exists():
+        return {}
+    try:
+        raw = json.loads(UDEMY_MODULES_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    out: dict[int, str] = {}
+    for qid_str, rec in raw.items():
+        if not isinstance(rec, dict):
+            continue
+        mod = rec.get("module")
+        if mod and not rec.get("below_threshold"):
+            try:
+                out[int(qid_str)] = str(mod)
+            except (TypeError, ValueError):
+                pass
+    return out
+
+
+def pick_few_shot(
+    pool: list[dict],
+    k: int = 3,
+    seed: int | None = None,
+    *,
+    module: str | None = None,
+    modules_map: dict[int, str] | None = None,
+) -> list[dict]:
+    """Tire k exemples Udemy pour le few-shot.
+
+    Si `module` + `modules_map` sont fournis (Phase 5.5.d) : on privilégie les
+    questions Udemy mappées sur le **même module**, puis on complète par
+    questions du **même tier**, puis aléatoirement.
+    Sinon : fallback historique = échantillon aléatoire pur sur le pool global.
+    """
     rng = random.Random(seed)
-    return rng.sample(pool, min(k, len(pool)))
+    if not module or not modules_map:
+        return rng.sample(pool, min(k, len(pool)))
+
+    target_tier = tier_of(module)
+    same_module: list[dict] = []
+    same_tier: list[dict] = []
+    others: list[dict] = []
+    for q in pool:
+        qid = q.get("id")
+        if not isinstance(qid, int):
+            others.append(q)
+            continue
+        mapped = modules_map.get(qid)
+        if mapped == module:
+            same_module.append(q)
+        elif mapped is not None and target_tier and tier_of(mapped) == target_tier:
+            same_tier.append(q)
+        else:
+            others.append(q)
+
+    rng.shuffle(same_module)
+    rng.shuffle(same_tier)
+    rng.shuffle(others)
+    merged = same_module + same_tier + others
+    return merged[:k]
 
 
 def format_few_shot(qs: list[dict]) -> str:
@@ -323,11 +415,11 @@ def _setup_run(
     output_path: Path | None,
     seed: int | None,
     dry_run: bool,
-) -> tuple[list[dict], list[dict], int, int, Path, str, str] | int:
+) -> tuple[list[dict], list[dict], int, int, Path, str, str, dict[int, str]] | int:
     """Setup commun pour run sync ou async.
 
-    Retourne (chunks, fewshot_pool, next_qid, next_aid, output_path, tier, model)
-    ou un int (exit code) si erreur ou dry-run.
+    Retourne (chunks, fewshot_pool, next_qid, next_aid, output_path, tier,
+    model, modules_map) ou un int (exit code) si erreur ou dry-run.
     """
     tier = tier_of(module) or "?"
     if tier == "?":
@@ -361,6 +453,15 @@ def _setup_run(
     if not pool:
         print("⚠️  Aucun few-shot Udemy disponible — pool vide", file=sys.stderr)
 
+    modules_map = load_udemy_modules_map()
+    if modules_map:
+        n_for_module = sum(1 for m in modules_map.values() if m == module)
+        print(f"→ Few-shot rotatif activé ({len(modules_map)} qids mappés ; "
+              f"{n_for_module} exactement sur module {module!r})")
+    else:
+        print(f"→ Few-shot rotatif désactivé (pas de {UDEMY_MODULES_FILE.name} — "
+              "fallback aléatoire global)")
+
     with open(QUESTIONS_FILE, encoding="utf-8") as f:
         bank_data = json.load(f)
     bank_qs = bank_data.get("questions") or []
@@ -374,7 +475,7 @@ def _setup_run(
     model = _answer_model()
     print(f"→ Modèle : {model}")
     print(f"→ Sortie : {output_path}\n")
-    return chunks, pool, next_qid, next_aid, output_path, tier, model
+    return chunks, pool, next_qid, next_aid, output_path, tier, model, modules_map
 
 
 def _process_raw_questions(
@@ -433,7 +534,7 @@ def run_generation(
     )
     if isinstance(setup, int):
         return setup
-    chunks, pool, next_qid, next_aid, output_path, tier, model = setup
+    chunks, pool, next_qid, next_aid, output_path, tier, model, modules_map = setup
 
     import anthropic
     client = anthropic.Anthropic(api_key=_anthropic_key())
@@ -444,7 +545,10 @@ def run_generation(
         for i, chunk in enumerate(chunks, 1):
             if written >= count:
                 break
-            fewshot = pick_few_shot(pool, k=3, seed=(seed or 0) + i)
+            fewshot = pick_few_shot(
+                pool, k=3, seed=(seed or 0) + i,
+                module=module, modules_map=modules_map,
+            )
             fewshot_text = format_few_shot(fewshot)
             user_prompt = _build_user_prompt(
                 chunk=chunk, module=module, version=version,
@@ -500,7 +604,7 @@ async def run_generation_async(
     )
     if isinstance(setup, int):
         return setup
-    chunks, pool, next_qid_init, next_aid_init, output_path, tier, model = setup
+    chunks, pool, next_qid_init, next_aid_init, output_path, tier, model, modules_map = setup
 
     from anthropic import AsyncAnthropic
     aclient = AsyncAnthropic(api_key=_anthropic_key())
@@ -510,7 +614,10 @@ async def run_generation_async(
 
     async def one_call(idx: int, chunk: dict) -> tuple[int, list[dict] | None, float, str | None]:
         """Retourne (idx, raw_array_or_None, elapsed_s, error_msg_or_None)."""
-        fewshot = pick_few_shot(pool, k=3, seed=(seed or 0) + idx)
+        fewshot = pick_few_shot(
+            pool, k=3, seed=(seed or 0) + idx,
+            module=module, modules_map=modules_map,
+        )
         fewshot_text = format_few_shot(fewshot)
         user_prompt = _build_user_prompt(
             chunk=chunk, module=module, version=version,

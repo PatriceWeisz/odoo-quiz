@@ -1,0 +1,472 @@
+{
+  "meta": {
+    "generated_at": "2026-05-19T23:59:27Z",
+    "total_target": 3000,
+    "tier_budget": {
+      "cert": 0.7,
+      "tier1": 0.2,
+      "tier2": 0.1
+    },
+    "version_ratios": {
+      "18.0": 0.4,
+      "19.0": 0.6
+    },
+    "cap_factor_light": 2,
+    "cap_factor_dense": 3,
+    "dense_threshold_chunks": 100,
+    "grand_total": 2999,
+    "total_overflow": 0
+  },
+  "tiers": {
+    "cert": {
+      "budget": 2100,
+      "modules": [
+        {
+          "module": "crm",
+          "v19_only": false,
+          "chunks_v18": 72,
+          "chunks_v19": 68,
+          "cap_v18": 144,
+          "cap_v19": 136,
+          "target_v18": 34,
+          "target_v19": 51,
+          "target_total": 85
+        },
+        {
+          "module": "sales",
+          "v19_only": false,
+          "chunks_v18": 295,
+          "chunks_v19": 312,
+          "cap_v18": 885,
+          "cap_v19": 936,
+          "target_v18": 147,
+          "target_v19": 221,
+          "target_total": 368
+        },
+        {
+          "module": "purchase",
+          "v19_only": false,
+          "chunks_v18": 42,
+          "chunks_v19": 44,
+          "cap_v18": 84,
+          "cap_v19": 88,
+          "target_v18": 21,
+          "target_v19": 31,
+          "target_total": 52
+        },
+        {
+          "module": "accounting",
+          "v19_only": false,
+          "chunks_v18": 206,
+          "chunks_v19": 221,
+          "cap_v18": 618,
+          "cap_v19": 663,
+          "target_v18": 104,
+          "target_v19": 155,
+          "target_total": 259
+        },
+        {
+          "module": "inventory_and_mrp/inventory",
+          "v19_only": false,
+          "chunks_v18": 233,
+          "chunks_v19": 232,
+          "cap_v18": 699,
+          "cap_v19": 696,
+          "target_v18": 113,
+          "target_v19": 169,
+          "target_total": 282
+        },
+        {
+          "module": "inventory_and_mrp/manufacturing",
+          "v19_only": false,
+          "chunks_v18": 103,
+          "chunks_v19": 105,
+          "cap_v18": 309,
+          "cap_v19": 315,
+          "target_v18": 50,
+          "target_v19": 76,
+          "target_total": 126
+        },
+        {
+          "module": "services/project",
+          "v19_only": false,
+          "chunks_v18": 17,
+          "chunks_v19": 21,
+          "cap_v18": 34,
+          "cap_v19": 42,
+          "target_v18": 9,
+          "target_v19": 14,
+          "target_total": 23
+        },
+        {
+          "module": "services/timesheets",
+          "v19_only": false,
+          "chunks_v18": 4,
+          "chunks_v19": 6,
+          "cap_v18": 8,
+          "cap_v19": 12,
+          "target_v18": 2,
+          "target_v19": 4,
+          "target_total": 6
+        },
+        {
+          "module": "hr",
+          "v19_only": false,
+          "chunks_v18": 332,
+          "chunks_v19": 415,
+          "cap_v18": 996,
+          "cap_v19": 1245,
+          "target_v18": 181,
+          "target_v19": 272,
+          "target_total": 453
+        },
+        {
+          "module": "websites/website",
+          "v19_only": false,
+          "chunks_v18": 55,
+          "chunks_v19": 55,
+          "cap_v18": 110,
+          "cap_v19": 110,
+          "target_v18": 27,
+          "target_v19": 40,
+          "target_total": 67
+        },
+        {
+          "module": "websites/ecommerce",
+          "v19_only": false,
+          "chunks_v18": 31,
+          "chunks_v19": 41,
+          "cap_v18": 62,
+          "cap_v19": 82,
+          "target_v18": 18,
+          "target_v19": 26,
+          "target_total": 44
+        },
+        {
+          "module": "marketing/email_marketing",
+          "v19_only": false,
+          "chunks_v18": 28,
+          "chunks_v19": 28,
+          "cap_v18": 56,
+          "cap_v19": 56,
+          "target_v18": 14,
+          "target_v19": 20,
+          "target_total": 34
+        },
+        {
+          "module": "marketing/marketing_automation",
+          "v19_only": false,
+          "chunks_v18": 18,
+          "chunks_v19": 18,
+          "cap_v18": 36,
+          "cap_v19": 36,
+          "target_v18": 9,
+          "target_v19": 13,
+          "target_total": 22
+        },
+        {
+          "module": "marketing/sms_marketing",
+          "v19_only": false,
+          "chunks_v18": 14,
+          "chunks_v19": 16,
+          "cap_v18": 28,
+          "cap_v19": 32,
+          "target_v18": 7,
+          "target_v19": 11,
+          "target_total": 18
+        },
+        {
+          "module": "marketing/surveys",
+          "v19_only": false,
+          "chunks_v18": 26,
+          "chunks_v19": 26,
+          "cap_v18": 52,
+          "cap_v19": 52,
+          "target_v18": 13,
+          "target_v19": 19,
+          "target_total": 32
+        },
+        {
+          "module": "sales/point_of_sale",
+          "v19_only": false,
+          "chunks_v18": 71,
+          "chunks_v19": 87,
+          "cap_v18": 142,
+          "cap_v19": 174,
+          "target_v18": 38,
+          "target_v19": 58,
+          "target_total": 96
+        },
+        {
+          "module": "productivity/spreadsheet",
+          "v19_only": false,
+          "chunks_v18": 45,
+          "chunks_v19": 52,
+          "cap_v18": 90,
+          "cap_v19": 104,
+          "target_v18": 24,
+          "target_v19": 35,
+          "target_total": 59
+        },
+        {
+          "module": "studio",
+          "v19_only": false,
+          "chunks_v18": 43,
+          "chunks_v19": 48,
+          "cap_v18": 86,
+          "cap_v19": 96,
+          "target_v18": 22,
+          "target_v19": 33,
+          "target_total": 55
+        },
+        {
+          "module": "productivity/ai",
+          "v19_only": true,
+          "chunks_v18": 0,
+          "chunks_v19": 22,
+          "cap_v18": 0,
+          "cap_v19": 44,
+          "target_v18": 0,
+          "target_v19": 13,
+          "target_total": 13
+        },
+        {
+          "module": "productivity/knowledge",
+          "v19_only": true,
+          "chunks_v18": 5,
+          "chunks_v19": 6,
+          "cap_v18": 10,
+          "cap_v19": 12,
+          "target_v18": 0,
+          "target_v19": 7,
+          "target_total": 7
+        }
+      ],
+      "computed_total": 2101,
+      "overflow": 0
+    },
+    "tier1": {
+      "budget": 600,
+      "modules": [
+        {
+          "module": "productivity/whatsapp",
+          "v19_only": false,
+          "chunks_v18": 14,
+          "chunks_v19": 14,
+          "cap_v18": 28,
+          "cap_v19": 28,
+          "target_v18": 16,
+          "target_v19": 24,
+          "target_total": 40
+        },
+        {
+          "module": "marketing/social_marketing",
+          "v19_only": false,
+          "chunks_v18": 12,
+          "chunks_v19": 12,
+          "cap_v18": 24,
+          "cap_v19": 24,
+          "target_v18": 14,
+          "target_v19": 20,
+          "target_total": 34
+        },
+        {
+          "module": "productivity/discuss",
+          "v19_only": false,
+          "chunks_v18": 16,
+          "chunks_v19": 15,
+          "cap_v18": 32,
+          "cap_v19": 30,
+          "target_v18": 18,
+          "target_v19": 26,
+          "target_total": 44
+        },
+        {
+          "module": "productivity/sign",
+          "v19_only": false,
+          "chunks_v18": 100,
+          "chunks_v19": 119,
+          "cap_v18": 300,
+          "cap_v19": 357,
+          "target_v18": 124,
+          "target_v19": 187,
+          "target_total": 311
+        },
+        {
+          "module": "services/helpdesk",
+          "v19_only": false,
+          "chunks_v18": 38,
+          "chunks_v19": 39,
+          "cap_v18": 76,
+          "cap_v19": 78,
+          "target_v18": 44,
+          "target_v19": 65,
+          "target_total": 109
+        },
+        {
+          "module": "sales/subscriptions",
+          "v19_only": false,
+          "chunks_v18": 24,
+          "chunks_v19": 19,
+          "cap_v18": 48,
+          "cap_v19": 38,
+          "target_v18": 24,
+          "target_v19": 37,
+          "target_total": 61
+        }
+      ],
+      "computed_total": 599,
+      "overflow": 0
+    },
+    "tier2": {
+      "budget": 300,
+      "modules": [
+        {
+          "module": "services/field_service",
+          "v19_only": false,
+          "chunks_v18": 6,
+          "chunks_v19": 6,
+          "cap_v18": 12,
+          "cap_v19": 12,
+          "target_v18": 2,
+          "target_v19": 2,
+          "target_total": 4
+        },
+        {
+          "module": "services/planning",
+          "v19_only": false,
+          "chunks_v18": 6,
+          "chunks_v19": 6,
+          "cap_v18": 12,
+          "cap_v19": 12,
+          "target_v18": 2,
+          "target_v19": 2,
+          "target_total": 4
+        },
+        {
+          "module": "hr/recruitment",
+          "v19_only": false,
+          "chunks_v18": 40,
+          "chunks_v19": 40,
+          "cap_v18": 80,
+          "cap_v19": 80,
+          "target_v18": 12,
+          "target_v19": 18,
+          "target_total": 30
+        },
+        {
+          "module": "hr/time_off",
+          "v19_only": false,
+          "chunks_v18": 24,
+          "chunks_v19": 24,
+          "cap_v18": 48,
+          "cap_v19": 48,
+          "target_v18": 7,
+          "target_v19": 11,
+          "target_total": 18
+        },
+        {
+          "module": "hr/payroll",
+          "v19_only": false,
+          "chunks_v18": 128,
+          "chunks_v19": 185,
+          "cap_v18": 384,
+          "cap_v19": 555,
+          "target_v18": 47,
+          "target_v19": 70,
+          "target_total": 117
+        },
+        {
+          "module": "hr/appraisals",
+          "v19_only": false,
+          "chunks_v18": 19,
+          "chunks_v19": 21,
+          "cap_v18": 38,
+          "cap_v19": 42,
+          "target_v18": 6,
+          "target_v19": 9,
+          "target_total": 15
+        },
+        {
+          "module": "sales/rental",
+          "v19_only": false,
+          "chunks_v18": 5,
+          "chunks_v19": 13,
+          "cap_v18": 10,
+          "cap_v19": 26,
+          "target_v18": 3,
+          "target_v19": 4,
+          "target_total": 7
+        },
+        {
+          "module": "inventory_and_mrp/barcode",
+          "v19_only": false,
+          "chunks_v18": 46,
+          "chunks_v19": 46,
+          "cap_v18": 92,
+          "cap_v19": 92,
+          "target_v18": 14,
+          "target_v19": 20,
+          "target_total": 34
+        },
+        {
+          "module": "inventory_and_mrp/quality",
+          "v19_only": false,
+          "chunks_v18": 26,
+          "chunks_v19": 23,
+          "cap_v18": 52,
+          "cap_v19": 46,
+          "target_v18": 7,
+          "target_v19": 11,
+          "target_total": 18
+        },
+        {
+          "module": "inventory_and_mrp/maintenance",
+          "v19_only": false,
+          "chunks_v18": 16,
+          "chunks_v19": 4,
+          "cap_v18": 32,
+          "cap_v19": 8,
+          "target_v18": 3,
+          "target_v19": 4,
+          "target_total": 7
+        },
+        {
+          "module": "productivity/documents",
+          "v19_only": false,
+          "chunks_v18": 6,
+          "chunks_v19": 7,
+          "cap_v18": 12,
+          "cap_v19": 14,
+          "target_v18": 2,
+          "target_v19": 3,
+          "target_total": 5
+        },
+        {
+          "module": "productivity/calendar",
+          "v19_only": false,
+          "chunks_v18": 13,
+          "chunks_v19": 13,
+          "cap_v18": 26,
+          "cap_v19": 26,
+          "target_v18": 4,
+          "target_v19": 6,
+          "target_total": 10
+        },
+        {
+          "module": "marketing/events",
+          "v19_only": false,
+          "chunks_v18": 41,
+          "chunks_v19": 38,
+          "cap_v18": 82,
+          "cap_v19": 76,
+          "target_v18": 12,
+          "target_v19": 18,
+          "target_total": 30
+        }
+      ],
+      "computed_total": 299,
+      "overflow": 0
+    }
+  }
+}
