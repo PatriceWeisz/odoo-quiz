@@ -447,7 +447,15 @@ HTML = """<!DOCTYPE html>
         <option value="18.0"{% if target_certification == '18.0' %} selected{% endif %}>v18</option>
         <option value="19.0"{% if target_certification == '19.0' %} selected{% endif %}>v19</option>
       </select>
-      <span id="quiz-cert-count">{{ total }} questions pour la cert v{{ target_certification|replace('.0','') }}</span>
+      <label for="quiz-module-select" style="font-weight:600;margin:0 0 0 .35rem">Module</label>
+      <select id="quiz-module-select" style="background:#fff;color:#1a1a2e;border:none;border-radius:6px;padding:.25rem .4rem;font:inherit;font-weight:600;max-width:280px">
+        <option value="">— Choisis un module —</option>
+      </select>
+      <label style="font-size:.72rem;display:flex;align-items:center;gap:.25rem;margin:0 0 0 .35rem;cursor:pointer" title="Inclure les questions générées notées 3/5 par le judge (qualité moyenne)">
+        <input type="checkbox" id="quiz-include-hidden" style="margin:0">
+        inclure unverified
+      </label>
+      <span id="quiz-cert-count">— sélectionne un module —</span>
     </div>
     <a class="header-btn" href="/" title="Accueil quiz" aria-current="page">🎓 Quiz</a>
     <a class="header-btn" href="/banque">📋 Banque</a>
@@ -531,30 +539,104 @@ document.getElementById('start-info').innerHTML =
 
 const quizCertSelect = document.getElementById('quiz-cert-select');
 const quizCertCount = document.getElementById('quiz-cert-count');
-if (quizCertSelect) {
-  quizCertSelect.addEventListener('change', async function() {
-    const res = await fetch('/api/settings/target_certification', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ target_certification: quizCertSelect.value })
-    });
-    const data = await res.json();
-    if (!res.ok) { alert(data.error || 'Erreur'); return; }
-    const n = data.cert_question_count || 0;
-    const v = String(data.target_certification || '19.0').replace('.0', '');
-    if (quizCertCount) quizCertCount.textContent = n + ' questions pour la cert v' + v;
-    const qc = document.getElementById('q-count');
-    if (qc) { qc.max = Math.max(1, n); if (parseInt(qc.value, 10) > n) qc.value = n; }
-    document.getElementById('start-info').innerHTML =
-      `${n} questions disponibles.<br>` +
-      `💡 ${withClaude} explications Claude · 📚 ${withSenedoo} explications Senedoo/Udemy<br>` +
-      `Scoring : +1 bonne / −1 mauvaise / 0 saut.`;
-  });
+const quizModuleSelect = document.getElementById('quiz-module-select');
+const quizIncludeHidden = document.getElementById('quiz-include-hidden');
+let startBtnRef = null;
+function getStartBtn() {
+  if (!startBtnRef) startBtnRef = document.querySelector('#start-screen .btn-primary');
+  return startBtnRef;
 }
 
+async function populateModules() {
+  if (!quizModuleSelect) return;
+  const cert = quizCertSelect ? quizCertSelect.value : '19.0';
+  const includeHidden = quizIncludeHidden && quizIncludeHidden.checked ? '1' : '0';
+  const url = `/api/modules?cert=${encodeURIComponent(cert)}&include_hidden=${includeHidden}`;
+  let data;
+  try {
+    const res = await fetch(url);
+    data = await res.json();
+  } catch (e) { return; }
+  const currentValue = quizModuleSelect.value;
+  quizModuleSelect.innerHTML = '<option value="">— Choisis un module —</option>';
+  // Group by tier for readability
+  const tierLabel = { cert: 'Cert (obligatoire)', tier1: 'Tier 1 (fréquent)', tier2: 'Tier 2 (occasionnel)', other: 'Autres' };
+  const byTier = { cert: [], tier1: [], tier2: [], other: [] };
+  for (const m of (data.modules || [])) {
+    if (m.count === 0) continue;
+    (byTier[m.tier] || byTier.other).push(m);
+  }
+  for (const tier of ['cert', 'tier1', 'tier2', 'other']) {
+    if (byTier[tier].length === 0) continue;
+    const og = document.createElement('optgroup');
+    og.label = tierLabel[tier] || tier;
+    for (const m of byTier[tier]) {
+      const opt = document.createElement('option');
+      opt.value = m.module;
+      const displayName = m.module === '_unclassified' ? 'Non classées (Udemy hors-scope)' : m.module;
+      opt.textContent = `${displayName} (${m.count})`;
+      opt.dataset.count = m.count;
+      if (m.module === currentValue) opt.selected = true;
+      og.appendChild(opt);
+    }
+    quizModuleSelect.appendChild(og);
+  }
+  updateQuizState();
+}
+
+function updateQuizState() {
+  if (!quizModuleSelect) return;
+  const mod = quizModuleSelect.value;
+  const startBtn = getStartBtn();
+  if (!mod) {
+    if (startBtn) { startBtn.disabled = true; startBtn.style.opacity = '0.5'; }
+    if (quizCertCount) quizCertCount.textContent = '— sélectionne un module —';
+    document.getElementById('start-info').innerHTML =
+      '<em>👆 Sélectionne un module en haut pour commencer.</em>';
+    total = 0;
+    return;
+  }
+  const opt = quizModuleSelect.options[quizModuleSelect.selectedIndex];
+  const n = parseInt(opt.dataset.count || '0', 10);
+  total = n;
+  if (startBtn) { startBtn.disabled = n === 0; startBtn.style.opacity = n === 0 ? '0.5' : '1'; }
+  const qc = document.getElementById('q-count');
+  if (qc) { qc.max = Math.max(1, n); if (parseInt(qc.value, 10) > n) qc.value = Math.min(20, n); }
+  if (quizCertCount) {
+    const v = String(quizCertSelect.value || '19.0').replace('.0', '');
+    const displayName = mod === '_unclassified' ? 'Non classées' : mod;
+    quizCertCount.textContent = `${n} q. dans ${displayName} (cert v${v})`;
+  }
+  document.getElementById('start-info').innerHTML =
+    `<strong>${n}</strong> questions disponibles dans <code>${mod === '_unclassified' ? 'Non classées' : mod}</code>.<br>` +
+    `💡 ${withClaude} explications Claude · 📚 ${withSenedoo} explications Senedoo/Udemy<br>` +
+    `Scoring : +1 bonne / −1 mauvaise / 0 saut.`;
+}
+
+if (quizCertSelect) {
+  quizCertSelect.addEventListener('change', async function() {
+    // Persiste la cert côté serveur, puis re-populate les modules
+    try {
+      await fetch('/api/settings/target_certification', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target_certification: quizCertSelect.value })
+      });
+    } catch (e) { /* non-bloquant */ }
+    await populateModules();
+  });
+}
+if (quizModuleSelect) quizModuleSelect.addEventListener('change', updateQuizState);
+if (quizIncludeHidden) quizIncludeHidden.addEventListener('change', populateModules);
+// Init au chargement
+populateModules();
+
 async function startQuiz() {
+  const mod = quizModuleSelect ? quizModuleSelect.value : '';
+  if (!mod) { alert('Choisis un module avant de lancer le quiz.'); return; }
   const count = Math.min(parseInt(document.getElementById('q-count').value) || 20, total);
-  const res = await fetch(`/api/questions?n=${count}`);
+  const includeHidden = quizIncludeHidden && quizIncludeHidden.checked ? '1' : '0';
+  const res = await fetch(`/api/questions?n=${count}&module=${encodeURIComponent(mod)}&include_hidden=${includeHidden}`);
   questions = await res.json();
   current = 0; score = 0; good = 0; bad = 0; skip = 0;
   document.getElementById('start-screen').style.display = 'none';
@@ -2081,12 +2163,41 @@ def api_ask():
 def api_questions():
     from app.config import filter_questions_for_cert, get_target_certification
 
-    pool = filter_questions_for_cert(ALL_QUESTIONS)
+    module = (request.args.get("module") or "").strip() or None
+    include_hidden = (request.args.get("include_hidden") or "").lower() in ("1", "true", "yes")
+    pool = filter_questions_for_cert(
+        ALL_QUESTIONS, module=module, include_hidden=include_hidden,
+    )
     if not pool:
         return jsonify([])
     n = min(int(request.args.get("n", 20)), len(pool))
     sample = random.sample(pool, n) if n <= len(pool) else pool[:]
     return jsonify(sample)
+
+
+@app.route("/api/modules")
+def api_modules():
+    """Liste des modules avec leur compte de questions disponibles
+    (filtrage cert version + status non-hidden par défaut).
+
+    Query :
+      - cert (optionnel) : 18.0 ou 19.0 ; défaut = target_certification courante.
+      - include_hidden=1 : inclure les unverified/flagged dans le compte.
+    """
+    from app.config import get_target_certification, list_modules_with_counts, normalize_cert_version
+
+    raw_cert = request.args.get("cert")
+    try:
+        cert = normalize_cert_version(raw_cert) if raw_cert else get_target_certification()
+    except ValueError:
+        cert = get_target_certification()
+    include_hidden = (request.args.get("include_hidden") or "").lower() in ("1", "true", "yes")
+    modules = list_modules_with_counts(ALL_QUESTIONS, cert, include_hidden=include_hidden)
+    return jsonify({
+        "cert_version": cert,
+        "include_hidden": include_hidden,
+        "modules": modules,
+    })
 
 
 @app.route("/health")
