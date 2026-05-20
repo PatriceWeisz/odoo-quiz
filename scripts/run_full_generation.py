@@ -125,9 +125,14 @@ def _flatten_plan(plan: dict) -> list[dict]:
 
 
 def _custom_id(entry: dict, chunk_idx: int) -> str:
-    """ID stable identifiant une requête dans le batch."""
-    mod_slug = entry["module"].replace("/", "__")
-    return f"{entry['tier']}/{mod_slug}/v{entry['version']}/c{chunk_idx:03d}"
+    """ID stable identifiant une requête dans le batch.
+
+    Anthropic impose ^[a-zA-Z0-9_-]{1,64}$ → on remplace tous les '/' '.' par '_'
+    et on garde une forme courte mais traçable.
+    """
+    mod_slug = entry["module"].replace("/", "_")
+    ver_slug = entry["version"].replace(".", "_")
+    return f"g_{entry['tier']}_{mod_slug}_v{ver_slug}_c{chunk_idx:03d}"
 
 
 def build_batch_requests(

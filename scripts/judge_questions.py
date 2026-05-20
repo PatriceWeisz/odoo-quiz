@@ -31,6 +31,7 @@ Fichiers touchés :
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 import time
@@ -228,16 +229,18 @@ def build_judge_requests(
     requests: list[dict] = []
     mapping: dict[str, dict] = {}
 
-    # Compteur global pour des custom_id courts (Anthropic limite à 64 chars).
+    # Compteur global pour des custom_id courts (Anthropic limite à 64 chars
+    # ET impose le pattern ^[a-zA-Z0-9_-]{1,64}$ — les '.' et autres sont bannis).
     # Le state file conserve le mapping idx → file/chunk pour la traçabilité.
     next_idx = 0
     for file_path, qs in pending_files:
         groups = group_by_chunk(qs)
         for chunk_id, group_qs in groups.items():
             qids = [q["id"] for q in group_qs]
-            # custom_id court : "j<idx>-<chunk_hash_8>" — max ~16 chars
-            chunk_hash = (chunk_id or "orphan")[:12]
-            custom_id = f"j{next_idx:04d}-{chunk_hash}"
+            # custom_id : "j<idx>_<md5_12>" (16 chars, pattern-safe).
+            # MD5 du chunk_id pour éviter les caractères interdits ('.', etc.)
+            md5_short = hashlib.md5((chunk_id or "orphan").encode("utf-8")).hexdigest()[:12]
+            custom_id = f"j{next_idx:04d}_{md5_short}"
             next_idx += 1
             ctx_header = _format_chunk_block(group_qs[0])
             qblocks = "\n".join(
