@@ -7,6 +7,53 @@ document liste les **écarts**, **décisions prises pendant l'exécution**, et l
 
 ---
 
+## ⚡ MIGRATION INFRA — session 20 mai 2026 (soir) : VPS dédié
+
+**Le quiz tourne désormais sur un serveur Hetzner DÉDIÉ, séparé de la médiathèque.**
+
+| Élément | Avant | Après |
+|---|---|---|
+| Projet Hetzner | `Mediathèque Picvert UICN` (mutualisé) | **`Odoo-quiz`** (nouveau projet dédié) |
+| Serveur | `niokolo-rs` (CPX32, partagé avec ResourceSpace) | **`odoo-quiz`** (CX23, Falkenstein, dédié) |
+| IPv4 | 46.224.219.81 (partagée) | **178.104.211.37** |
+| IPv6 | 2a01:4f8:c0c:e09e::1 | **2a01:4f8:c015:be2b::1** |
+| OS | Ubuntu 24.04 | Ubuntu 24.04.4 LTS (Python 3.12.3) |
+| Coût | — | ~4,49 €/mois (CX23 + IPv4) |
+| Caddy | mutualisé (ResourceSpace + quiz) | dédié quiz uniquement |
+| Cert HTTPS | — | Let's Encrypt (renouv. auto), valable jusqu'au 18 août 2026 |
+
+**DNS (OVH)** : `quiz-odoo.picvert-senedoo.org` A+AAAA → nouveau VPS (basculé via le manager OVH).
+Les enregistrements `picvert-senedoo.org` / `www` restent sur 46.224.219.81 (ResourceSpace).
+
+**Validé le 20/05** : `/health` = `{"questions":3251,"status":"ok","version":"2.0.0"}`,
+images doc_media + question_media servies en HTTPS, redirection HTTP→HTTPS OK.
+
+**Migration réalisée** : tar streamé (188 MB, hors .venv) ancien→nouveau via le Mac,
+venv recréé (`pip install -r requirements.txt`), config.json (secrets) transféré,
+service systemd `odoo-quiz.service` identique, Caddy quiz-only.
+
+### Nouveaux accès SSH (même clé `~/.ssh/niokolo_claude`)
+```bash
+ssh -i ~/.ssh/niokolo_claude root@178.104.211.37      # nouveau VPS quiz (root)
+ssh -i ~/.ssh/niokolo_claude senedoo@178.104.211.37   # nouveau VPS quiz (app)
+# Anciens (désormais ResourceSpace uniquement) :
+ssh -i ~/.ssh/niokolo_claude senedoo@picvert-senedoo.org
+ssh -i ~/.ssh/niokolo_claude niokolo@picvert-senedoo.org
+```
+
+### Points d'attention post-migration
+- **Ancien VPS** : le service `odoo-quiz.service` + le bloc Caddy `quiz-odoo` y existent
+  toujours (fallback). À désactiver quand on est sûr (réversible, ne PAS supprimer les fichiers).
+- **`.ovh-creds.env` = placeholders** (`...`) → bascule DNS faite manuellement via le manager OVH.
+  Pour automatiser plus tard : générer un token API OVH (droits GET/PUT/POST sur
+  `/domain/zone/picvert-senedoo.org/*`) et le coller dans `.ovh-creds.env`.
+- **fastembed** : modèle re-téléchargé à chaque restart (PrivateTmp). Comportement identique
+  à l'ancien VPS. Optimisation possible : cache persistant.
+- **gunicorn** : warning `Read-only file system: /home/senedoo/.gunicorn` (control socket) —
+  non bloquant, déjà présent avant.
+
+---
+
 ## État courant des phases — fin session 20 mai 2026
 
 | Phase | État | Détail |
@@ -223,10 +270,11 @@ curl -s 'https://quiz-odoo.picvert-senedoo.org/api/modules?cert=19.0' \
 
 ---
 
-## Bridge `cmdbridge.sh` — état au 20 mai 01h40
+## Bridge `cmdbridge.sh` — état au 20 mai 23h (après migration)
 
-- Prochain `.req` à utiliser : **`082`** (le dernier traité était `081`)
+- Prochain `.req` à utiliser : **`102`** (le dernier traité était `101` — bascule HTTPS)
 - Le bridge tourne avec timeout par défaut 1800 s (override par `# TIMEOUT=N`)
+- Les `.req` 084→101 = audit infra + création VPS + migration + bascule DNS/HTTPS
 
 ---
 
@@ -239,5 +287,5 @@ ssh -i ~/.ssh/niokolo_claude niokolo@picvert-senedoo.org   # admin (sudo)
 
 ---
 
-*Document mis à jour à la fin de la session du 20 mai 2026, 01h40.*
-*Prochaine session : Phase 7.2 (Signaler) + 7.3 (Page admin review) + Tests utilisateur du picker module.*
+*Document mis à jour le 20 mai 2026 au soir, après migration vers VPS dédié (projet Hetzner Odoo-quiz, 178.104.211.37).*
+*Prochaine session : nettoyage ancien VPS (désactiver service+Caddy quiz sur niokolo-rs), puis Phase 7.2 (Signaler) + 7.3 (Page admin review) + Tests utilisateur du picker module.*
