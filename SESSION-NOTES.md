@@ -41,9 +41,34 @@ ssh -i ~/.ssh/niokolo_claude senedoo@picvert-senedoo.org
 ssh -i ~/.ssh/niokolo_claude niokolo@picvert-senedoo.org
 ```
 
-### Points d'attention post-migration
-- **Ancien VPS** : le service `odoo-quiz.service` + le bloc Caddy `quiz-odoo` y existent
-  toujours (fallback). À désactiver quand on est sûr (réversible, ne PAS supprimer les fichiers).
+### ⏳ À FAIRE — désactiver le quiz résiduel sur l'ancien VPS (niokolo-rs)
+Décidé le 20/05 : **on le fera plus tard** (le quiz tourne encore en fallback sur l'ancien
+VPS, mais le DNS pointe déjà vers le nouveau, donc aucun impact utilisateur).
+
+⚠️ **Incident à connaître** : une tentative de connexion `ssh root@picvert-senedoo.org` a
+déclenché un **ban fail2ban** sur l'IP du Mac (symptôme : `No route to host` / `Connection
+refused` sur le port 22). **Ne jamais se connecter en root** sur l'ancien VPS → toujours
+`niokolo` (sudo NOPASSWD). Le ban se lève seul (~10 min) ou via la console Hetzner (KVM)
+si besoin. ResourceSpace n'est pas affecté (répond en HTTPS pendant le ban).
+
+Procédure exacte à exécuter quand on veut désactiver (réversible, **ne supprime aucun fichier**) :
+```bash
+SSH="ssh -i ~/.ssh/niokolo_claude niokolo@picvert-senedoo.org"
+# 1) arrêter + désactiver le service quiz
+$SSH "sudo systemctl stop odoo-quiz.service && sudo systemctl disable odoo-quiz.service"
+# 2) backup + retirer le bloc quiz-odoo du Caddyfile (garder le bloc ResourceSpace !)
+$SSH "sudo cp -a /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak.\$(date +%Y%m%dT%H%M%SZ)"
+#    puis éditer /etc/caddy/Caddyfile pour SUPPRIMER uniquement :
+#      quiz-odoo.picvert-senedoo.org { encode gzip zstd; reverse_proxy 127.0.0.1:5001 }
+# 3) valider AVANT reload, puis recharger
+$SSH "sudo caddy validate --config /etc/caddy/Caddyfile && sudo systemctl reload caddy"
+# 4) vérifier : ResourceSpace toujours up, port 5001 fermé
+$SSH "curl -s -o /dev/null -w 'RS:%{http_code}\n' http://127.0.0.1:8080/"
+```
+Pour réactiver (rollback) : `sudo systemctl enable --now odoo-quiz.service` + restaurer le
+`.bak` du Caddyfile + `sudo systemctl reload caddy` + rebasculer le DNS si nécessaire.
+
+### Autres points d'attention post-migration
 - **`.ovh-creds.env` = placeholders** (`...`) → bascule DNS faite manuellement via le manager OVH.
   Pour automatiser plus tard : générer un token API OVH (droits GET/PUT/POST sur
   `/domain/zone/picvert-senedoo.org/*`) et le coller dans `.ovh-creds.env`.
