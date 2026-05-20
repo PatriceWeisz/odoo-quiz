@@ -59,6 +59,16 @@
   .list button:hover { border-color: #714B67; background: #faf5ff; }
   .list button.active { border-color: #714B67; background: #f3e8ff; }
   .muted { font-size: .75rem; color: #64748b; margin-top: .2rem; }
+  .bank-filters { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin-top: .5rem; }
+  .bank-filters select { font-size: .8rem; padding: .38rem .45rem; }
+  #topicf optgroup { font-weight: 700; color: #714B67; }
+  #topicf option { font-weight: 400; color: #1a1a2e; }
+  .filters-meta { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .4rem; min-height: 1.1rem; }
+  .link-btn { background: none; border: none; color: #714B67; font-size: .75rem; font-weight: 600;
+              cursor: pointer; padding: 0; text-decoration: underline; }
+  .badge-status-verified_by_judge { background: #dcfce7; color: #166534; }
+  .badge-status-unverified { background: #fef9c3; color: #854d0e; }
+  .badge-status-flagged { background: #fee2e2; color: #b91c1c; }
   .badge { display: inline-block; font-size: .68rem; padding: .1rem .35rem; border-radius: 4px;
            background: #e2e8f0; color: #334155; margin-left: .35rem; }
   .badge-src-udemy { background: #e0e7ff; color: #3730a3; }
@@ -218,31 +228,41 @@
   </nav>
 </header>
 <main>
-  <div class="panel" style="grid-column:1/-1">
-    <h2>Importer depuis Odoo (votre instance)</h2>
-    <p class="muted" style="margin-bottom:.65rem;line-height:1.45">
-      Via l’API XML-RPC de <strong>senedoo.odoo.com</strong> (<code>config.json</code>).
-      Ne concerne pas le quiz public sur
-      <a href="https://www.odoo.com/fr_FR/slides/odoo-certification-sample-test-50" target="_blank" rel="noopener">odoo.com/eLearning</a>
-      — pour celui-ci, utilisez <a href="/import-capture">📷 Capture</a> (collage d’écran).
-    </p>
-    <div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:flex-end;margin-bottom:.5rem">
-      <div style="flex:1;min-width:12rem">
-        <label for="odoo-survey-search">Rechercher un sondage</label>
-        <input type="search" id="odoo-survey-search" placeholder="certification, survey…">
-      </div>
-      <button type="button" class="btn btn-secondary" id="odoo-survey-refresh">Actualiser</button>
-    </div>
-    <select id="odoo-survey-select" size="4" style="width:100%;margin-bottom:.5rem;font-size:.88rem">
-      <option value="">—</option>
-    </select>
-    <button type="button" class="btn btn-primary" id="odoo-survey-extract">Importer ce sondage → questions.json</button>
-    <div id="odoo-extract-msg"></div>
-  </div>
   <div class="panel">
     <h2>Liste</h2>
     <input type="search" id="q" placeholder="Filtrer (titre, n°, thème)…">
     <select id="topicf" style="margin-top:.5rem"><option value="__all__">Tous les thèmes</option></select>
+    <div class="bank-filters">
+      <select id="fsource" title="Source de la question">
+        <option value="">Toutes sources</option>
+        <option value="claude">Claude (générées)</option>
+        <option value="udemy">Udemy / capture</option>
+        <option value="user">Utilisateur</option>
+        <option value="odoo">Site Odoo</option>
+      </select>
+      <select id="fversion" title="Version cible">
+        <option value="">Toutes versions</option>
+        <option value="18.0">v18</option>
+        <option value="19.0">v19</option>
+        <option value="both">v18 + v19</option>
+      </select>
+      <select id="fstatus" title="Statut de validation">
+        <option value="">Tous statuts</option>
+        <option value="verified_by_judge">Vérifiées</option>
+        <option value="unverified">À revoir</option>
+        <option value="flagged">Signalées</option>
+      </select>
+      <select id="ftier" title="Tier de priorité">
+        <option value="">Tous tiers</option>
+        <option value="cert">Cert</option>
+        <option value="tier1">Tier 1</option>
+        <option value="tier2">Tier 2</option>
+      </select>
+    </div>
+    <div class="filters-meta">
+      <span id="active-filters" class="muted"></span>
+      <button type="button" id="filters-reset" class="link-btn" hidden>Réinitialiser</button>
+    </div>
     <div class="list" id="list"></div>
     <div class="pager">
       <button type="button" class="btn btn-secondary" id="prev">←</button>
@@ -271,12 +291,9 @@
         </div>
         <span class="muted">Cochez une ou les deux. Visible dans la liste si la certif. (header) correspond.</span>
       </div>
-      <div class="row"><label for="ed-topic">Thème / module</label>
-        <div style="display:flex;gap:.35rem;flex-wrap:wrap">
-          <input type="text" id="ed-topic" placeholder="Ex. Stock / Inventaire" style="flex:1;min-width:12rem">
-          <button type="button" class="btn btn-secondary" id="btn-guess">Deviner</button>
-        </div>
-        <span class="muted" id="topic-hint"></span>
+      <div class="row"><label for="ed-module">Module / thème</label>
+        <select id="ed-module"><option value="">— Non classé —</option></select>
+        <span class="muted" id="module-hint"></span>
       </div>
       <div class="row">
         <label>Intitulé de la question</label>
@@ -317,6 +334,13 @@
   const listEl = document.getElementById('list');
   const qEl = document.getElementById('q');
   const topicf = document.getElementById('topicf');
+  const fsource = document.getElementById('fsource');
+  const fversion = document.getElementById('fversion');
+  const fstatus = document.getElementById('fstatus');
+  const ftier = document.getElementById('ftier');
+  const filtersReset = document.getElementById('filters-reset');
+  const activeFiltersEl = document.getElementById('active-filters');
+  let topicTreeSig = '';
   const msg = document.getElementById('msg');
   const certSelect = document.getElementById('cert-select');
   const certCountEl = document.getElementById('cert-count');
@@ -432,10 +456,68 @@
     return escDiv.innerHTML;
   }
 
+  function populateTopicFilter(tree) {
+    var sig = JSON.stringify((tree || []).map(function(c) {
+      return [c.value, c.count, (c.modules || []).map(function(m) { return [m.value, m.count]; })];
+    }));
+    if (sig === topicTreeSig) return; // pas de changement → ne pas reconstruire
+    topicTreeSig = sig;
+    var prev = topicf.value;
+    topicf.innerHTML = '<option value="__all__">Tous les thèmes</option>';
+    (tree || []).forEach(function(cat) {
+      var og = document.createElement('optgroup');
+      og.label = cat.label + ' (' + cat.count + ')';
+      var oCat = document.createElement('option');
+      oCat.value = cat.value;
+      oCat.textContent = '▸ Tout : ' + cat.label + ' (' + cat.count + ')';
+      og.appendChild(oCat);
+      (cat.modules || []).forEach(function(m) {
+        var o = document.createElement('option');
+        o.value = m.value;
+        o.textContent = '   ' + m.label + ' (' + m.count + ')';
+        og.appendChild(o);
+      });
+      topicf.appendChild(og);
+    });
+    if (prev && Array.from(topicf.options).some(function(o) { return o.value === prev; })) {
+      topicf.value = prev;
+    } else {
+      topicf.value = '__all__';
+    }
+  }
+
+  function statusBadge(st) {
+    if (!st) return '';
+    var lbl = st === 'verified_by_judge' ? 'Vérifiée'
+      : st === 'unverified' ? 'À revoir'
+      : st === 'flagged' ? 'Signalée' : st;
+    return ' <span class="badge badge-status-' + esc(st) + '" title="Statut de validation">' + esc(lbl) + '</span>';
+  }
+
+  function updateActiveFilters() {
+    var bits = [];
+    if (topicf.value && topicf.value !== '__all__') {
+      var sel = topicf.options[topicf.selectedIndex];
+      bits.push((sel ? sel.textContent.trim().replace(/^▸ Tout : /, '') : topicf.value));
+    }
+    if (fsource.value) bits.push(fsource.options[fsource.selectedIndex].textContent);
+    if (fversion.value) bits.push(fversion.options[fversion.selectedIndex].textContent);
+    if (fstatus.value) bits.push(fstatus.options[fstatus.selectedIndex].textContent);
+    if (ftier.value) bits.push(ftier.options[ftier.selectedIndex].textContent);
+    var hasFilters = bits.length > 0;
+    activeFiltersEl.textContent = hasFilters ? ('Filtres : ' + bits.join(' · ')) : '';
+    filtersReset.hidden = !hasFilters;
+  }
+
   async function loadList() {
-    const q = encodeURIComponent(qEl.value.trim());
-    const t = encodeURIComponent(topicf.value);
-    const res = await fetch('/api/bank?q=' + q + '&topic=' + t + '&offset=' + offset + '&limit=' + limit);
+    const params = '?q=' + encodeURIComponent(qEl.value.trim())
+      + '&topic=' + encodeURIComponent(topicf.value)
+      + '&source=' + encodeURIComponent(fsource.value)
+      + '&version=' + encodeURIComponent(fversion.value)
+      + '&status=' + encodeURIComponent(fstatus.value)
+      + '&tier=' + encodeURIComponent(ftier.value)
+      + '&offset=' + offset + '&limit=' + limit;
+    const res = await fetch('/api/bank' + params);
     var data = {};
     try { data = await res.json(); } catch (e) { data = {}; }
     if (!res.ok) {
@@ -447,30 +529,31 @@
     }
     total = data.total || 0;
     updateCertCount(data);
+    populateTopicFilter(data.topic_tree);
+    updateActiveFilters();
     document.getElementById('pginfo').textContent =
       (total === 0 ? '0' : (offset + 1) + '–' + Math.min(offset + limit, total)) + ' / ' + total;
-    if (data.topics && topicf.options.length === 1) {
-      data.topics.forEach(function(t) {
-        var o = document.createElement('option');
-        o.value = t; o.textContent = t;
-        topicf.appendChild(o);
-      });
-    }
     listEl.innerHTML = '';
-    (data.items || []).forEach(function(item) {
+    if (!data.items || !data.items.length) {
+      listEl.innerHTML = '<p class="muted" style="padding:.5rem">Aucune question ne correspond à ces filtres.</p>';
+      return;
+    }
+    data.items.forEach(function(item) {
       var b = document.createElement('button');
       b.type = 'button';
       b.dataset.bankId = String(item.id);
-      var auto = item.topic_auto ? ' <span class="badge">auto</span>' : '';
+      var auto = item.topic_auto ? ' <span class="badge" title="Module inféré automatiquement">auto</span>' : '';
       var src = item.correct_answer_source || '';
       var srcBadge = src ? '<span class="' + answerSourceBadgeClass(src) + '" title="Provenance de la bonne réponse">' +
         esc(answerSourceLabel(src)) + '</span>' : '';
       var title = item.title == null ? '' : String(item.title);
       var imgMark = item.has_question_image ? ' <span title="Image de question enregistrée">📷</span>' : '';
+      var cat = (item.category && item.category !== item.topic) ? esc(item.category) + ' › ' : '';
       b.innerHTML = '<strong>#' + item.num + '</strong><span class="muted" style="margin-left:.25rem">id ' +
         esc(item.id) + '</span> ' + esc(title.slice(0, 120)) +
         (title.length > 120 ? '…' : '') + imgMark + targetVersionBadge(item.target_version) + srcBadge +
-        '<div class="muted">' + esc(item.topic) + auto + '</div>';
+        statusBadge(item.status) +
+        '<div class="muted">' + cat + esc(item.topic) + auto + '</div>';
       b.onclick = function() { select(Number(item.id), false); };
       if (Number(selectedId) === Number(item.id)) b.classList.add('active');
       listEl.appendChild(b);
@@ -524,10 +607,12 @@
     document.getElementById('ed-id').textContent = current.id;
     document.getElementById('ed-answer-src').textContent = answerSourceLabel(current.correct_answer_source || '');
     setTargetVersionEditor(current.target_version);
-    document.getElementById('ed-topic').value = current.topic || '';
-    document.getElementById('topic-hint').textContent = current.topic_is_auto_display
-      ? ('Suggestion auto : ' + (current.topic_inferred || '') + ' — modifiable puis enregistrer.')
-      : 'Thème enregistré sur cette question.';
+    setEditorModule(current.module_resolved || '');
+    document.getElementById('module-hint').textContent = current.module
+      ? 'Module enregistré sur cette question.'
+      : (current.module_resolved
+          ? ('Module inféré automatiquement (' + (current.module_label || current.module_resolved) + ') — corrigez si besoin puis enregistrez.')
+          : 'Aucun module — choisissez-en un puis enregistrez.');
     document.getElementById('ed-title').value = current.title || '';
     document.getElementById('ed-titlefr').value = current.title_fr || '';
     (function renderQImg() {
@@ -599,10 +684,39 @@
     });
   }
 
-  document.getElementById('btn-guess').onclick = function() {
-    if (!current) return;
-    document.getElementById('ed-topic').value = current.topic_inferred || '';
-  };
+  var edModule = document.getElementById('ed-module');
+  var moduleCatalogValues = {};
+  async function loadModuleCatalog() {
+    try {
+      var res = await fetch('/api/bank/modules');
+      var data = await res.json();
+      edModule.innerHTML = '<option value="">— Non classé —</option>';
+      (data.catalog || []).forEach(function(cat) {
+        var og = document.createElement('optgroup');
+        og.label = cat.label;
+        (cat.modules || []).forEach(function(m) {
+          var o = document.createElement('option');
+          o.value = m.value;
+          o.textContent = m.label;
+          og.appendChild(o);
+          moduleCatalogValues[m.value] = true;
+        });
+        edModule.appendChild(og);
+      });
+    } catch (e) { /* catalogue indisponible : le select reste minimal */ }
+  }
+  function setEditorModule(val) {
+    val = val || '';
+    if (val && !moduleCatalogValues[val]) {
+      // module hors catalogue (rare) : ajoute une option ad hoc
+      var o = document.createElement('option');
+      o.value = val; o.textContent = val;
+      edModule.appendChild(o);
+      moduleCatalogValues[val] = true;
+    }
+    edModule.value = val;
+  }
+  loadModuleCatalog();
 
   document.getElementById('btn-save').onclick = async function() {
     if (!current) return;
@@ -627,7 +741,7 @@
     var body = {
       title: document.getElementById('ed-title').value,
       title_fr: document.getElementById('ed-titlefr').value,
-      topic: document.getElementById('ed-topic').value,
+      module: document.getElementById('ed-module').value,
       target_version: tv,
       explication_senedoo: document.getElementById('ed-exs').value,
       explication_claude: document.getElementById('ed-exc').value,
@@ -642,7 +756,6 @@
     try { data = await res.json(); } catch (e) {}
     if (!res.ok) { showMsg(data.error || 'Erreur enregistrement', 'err'); return; }
     showMsg('Modifications enregistrées.', 'ok');
-    while (topicf.options.length > 1) topicf.removeChild(topicf.lastChild);
     offset = 0;
     await loadList();
   };
@@ -652,83 +765,17 @@
 
   qEl.addEventListener('input', function() { offset = 0; debounce(loadList); });
   topicf.addEventListener('change', function() { offset = 0; loadList(); });
+  [fsource, fversion, fstatus, ftier].forEach(function(el) {
+    el.addEventListener('change', function() { offset = 0; loadList(); });
+  });
+  filtersReset.addEventListener('click', function() {
+    topicf.value = '__all__'; fsource.value = ''; fversion.value = '';
+    fstatus.value = ''; ftier.value = ''; offset = 0; loadList();
+  });
   document.getElementById('prev').onclick = function() { offset = Math.max(0, offset - limit); loadList(); };
   document.getElementById('next').onclick = function() { if (offset + limit < total) { offset += limit; loadList(); } };
 
   loadList();
-
-  var odooSurveySearch = document.getElementById('odoo-survey-search');
-  var odooSurveySelect = document.getElementById('odoo-survey-select');
-  var odooExtractMsg = document.getElementById('odoo-extract-msg');
-  function showOdooMsg(html, kind) {
-    if (!odooExtractMsg) return;
-    odooExtractMsg.className = kind === 'ok' ? 'ok' : (kind === 'err' ? 'err' : 'muted');
-    odooExtractMsg.innerHTML = html || '';
-  }
-  async function loadOdooSurveys() {
-    if (!odooSurveySelect) return;
-    var q = odooSurveySearch ? odooSurveySearch.value.trim() : '';
-    showOdooMsg('Chargement des sondages…', '');
-    try {
-      var res = await fetch('/api/odoo/surveys?q=' + encodeURIComponent(q));
-      var data = await res.json();
-      if (!data.ok) throw new Error(data.error || 'Erreur');
-      odooSurveySelect.innerHTML = '';
-      if (!data.surveys || !data.surveys.length) {
-        odooSurveySelect.innerHTML = '<option value="">Aucun sondage trouvé</option>';
-        showOdooMsg('Aucun sondage. Essayez un autre mot-clé.', 'err');
-        return;
-      }
-      data.surveys.forEach(function (s) {
-        var opt = document.createElement('option');
-        opt.value = String(s.id);
-        opt.textContent = '[' + s.id + '] ' + s.title + ' (' + s.question_count + ' questions)';
-        odooSurveySelect.appendChild(opt);
-      });
-      showOdooMsg(data.surveys.length + ' sondage(s) sur ' + (data.odoo_url || 'Odoo') + '.', 'ok');
-    } catch (e) {
-      odooSurveySelect.innerHTML = '<option value="">—</option>';
-      showOdooMsg('Erreur : ' + (e.message || e), 'err');
-    }
-  }
-  var odooRefresh = document.getElementById('odoo-survey-refresh');
-  if (odooRefresh) odooRefresh.addEventListener('click', loadOdooSurveys);
-  if (odooSurveySearch) {
-    odooSurveySearch.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') { e.preventDefault(); loadOdooSurveys(); }
-    });
-  }
-  var odooExtractBtn = document.getElementById('odoo-survey-extract');
-  if (odooExtractBtn) {
-    odooExtractBtn.addEventListener('click', async function () {
-      var sid = odooSurveySelect && odooSurveySelect.value;
-      if (!sid) { showOdooMsg('Choisissez un sondage.', 'err'); return; }
-      if (!confirm('Remplacer questions.json par ce sondage ? (sauvegarde .bak automatique)')) return;
-      odooExtractBtn.disabled = true;
-      showOdooMsg('Import en cours…', '');
-      try {
-        var res = await fetch('/api/odoo/extract', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ survey_id: parseInt(sid, 10) })
-        });
-        var data = await res.json();
-        if (!data.ok) throw new Error(data.error || 'Échec import');
-        showOdooMsg(
-          'Importé : <strong>' + data.question_count + '</strong> questions — « ' +
-          (data.survey_title || '') + ' ». Rechargez la liste si besoin.',
-          'ok'
-        );
-        offset = 0;
-        await loadList();
-      } catch (e) {
-        showOdooMsg('Erreur : ' + (e.message || e), 'err');
-      } finally {
-        odooExtractBtn.disabled = false;
-      }
-    });
-  }
-  loadOdooSurveys();
 
   var zOver = document.getElementById('bank-q-zoom-overlay');
   var zImg = document.getElementById('bank-q-zoom-img');

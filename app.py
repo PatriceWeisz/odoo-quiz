@@ -1944,10 +1944,15 @@ def api_settings_target_certification():
 
 @app.route("/api/bank")
 def api_bank_list():
+    import bank_topics as bt
     from app.config import count_questions_for_cert, filter_questions_for_cert, get_target_certification
 
     search = (request.args.get("q") or "").strip().lower()
     topic_filter = (request.args.get("topic") or "").strip()
+    source_filter = (request.args.get("source") or "").strip().lower()
+    version_filter = (request.args.get("version") or "").strip()
+    status_filter = (request.args.get("status") or "").strip()
+    tier_filter = (request.args.get("tier") or "").strip()
     try:
         offset = max(0, int(request.args.get("offset", 0)))
     except ValueError:
@@ -1958,20 +1963,46 @@ def api_bank_list():
         lim = 40
     cert = get_target_certification()
     cert_counts = count_questions_for_cert(ALL_QUESTIONS, cert)
+    # Inférence des modules sur TOUT le corpus (contexte complet pour le kNN), caché.
+    inferred = bt.infer_modules(ALL_QUESTIONS)
     sorted_q = _sort_questions_bank(filter_questions_for_cert(ALL_QUESTIONS, cert))
-    topics_set = set()
-    for q in sorted_q:
-        disp, _ = _display_topic(q)
-        topics_set.add(disp)
+    topic_tree = bt.build_topic_tree(sorted_q, inferred)
+
+    def _version_ok(q):
+        if not version_filter:
+            return True
+        tv = (q.get("target_version") or "").strip()
+        if version_filter == "both":
+            return tv == "both"
+        if version_filter == "none":
+            return not tv
+        if version_filter in ("18.0", "19.0"):
+            return tv == version_filter or tv == "both"
+        return True
+
     filtered_rows = []
     for num, q in enumerate(sorted_q, start=1):
-        disp, inferred = _display_topic(q)
+        mod, mod_inf = bt.resolve_module(q, inferred)
+        disp_label = bt.module_label(mod) if mod else bt.UNCLASSIFIED_LABEL
+        cat_label = bt.category_label(bt.category_of(mod)) if mod else bt.UNCLASSIFIED_LABEL
+        src = _normalized_answer_source(q)
         title = (q.get("title") or "").strip()
         if search:
-            blob = (title + " " + (q.get("title_fr") or "") + " " + disp + " " + str(q.get("id"))).lower()
+            blob = (
+                title + " " + (q.get("title_fr") or "") + " " + disp_label + " "
+                + cat_label + " " + (mod or "") + " " + str(q.get("id"))
+            ).lower()
             if search not in blob:
                 continue
-        if topic_filter and topic_filter != "__all__" and disp != topic_filter:
+        if not bt.matches_topic_filter(q, inferred, topic_filter):
+            continue
+        if source_filter and (src or "") != source_filter:
+            continue
+        if not _version_ok(q):
+            continue
+        if status_filter and (q.get("status") or "") != status_filter:
+            continue
+        if tier_filter and (q.get("tier") or "") != tier_filter:
             continue
         tv = (q.get("target_version") or "").strip() or None
         filtered_rows.append(
@@ -1979,10 +2010,14 @@ def api_bank_list():
                 "num": num,
                 "id": q.get("id"),
                 "title": title,
-                "topic": disp,
-                "topic_auto": inferred,
+                "topic": disp_label,
+                "category": cat_label,
+                "module": mod or None,
+                "topic_auto": mod_inf,
                 "target_version": tv,
-                "correct_answer_source": _normalized_answer_source(q),
+                "status": (q.get("status") or None),
+                "tier": (q.get("tier") or None),
+                "correct_answer_source": src,
                 "has_question_image": bool(normalize_question_media_rel(q.get("question_image")))
                 and has_valid_question_image(q),
             }
@@ -1993,12 +2028,21 @@ def api_bank_list():
         {
             "items": page,
             "total": total,
-            "topics": sorted(topics_set),
+            "topic_tree": topic_tree,
+            "topics": [],  # déprécié (remplacé par topic_tree)
             "target_certification": cert,
             "cert_question_count": cert_counts["matched"],
             "total_bank": cert_counts["total_bank"],
         }
     )
+
+
+@app.route("/api/bank/modules")
+def api_bank_modules():
+    """Catalogue complet catégorie → modules (pour le sélecteur de l'éditeur)."""
+    import bank_topics as bt
+
+    return jsonify({"catalog": bt.full_catalog()})
 
 
 @app.route("/api/bank/<q_id>")
@@ -2044,6 +2088,11 @@ def api_bank_get(q_id):
     inferred = _infer_odoo_topic(q)
     disp, is_auto = _display_topic(q)
     qi = normalize_question_media_rel(q.get("question_image"))
+    import bank_topics as bt
+
+    real_module = bt._norm_module(q.get("module"))
+    inferred_map = bt.infer_modules(ALL_QUESTIONS)
+    resolved_module, module_is_inferred = bt.resolve_module(q, inferred_map)
     return jsonify(
         {
             "num": num,
@@ -2054,6 +2103,10 @@ def api_bank_get(q_id):
             "topic_inferred": inferred,
             "topic_display": disp,
             "topic_is_auto_display": is_auto and not stored,
+            "module": real_module or None,
+            "module_resolved": resolved_module or None,
+            "module_is_inferred": module_is_inferred,
+            "module_label": bt.module_label(resolved_module) if resolved_module else None,
             "answers": copy.deepcopy(q.get("answers") or []),
             "explication_senedoo": q.get("explication_senedoo") or "",
             "explication_claude": q.get("explication_claude") or "",
@@ -2096,7 +2149,13 @@ def api_bank_put(q_id):
     merged = dict(old)
     merged["title"] = title
     merged["title_fr"] = (payload.get("title_fr") or "").strip()
-    merged["topic"] = (payload.get("topic") or "").strip()
+    if "topic" in payload:
+        merged["topic"] = (payload.get("topic") or "").strip()
+    if "module" in payload:
+        import bank_topics as bt
+
+        new_mod = bt._norm_module(payload.get("module"))
+        merged["module"] = new_mod or None
     merged["answers"] = new_answers
     merged["explication_senedoo"] = (payload.get("explication_senedoo") or "").strip()
     merged["explication_claude"] = (payload.get("explication_claude") or "").strip()
