@@ -228,13 +228,17 @@ def build_judge_requests(
     requests: list[dict] = []
     mapping: dict[str, dict] = {}
 
+    # Compteur global pour des custom_id courts (Anthropic limite à 64 chars).
+    # Le state file conserve le mapping idx → file/chunk pour la traçabilité.
+    next_idx = 0
     for file_path, qs in pending_files:
-        file_slug = file_path.stem
         groups = group_by_chunk(qs)
         for chunk_id, group_qs in groups.items():
             qids = [q["id"] for q in group_qs]
-            cid_str = chunk_id[:16] if chunk_id and not chunk_id.startswith("_orphan_") else chunk_id
-            custom_id = f"{file_slug}__{cid_str}"
+            # custom_id court : "j<idx>-<chunk_hash_8>" — max ~16 chars
+            chunk_hash = (chunk_id or "orphan")[:12]
+            custom_id = f"j{next_idx:04d}-{chunk_hash}"
+            next_idx += 1
             ctx_header = _format_chunk_block(group_qs[0])
             qblocks = "\n".join(
                 _format_question_block(q, i + 1) for i, q in enumerate(group_qs)
