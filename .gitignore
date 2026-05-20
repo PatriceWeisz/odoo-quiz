@@ -34,3 +34,26 @@ static/doc_media/
 
 # Logs runtime (gunicorn, reingest_images, etc.)
 logs/
+
+# Secrets supplémentaires (API OVH)
+.ovh-creds.env
+
+# Pont d'exécution local Claude <-> Mac (transitoire)
+.bridge/
+
+# Sauvegardes questions.json
+questions.json.bak.*
+
+# Artefacts transitoires de pipeline / debug (reconstructibles)
+data/*.from-vps
+data/generated_pending/
+data/generated_pending_TEST/
+data/chunk_embedding_full.*
+data/chunk_sample_preview.json
+data/schema_inspection_report.md
+data/run_state.json
+data/judge_state.json
+data/translate_state.json
+data/dedup_log.jsonl
+data/insertion_log.jsonl
+data/rejected_questions.jsonl

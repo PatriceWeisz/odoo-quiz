@@ -7,6 +7,37 @@ document liste les **écarts**, **décisions prises pendant l'exécution**, et l
 
 ---
 
+## 🚀 PROCHAINE SESSION — COMMENCER ICI
+
+**État au 20 mai 2026 (soir) — tout est en prod et fonctionne.**
+
+- **App en ligne** : https://quiz-odoo.picvert-senedoo.org — **v2.1.1**, 3251 questions, HTTPS OK.
+- **Infra** : VPS Hetzner **dédié** `odoo-quiz` (projet Hetzner « Odoo-quiz », CX23, **178.104.211.37**),
+  séparé de la médiathèque (qui reste sur `niokolo-rs` / 46.224.219.81).
+- **Accès** : `ssh -i ~/.ssh/niokolo_claude root@178.104.211.37` (ou `senedoo@…` pour l'app).
+- **Git** : à jour et poussé (`PatriceWeisz/odoo-quiz`, branche `main`).
+
+### Fait cette session
+1. **Migration** du quiz vers un VPS dédié (projet + serveur Hetzner créés, app + données + secrets
+   migrés, Caddy + systemd, DNS OVH basculé A+AAAA, cert Let's Encrypt).
+2. **Refonte du filtre thématique** de la banque (`bank_topics.py`) : filtre par **vrai module**
+   + inférence (667/670 classées), menu 2 niveaux + compteurs, filtres combinés, sélecteur de
+   module dans l'éditeur, suppression du panneau « Importer depuis Odoo ». (v2.0.0 → v2.1.0)
+3. **Ajustements UI** éditeur : champs d'énoncé agrandis, section image épurée. (v2.1.1)
+
+### À FAIRE en priorité la prochaine fois
+1. ⏳ **Désactiver le quiz résiduel sur l'ancien VPS** (`niokolo-rs`) — procédure + incident
+   fail2ban détaillés plus bas (⚠️ **ne jamais se connecter en root** sur l'ancien serveur).
+2. **Réflexe versioning** : bumper `APP_VERSION` (app.py) à chaque changement fonctionnel + déployer.
+3. Reliquats de la roadmap initiale : Phase 7.2 (bouton Signaler), 7.3 (page admin review).
+4. (Option) éditeur du champ `module` : fait ; envisager de re-juger les `unverified`.
+
+### Rappels de clôture
+- Le **pont `cmdbridge.sh`** tournait sur le Mac (Terminal) — pensez à l'arrêter (Ctrl+C) en fin de session.
+- Un script **`cleanup.sh`** est fourni à la racine pour le ménage du dossier (à relire puis lancer).
+
+---
+
 ## ⚡ MIGRATION INFRA — session 20 mai 2026 (soir) : VPS dédié
 
 **Le quiz tourne désormais sur un serveur Hetzner DÉDIÉ, séparé de la médiathèque.**
