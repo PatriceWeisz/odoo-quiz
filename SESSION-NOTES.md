@@ -1,4 +1,4 @@
-# Notes de passation — état après session du 19 mai 2026
+# Notes de passation — état après session du 20 mai 2026
 
 Ce fichier complète `BRIEFING_COWORK_quiz_odoo.md.docx`. Il ne le remplace pas :
 le briefing reste la source d'origine pour les décisions architecturales. Ce
@@ -7,213 +7,237 @@ document liste les **écarts**, **décisions prises pendant l'exécution**, et l
 
 ---
 
-## État courant des phases
+## État courant des phases — fin session 20 mai 2026
 
 | Phase | État | Détail |
 |---|---|---|
 | 1 — Déploiement VPS | ✅ | https://quiz-odoo.picvert-senedoo.org/ — HTTPS, gunicorn `odoo-quiz.service`, Caddy mutualisé avec ResourceSpace |
 | 2 — Couverture v19 inventory | ✅ | 233/232 chunks v18/v19 (parité) |
-| 3 — Scope 3 tiers | ✅ | `app/study_modules.py`, 39 modules, validateur de chemins (0 chemin à corriger) |
-| 4 — Pipeline images | 🟡 **run en background** | Tables `doc_images` + `chunk_images`, code livré. Le run de re-ingestion images tourne sur le VPS via `nohup`. Au dernier check 23:34 : 733 pages traitées / 1719, 2555 doc_images. PID : `cat /tmp/reingest.pid` sur le VPS. |
+| 3 — Scope 3 tiers | ✅ | `app/study_modules.py`, 39 modules, validateur de chemins |
+| 4 — Pipeline images | ✅ | 1614 pages traitées, **3110 doc_images**, **30667 chunk_images**, 4603 stockées / 1259 skipped |
 | 5.1 schéma question étendu | ✅ | `app/question_schema.py` |
 | 5.2 calibrage Udemy | ✅ | `data/calibration_report.md` |
-| 5.3 plan génération | ✅ | `data/generation_plan.json` — 3000 questions atteignables, 0 overflow |
-| 5.4 mini-run 50 q | ✅ | 88 % validation, qualité humaine excellente (cf. inspect 8 q dans le chat) |
-| Optims génération | ✅ | mode `--async` + prompt caching ajoutés |
-| **5.5 full run + judge** | **⏳ à faire** | Voir spec détaillée plus bas |
-| 5.6 insertion atomique | ⏳ | Doit utiliser `_save_questions_file_raw()` |
-| 5.7 embeddings nouvelles q | ⏳ | Append à `bank_embeddings.npz` |
-| 5.8 invalidate cache | ⏳ | `bank_embeddings.invalidate_embedding_cache()` |
-| 6 traduction FR Udemy | ⏳ | Briefing dit ~$2 via Batch API |
-| 7 UX filtres / review | ⏳ | Filtres source/tier/version/status, bouton Signaler, page admin |
+| 5.3 plan génération | ✅ | `data/generation_plan.json` — 2999 q atteignables |
+| 5.4 mini-run 50 q | ✅ | 96 q générées sur inventory v19 |
+| 5.5.a Orchestrateur multi-modules | ✅ | `scripts/run_full_generation.py` — Batch API mono-batch |
+| 5.5.b Pipeline judge | ✅ | `scripts/judge_questions.py` — 5 critères, MIN, groupage 4q/chunk |
+| 5.5.c Dédup vectorisée | ✅ | `scripts/dedupe_pending.py` — numpy pur, threshold 0.92 |
+| 5.5.d Few-shot rotatif par module | ✅ | `scripts/build_udemy_module_map.py` + patch `pick_few_shot` |
+| **5.5 Full run** | ✅ | **2708 q générées → 2007 verified + 678 unverified + 86 reject + 137 dedup**. Coût $13.25 + $3.77 judge = **$17.02** |
+| 5.6 Insertion atomique | ✅ | `scripts/insert_pending_questions.py` — 670 → **3251 q** insérées |
+| 5.7 Embeddings nouvelles q | ✅ | Warmup auto via `bank_embeddings.warmup_bank_embeddings()` — 12.7 sec sur 3251 q |
+| 5.8 Invalidate cache | ✅ | Intégré dans `save_bank_atomic()` |
+| 6 traduction FR Udemy | ✅ | `scripts/translate_udemy_batch.py` — 643/643 traduites, coût $1.12 |
+| 7.1 Filtre module obligatoire | ✅ | Picker module dans header, `/api/modules`, exclude unverified par défaut |
+| 7.2 Bouton Signaler | ⏳ | À faire prochaine session |
+| 7.3 Page admin review | ⏳ | À faire prochaine session |
+
+**App en ligne : v2.0.0 sur https://quiz-odoo.picvert-senedoo.org**
 
 ---
 
-## Écarts notables par rapport au briefing
+## Bilan session 20 mai 2026 — chiffré
 
-1. **Caddy au lieu de nginx** (Phase 1.7) : le VPS tourne déjà Caddy pour ResourceSpace. On a ajouté un block `quiz-odoo.picvert-senedoo.org` au `Caddyfile` existant plutôt que d'installer nginx en parallèle. **HTTPS auto via Let's Encrypt fonctionne.**
-
-2. **Sous-domaine `quiz-odoo.picvert-senedoo.org`** (et non `quiz.<...>` comme suggéré). Choix Patrice.
-
-3. **`app/study_modules.py` au lieu de `app/config.py`** (Phase 3.1) : `config.py` était focalisé sur l'état runtime (target_certification). On a créé un nouveau fichier dédié pour la source de vérité des modules — séparation des concerns plus propre. Helpers : `all_modules()`, `tier_of(m)`, `is_v19_only(m)`, `url_paths_for(m)`, `modules_in_tier(tier)`, constantes `STUDY_MODULES`, `TIER_BUDGET`, `V19_ONLY_MODULES`, `MODULE_URL_PATHS`, `ALL_TIERS`.
-
-4. **WSGI shim `wsgi.py`** pour contourner la collision Python entre `app.py` (fichier Flask) et `app/` (package). Gunicorn lance `wsgi:app` qui charge `app.py` par chemin de fichier explicite. Le code local (Cursor / `python app.py`) continue de marcher inchangé.
-
-5. **`/api/ask` patché** : passait par `subprocess(["claude", "-p", ...])` (CLI Claude Code, non dispo sur VPS) → bascule sur le SDK Anthropic Python via les helpers `app.llm._anthropic_key()`, `_answer_model()`, `extract_text_from_content()`. Cohérent avec `/api/suggest-answer`.
-
-6. **Anomalies SQL `audit_doc_coverage`** : `MIN_MODULE_CHUNKS = 150` est inadapté pour les modules à très peu d'URLs sitemap (`productivity/whatsapp` : 1 URL). Le rapport flag des "sous-représentés" qui sont en réalité des plafonds naturels. **Pas corrigé** — c'est de l'info, pas du bloquant. À rendre tier-aware si on retouche le validateur.
-
-7. **Bridge `cmdbridge.sh`** : timeout par défaut passé de 300 s → **1800 s** (cf. commit modifié). Permet override par `# TIMEOUT=N` dans le `.req`. Idéal pour les commandes Claude API longues ou les rsync gros volume.
+| Métrique | Valeur |
+|---|---|
+| Questions ajoutées | **+2 581** (670 → 3 251, ×4.85) |
+| Questions Udemy traduites | 643/643 (100 %) |
+| Coût LLM total session | **$18.29** (vs briefing $16-27) |
+| Tokens IN cached (judge) | 1 289 034 (économie ~$1.55) |
+| Durée pipeline (gen+judge+trad+insert) | ~20 min vs ETA 4-5h |
+| Commits poussés cette session | 16 (de a0aa30f → 802d489) |
 
 ---
 
-## Anomalies / dette technique notée
+## Stats banque finale
 
-- **28 questions Udemy hors normes** (option count = 2 ou 5) — vs briefing "3 ou 4". À nettoyer un jour.
-- **2 questions Udemy avec ≠1 bonne réponse** (devrait être exactement 1). À nettoyer.
-- **`productivity/knowledge`** marqué v19-only mais a 1 URL en v18 (1 chunk en base). Annomalie cosmétique.
-- **Alt-text images Odoo** : Sphinx émet le chemin (`'../../../../_images/foo.png'`) par défaut. Pas un alt-text descriptif. Pour la génération (Phase 5.5), on peut compenser via titre+section du chunk + texte autour.
-- **`gunicorn` log warning** : `[ERROR] Control server error: Read-only file system: '/home/senedoo/.gunicorn'`. Dû à `ProtectHome=read-only` dans le service systemd. Cosmétique — service fonctionne. À fixer en relocalisant le control socket (ex. `/opt/odoo-quiz/run/`).
-- **Sitemap.xml Odoo 18/19 retourne 404** : `ingest_odoo_docs.py` a un fallback `searchindex.js` qui marche. Les rapports `sitemap_vs_ingestion.md` indiquent bien "searchindex.js" comme source.
-- **Anthropic prompt caching < 1024 tokens** : actuellement, le `SYSTEM_PROMPT` de `generate_questions.py` fait ~600 tokens, donc le caching est silencieusement ignoré. Si on renforce le system avec des consignes plus détaillées (ou un exemple complet inline), on franchit le seuil et on gagne -90 % input cached.
+```
+Total questions       : 3 251
+  - udemy             : 643   (bilingues EN/FR depuis Phase 6)
+  - claude (générées) : 2 586 (Phase 5.5)
+  - user              : 1
+  - sans source       : 21    (anciennes système)
 
----
+Par status (générées uniquement) :
+  - verified_by_judge : 1 903 (judge score ≥ 4 — affichées par défaut)
+  - unverified        : 678   (judge score = 3 — cachées par défaut)
+  - flagged           : 223   (judge ≤ 2 ou dedup duplicate — exclues)
 
-## Spec détaillée pour Phase 5.5 (à coder en nouvelle session)
+Par target_version :
+  - 19.0  : 1 547
+  - 18.0  : 1 035
+  - both  :   201
+  - null  :   468   (anciennes, target_version non renseigné)
 
-### 5.5.a — Orchestrateur multi-modules
-
-Nouveau script `scripts/run_full_generation.py` qui :
-
-1. Charge `data/generation_plan.json`.
-2. Pour chaque `(tier, module, version)` avec `target_total > 0` :
-   - Appelle `generate_questions(module, version, count=target_total, --async --concurrency 20)`.
-   - Stocke chaque batch dans `data/generated_pending/<module>-v<ver>-<batch_id>.jsonl`.
-3. **Mode reprise** : `--resume-from <batch_id>` qui skip les (module, version) déjà traités.
-4. **Mode dry-run** : affiche le plan d'exécution + estimation coût + temps.
-
-Estimations cible :
-- ~750 appels Claude × ~20 s = 15 000 s en sync = 4h
-- En async concurrency 20 → ~30-60 min
-- Avec Batch API → ~50 min en file d'attente + traitement (-50 % coût)
-
-### 5.5.b — Pipeline judge
-
-Nouveau script `scripts/judge_questions.py` :
-
-1. Pour chaque fichier `data/generated_pending/*.jsonl` :
-   - Pour chaque question : appel Claude (Sonnet 4.6) avec un prompt qui demande de noter sur **5 critères** (1-5) :
-     - factualité
-     - clarté
-     - distracteurs (plausibles, non triviaux, pas plus courts que la bonne)
-     - niveau cert (fonctionnel, pas technique dev)
-     - pertinence module
-2. Score final = **MIN des 5 critères** (maillon faible).
-3. Décision :
-   - `score ≥ 4` → `accept` → `status: "verified_by_judge"`
-   - `score == 3` → `review` → `status: "unverified"`
-   - `score ≤ 2` → `reject` → log dans `data/rejected_questions.jsonl`, NE PAS insérer.
-4. Mise à jour des champs `judge_score`, `judge_decision`, `judge_reasons`, `status` directement dans le pending JSONL.
-
-Mode async + semaphore=20 idem que le générateur. Batch API si pertinent (briefing recommande).
-
-### 5.5.c — Dédup vectorisée
-
-Nouveau utilitaire dans `bank_embeddings.py` ou `scripts/dedupe_pending.py` :
-
-1. Pour les questions pending acceptées, calculer leur embedding via `bank_embeddings.embed_texts([title for q in pending])`.
-2. Matrice similarité cosinus contre toutes les questions existantes dans `bank_embeddings.npz`.
-3. Si max sim > **0.92** → drop la pending (doublon avec une question existante).
-4. Et entre les pendings elles-mêmes (matrice triangulaire), drop les paires > 0.92, garder la première.
-
-Briefing : `duplicate_score_threshold: 0.98` (config) — mais aussi mentionne 0.92 pour le pipeline génération. À clarifier ; je propose **0.92** comme un seuil intermédiaire.
-
-### 5.5.d — Few-shot rotatif par module
-
-À ajouter dans `generate_questions.py` (override de `pick_few_shot`) :
-
-Au lieu de tirer 3 questions Udemy au hasard, filtrer par **module inféré** (via RAG sur `title` → top chunk → module). Cache l'inférence dans un fichier `data/udemy_modules.json` après une passe unique pour économiser des appels embedding.
-
-Sans ça, le few-shot reste générique et peut détonner avec le module en cours.
-
----
-
-## Spec détaillée pour Phase 5.6 (insertion atomique)
-
-Nouveau script `scripts/insert_pending_questions.py` :
-
-1. Lit toutes les questions pending acceptées (status `verified_by_judge` ou `unverified`).
-2. Sanity check **avant écriture** :
-   - `validate_generated_question(q)` retourne `[]` pour CHAQUE q.
-   - Aucun `id` déjà présent dans la banque (collision).
-   - Aucun `answer.id` déjà présent (collision globale).
-3. Backup horodaté de `questions.json` (briefing rule de pilotage).
-4. `_save_questions_file_raw(questions_data)` (vu dans `app.py`, à importer).
-5. `bank_embeddings.invalidate_embedding_cache()` (Phase 5.8).
-6. Logue dans `data/insertion_log.jsonl` (qid, batch_id, timestamp).
-
-**JAMAIS** d'écriture directe dans `questions.json` sans passer par `_save_questions_file_raw()` — il fait l'écriture atomique (rename) + invalidation cache.
-
----
-
-## Spec Phase 5.7 — embeddings
-
-Une fois les questions insérées :
-
-```python
-from bank_embeddings import embed_texts, save_npz, load_npz_meta
-new_titles = [q["title"] for q in inserted]
-new_vecs = embed_texts(new_titles, batch_size=128)  # briefing : 128 textes/appel
-# Append au npz existant + meta
-save_npz(append=True, vectors=new_vecs, qids=[q["id"] for q in inserted])
+Par tier (générées) :
+  - cert  : 1 844
+  - tier1 :   476
+  - tier2 :   261
 ```
 
-À vérifier l'API exacte de `bank_embeddings.py` au moment de coder.
+---
+
+## Architecture du pipeline 5.5 (résumé)
+
+```
+                ┌──────────────────┐
+                │ generation_plan  │ (5.3)
+                │ .json — 76 paires│
+                │ (module,version) │
+                └────────┬─────────┘
+                         │
+              ┌──────────▼────────────────┐
+              │ run_full_generation.py     │  5.5.a
+              │ Batch Anthropic mono-batch │
+              │ (777 appels, $13.25)        │
+              └──────────┬────────────────┘
+                         │ pendings JSONL
+              ┌──────────▼────────────────┐
+              │ judge_questions.py         │  5.5.b
+              │ 5 critères / 4 q/chunk    │
+              │ ($3.77 dont $1.55 caching)│
+              └──────────┬────────────────┘
+                         │ status updates
+              ┌──────────▼────────────────┐
+              │ dedupe_pending.py          │  5.5.c
+              │ cosine 0.92 vs bank +     │
+              │ intra-pending (numpy)     │
+              └──────────┬────────────────┘
+                         │ flagged duplicates
+              ┌──────────▼────────────────┐
+              │ insert_pending_questions   │  5.6
+              │ ré-attribution qid/aid    │
+              │ backup + atomic save      │
+              └──────────┬────────────────┘
+                         │ 2581 q insérées
+              ┌──────────▼────────────────┐
+              │ warmup_bank_embeddings()  │  5.7
+              │ 12.7s pour 3251 q         │
+              └────────────────────────────┘
+```
 
 ---
 
-## Bridge `cmdbridge.sh` — usage
+## Optimisations actives (toutes mesurées effectives)
 
-Le bridge tourne dans un terminal sur le Mac de Patrice. **Tant qu'il n'est
-pas Ctrl+C**, une nouvelle session Cowork peut lui envoyer des `.req` et
-récupérer les `.out`.
-
-```bash
-# Démarrer (si fenêtre fermée)
-bash ~/odoo-quiz/cmdbridge.sh
-
-# Convention de nommage
-~/odoo-quiz/.bridge/NNN-description.req → NNN-description.out
-
-# Override timeout (sec) dans le .req
-# TIMEOUT=300
-```
-
-Au 19 mai 23h35, le dernier `.req` traité était `046`. Le prochain à utiliser
-est **`047`**.
+1. **Batch API Anthropic mono-batch** — −50 % coût vs sync (1 batch_id par étape)
+2. **Prompt caching `ephemeral`** — SYSTEM_PROMPT 7259 chars / 2074 tokens (au-dessus du seuil 1024) → 1.3M tokens cached sur le judge full, économie ~$1.55
+3. **per_call = 4 questions** — amortit le contexte chunk + few-shot
+4. **Module-inference Udemy 100 % numpy** — 3 sec sur 643 titres × 5217 chunks
+5. **Dédup vectorisée 100 % numpy** — matmul, pas de boucle Python
+6. **Embeddings nouvelles questions en batch=128** (fastembed local)
+7. **State files atomiques** — `run_state.json`, `judge_state.json`, `translate_state.json` permettent la reprise via `--poll <batch_id>` sur n'importe quelle session
+8. **Pipeline indépendant du bridge** — `nohup` côté VPS, peut continuer si bridge stoppé
+9. **JSONL streamé** + `.tmp + replace` partout (atomique)
+10. **Idempotence** — `judge_questions` skip les questions avec `judge_score is not None`, `insert_pending_questions` skip les questions avec `inserted_at`
 
 ---
 
-## Accès SSH
+## Écarts notables (mises à jour 20 mai)
 
-Cf. `BRIEFING` (rappel) :
-```bash
-ssh -i ~/.ssh/niokolo_claude senedoo@picvert-senedoo.org   # app quiz
-ssh -i ~/.ssh/niokolo_claude niokolo@picvert-senedoo.org   # admin (sudo)
+1. **Caddy au lieu de nginx** — inchangé (session précédente)
+2. **Sous-domaine `quiz-odoo.picvert-senedoo.org`** — inchangé
+3. **`app/study_modules.py` au lieu de `app/config.py`** — inchangé
+4. **WSGI shim `wsgi.py`** — inchangé
+5. **`/api/ask` patché SDK Anthropic** — inchangé
+6. **Anomalies SQL `audit_doc_coverage`** — inchangé (cosmétique)
+7. **Bridge timeout 1800 s** — inchangé
+8. **APP_VERSION → 2.0.0** (était 1.15.1) — bump majeur suite enrichissement banque
+
+---
+
+## Dette technique / TODOs reportés
+
+### Court terme (à faire dans une session)
+- **7.2 Bouton "Signaler"** sur chaque question → passe à `status=flagged` (UX + endpoint POST)
+- **7.3 Page admin review** des `unverified` / `flagged` avec [Valider / Modifier / Supprimer]
+- **Stats inserted vs flagged par tier** dans `/api/modules` ou un endpoint dédié (utile pour le pilotage)
+- **Persistance du module choisi** côté serveur (actuellement non persistant, perdu au refresh — plug sur `app_settings.sqlite`)
+
+### Moyen terme
+- 28 questions Udemy hors normes (option count = 2 ou 5) — à nettoyer
+- 2 questions Udemy avec ≠1 bonne réponse — à nettoyer
+- `productivity/knowledge` v19-only mais 1 chunk en v18 — cosmétique
+- 28 q v19 anciennes n'ont pas de `tier` — peuvent perturber le picker, à ré-classer
+- 678 unverified : ré-juger avec un prompt judge ajusté pour distinguer "review borderline" vs "à revoir réellement" (actuellement tous au même status)
+
+### Long terme
+- Sphinx alt-text images Odoo : compenser via titre + section du chunk
+- gunicorn warning `ProtectHome=read-only` — relocaliser control socket
+- Sitemap.xml Odoo 18/19 → fallback `searchindex.js` (info)
+
+---
+
+## Commits Phase 5.5 + 6 + 7 (chronologique)
+
 ```
-
-User OS : `senedoo` (uid 1001) — créé pendant la session, isolé de `niokolo`
-(qui possède ResourceSpace).
+d02d592 feat(deploy): use Anthropic SDK in /api/ask + WSGI shim
+cebeced feat(modules): periodic study modules in 3 tiers + path validator
+4f597fb feat(images): doc-image pipeline (scénario A)
+d6b2518 feat(gen): question schema + Udemy calibration + generation plan
+0169d3c perf(images): throttle 0s pour images CDN + --skip-done
+278adc8 feat(gen): generator + pending inspector (Phase 5.4 mini-run)
+26c03c2 perf(gen): mode --async (AsyncAnthropic + semaphore) + prompt caching
+6c6a12c docs(session): notes de passation session 19 mai
+fb13e8e feat(5.5): pipeline génération + judge + dedup + few-shot rotatif
+dc77fe3 fix(5.5.b): custom_id Batch judge < 64 chars
+d6444e8 fix(5.5): custom_id Batch API conforme au pattern
+5d1e6ef fix(5.5.a): prompt génération — distracteurs subtils + 4 options défaut
+fd1e6b9 fix(5.5.b): idempotence judge — skip questions déjà jugées
+3161d26 feat(6): traduction FR Udemy via Batch API
+ee72641 feat(5.6): insertion atomique pendings dans questions.json
+6f2e44d release: v2.0.0 — banque enrichie 670 → 3251 questions
+802d489 feat(7): filtre module obligatoire + exclude unverified par défaut
+```
 
 ---
 
 ## Quick commands pour la nouvelle session
 
 ```bash
-# 1. Vérifier l'état du run images en background
-ssh -i ~/.ssh/niokolo_claude senedoo@picvert-senedoo.org \
-  "ps -ef | grep [r]eingest; tail -10 /opt/odoo-quiz/logs/reingest_images_v2.log"
+# 1. État service VPS
+curl -s https://quiz-odoo.picvert-senedoo.org/health | python3 -m json.tool
 
-# 2. Stats DB courantes
+# 2. Stats DB courantes (chunks + images)
 ssh -i ~/.ssh/niokolo_claude senedoo@picvert-senedoo.org \
   "cd /opt/odoo-quiz && ./.venv/bin/python -c '
 import sqlite3
-from app.odoo_docs_rag import db_path
-c = sqlite3.connect(db_path())
+c = sqlite3.connect(\"data/odoo_docs.sqlite\")
 print(\"chunks:\", c.execute(\"SELECT COUNT(*) FROM chunks\").fetchone()[0])
 print(\"doc_images:\", c.execute(\"SELECT COUNT(*) FROM doc_images\").fetchone()[0])
-print(\"chunk_images:\", c.execute(\"SELECT COUNT(*) FROM chunk_images\").fetchone()[0])
-'"
+print(\"chunk_images:\", c.execute(\"SELECT COUNT(*) FROM chunk_images\").fetchone()[0])'"
 
-# 3. Voir les pending
-ls -la ~/odoo-quiz/data/generated_pending/ 2>/dev/null
-ssh -i ~/.ssh/niokolo_claude senedoo@picvert-senedoo.org \
-  "ls -la /opt/odoo-quiz/data/generated_pending/"
+# 3. Stats banque locale
+python3 -c "
+import json
+from collections import Counter
+qs = json.load(open('questions.json'))['questions']
+print('total:', len(qs))
+print('sources:', dict(Counter(q.get('correct_answer_source') for q in qs)))
+print('statuses:', dict(Counter(q.get('status') for q in qs)))"
 
-# 4. App health
-curl -s https://quiz-odoo.picvert-senedoo.org/health
+# 4. Test /api/modules
+curl -s 'https://quiz-odoo.picvert-senedoo.org/api/modules?cert=19.0' \
+  | python3 -m json.tool | head -30
 ```
 
 ---
 
-*Document généré à la fin de la session du 19 mai 2026. Mettre à jour à chaque session future.*
+## Bridge `cmdbridge.sh` — état au 20 mai 01h40
+
+- Prochain `.req` à utiliser : **`082`** (le dernier traité était `081`)
+- Le bridge tourne avec timeout par défaut 1800 s (override par `# TIMEOUT=N`)
+
+---
+
+## Accès SSH (rappel)
+
+```bash
+ssh -i ~/.ssh/niokolo_claude senedoo@picvert-senedoo.org   # app quiz
+ssh -i ~/.ssh/niokolo_claude niokolo@picvert-senedoo.org   # admin (sudo)
+```
+
+---
+
+*Document mis à jour à la fin de la session du 20 mai 2026, 01h40.*
+*Prochaine session : Phase 7.2 (Signaler) + 7.3 (Page admin review) + Tests utilisateur du picker module.*
