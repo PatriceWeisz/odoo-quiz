@@ -47,6 +47,20 @@ document liste les **écarts**, **décisions prises pendant l'exécution**, et l
    page `/admin/review` s'appuie désormais sur ce login global (code adapté : sans `admin.token`,
    l'admin est accessible aux utilisateurs déjà authentifiés). Changer le mot de passe :
    `caddy hash-password --plaintext '...'` puis remplacer le hash dans le Caddyfile + `systemctl reload caddy`.
+8. **v2.3.1 — capture : bouton « Ignorer » corrigé.** Le POST `/import-capture` validait la
+   bonne réponse AVANT de lire le choix add/update/ignore → « choisissez la bonne réponse 1..N »
+   bloquait l'ignore. On lit le choix d'abord ; `correct_index` non requis si la carte est ignorée.
+9. **Régression login → favori de capture, corrigée (Caddy).** Le login global bloquait le favori
+   « pleine page » : il charge `/static/odoo_fullpage_capture.js` + `/static/quiz_dom_extract.js`
+   et POST `/import-capture/fullpage` **en cross-origin depuis odoo.com/Udemy, sans le login**
+   (impossible à transmettre) → 401. Sans le favori, on retombait sur un collage manuel (capture
+   brute > 8000 px, sans DOM) → la **vision Anthropic échoue** (limite 8000 px) → « Vision
+   unavailable ». **Fix** : ces 3 URL exemptées du login dans le Caddyfile (matcher `@needauth`
+   + `not path …`) ; tout le reste (hub `/import-capture`, images `/static/doc_media`) reste
+   protégé. Le favori re-télécharge ≤ 4096 px + envoie le DOM → plus d'erreur vision sur la
+   taille, le texte vient du DOM (vision = secours). Diag : modèle/clé OK, seul le dépassement
+   8000 px faisait échouer la vision. Amélioration possible : pour une question qui dépend d'une
+   image (« In the image… »), n'envoyer à Claude que le **recadrage** (via `crop_rel` du DOM).
 
 ### Tests réalisés (prod, HTTPS)
 - Auth : `/admin/review` → 403 sans/mauvais jeton, 200 avec. `/api/admin/review` → 403 sans
