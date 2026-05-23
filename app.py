@@ -55,7 +55,7 @@ from quiz_llm import api_available, parse_json_value, run_prompt_with_images
 
 CONFIG_FILE = Path(__file__).parent / "config.json"
 # Incrémenter à chaque livraison (affichée dans l’UI : en-tête, onglet, pied de page ; F5 si auto_reload).
-APP_VERSION = "2.3.0"
+APP_VERSION = "2.3.1"
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12 Mo (captures)
@@ -1306,27 +1306,10 @@ def _parse_capture_confirm_form(form, only_index: Optional[int] = None) -> list[
         for j in range(n_ans):
             answers.append((form.get(f"{p}a{j}_en") or "").strip())
             answers_fr.append((form.get(f"{p}a{j}_fr") or "").strip())
-        raw_correct = (form.get(f"{p}correct") or "").strip()
-        if raw_correct.lower() in ("none", "null"):
-            raw_correct = ""
-        if not raw_correct.isdigit():
-            raise ValueError(
-                f"Carte {i + 1} : choisissez la bonne réponse (une option entre 1 et {n_ans})."
-            )
-        correct_index = int(raw_correct)
-        if correct_index < 1 or correct_index > n_ans:
-            raise ValueError(f"Carte {i + 1} : numéro de bonne réponse hors plage.")
-        ex_raw_id = (form.get(f"{p}existing_id") or "").strip()
-        existing_id = int(ex_raw_id) if ex_raw_id.isdigit() else None
-        crop_raw = (form.get(f"{p}crop_json") or "{}").strip()
-        try:
-            crop_rel = json.loads(html.unescape(crop_raw))
-        except json.JSONDecodeError:
-            crop_rel = None
-        if crop_rel is not None and not isinstance(crop_rel, dict):
-            crop_rel = None
-        needs_vals = form.getlist(f"{p}needs_image")
-        needs_question_image = any(str(v).strip() == "1" for v in needs_vals)
+        # On détermine D'ABORD le choix (ajouter / mettre à jour / ignorer) :
+        # une carte « ignorée » ne doit PAS exiger qu'une bonne réponse soit
+        # sélectionnée (sinon le bouton « Ignorer » échoue avec
+        # « choisissez la bonne réponse… »).
         is_dup = form.get(f"{p}is_dup") == "1"
         skip_bank_update = False
         skip_new_question = False
@@ -1346,6 +1329,33 @@ def _parse_capture_confirm_form(form, only_index: Optional[int] = None) -> list[
                     f"Carte {i + 1} : pour une nouvelle question, choisissez « Ajouter à la banque » ou « Ignorer »."
                 )
             skip_new_question = ch == "ignore"
+        card_ignored = skip_new_question or (is_dup and skip_bank_update)
+
+        raw_correct = (form.get(f"{p}correct") or "").strip()
+        if raw_correct.lower() in ("none", "null"):
+            raw_correct = ""
+        if not raw_correct.isdigit():
+            if card_ignored:
+                correct_index = None  # non utilisé : la carte est ignorée
+            else:
+                raise ValueError(
+                    f"Carte {i + 1} : choisissez la bonne réponse (une option entre 1 et {n_ans})."
+                )
+        else:
+            correct_index = int(raw_correct)
+            if correct_index < 1 or correct_index > n_ans:
+                raise ValueError(f"Carte {i + 1} : numéro de bonne réponse hors plage.")
+        ex_raw_id = (form.get(f"{p}existing_id") or "").strip()
+        existing_id = int(ex_raw_id) if ex_raw_id.isdigit() else None
+        crop_raw = (form.get(f"{p}crop_json") or "{}").strip()
+        try:
+            crop_rel = json.loads(html.unescape(crop_raw))
+        except json.JSONDecodeError:
+            crop_rel = None
+        if crop_rel is not None and not isinstance(crop_rel, dict):
+            crop_rel = None
+        needs_vals = form.getlist(f"{p}needs_image")
+        needs_question_image = any(str(v).strip() == "1" for v in needs_vals)
         raw_sug = (form.get(f"{p}suggested_ci") or "").strip()
         suggested_correct_index = int(raw_sug) if raw_sug.isdigit() else None
         suggested_correct_source = (form.get(f"{p}suggested_src") or "").strip()
