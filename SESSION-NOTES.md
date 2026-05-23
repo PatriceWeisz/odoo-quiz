@@ -9,7 +9,7 @@ document liste les **écarts**, **décisions prises pendant l'exécution**, et l
 
 ## ✅ SESSION 23 mai 2026 — finalisation Phase 7 + nettoyage infra (v2.2.0)
 
-**Tout est en prod et vérifié.** App : https://quiz-odoo.picvert-senedoo.org — **v2.2.0**,
+**Tout est en prod et vérifié.** App : https://quiz-odoo.picvert-senedoo.org — **v2.2.1**,
 3251 questions, HTTPS OK. VPS dédié `odoo-quiz` (178.104.211.37).
 
 ### Fait cette session
@@ -34,6 +34,10 @@ document liste les **écarts**, **décisions prises pendant l'exécution**, et l
 5. **Déploiement** : backups VPS (`app.py.bak.20260523T185402Z`, `config.json.bak.*`), scp
    `app.py`, ajout jeton admin dans `config.json` in place (secrets préservés), contrôle de
    syntaxe, restart `odoo-quiz.service`.
+6. **Correctif v2.2.1 — picker module du quiz** : sélectionner un module (ex. CRM) sur l'écran
+   de démarrage ne faisait rien et « Commencer » restait grisé. Cause : `total` déclaré `const`
+   puis réassigné dans `updateQuizState()` → `TypeError: Assignment to constant variable` (bug
+   latent depuis v2.1.0, jamais testé côté quiz). Corrigé en `let total`. CRM = 38 q (v19) / 31 (v18).
 
 ### Tests réalisés (prod, HTTPS)
 - Auth : `/admin/review` → 403 sans/mauvais jeton, 200 avec. `/api/admin/review` → 403 sans

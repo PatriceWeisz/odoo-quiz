@@ -55,7 +55,7 @@ from quiz_llm import api_available, parse_json_value, run_prompt_with_images
 
 CONFIG_FILE = Path(__file__).parent / "config.json"
 # Incrémenter à chaque livraison (affichée dans l’UI : en-tête, onglet, pied de page ; F5 si auto_reload).
-APP_VERSION = "2.2.0"
+APP_VERSION = "2.2.1"
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12 Mo (captures)
@@ -538,7 +538,7 @@ let questions = [], current = 0, answered = false;
 let score = 0, good = 0, bad = 0, skip = 0;
 let startTime, timerInterval;
 let showFr = false;
-const total = {{ total }};
+let total = {{ total }};
 const withClaude  = {{ with_claude }};
 const withSenedoo = {{ with_senedoo }};
 
