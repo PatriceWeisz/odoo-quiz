@@ -33,6 +33,7 @@
     "top_n": 5
   },
   "admin": {
-    "token": "GENERER_UN_JETON_ALEATOIRE_ICI"
+    "_comment": "OPTIONNEL. Laisser vide/absent si l'appli est protegee par un login global au niveau du reverse-proxy (Caddy basicauth) : la page /admin/review s'appuie alors sur ce login. Si renseigne, /admin/review exige ce jeton EN PLUS via ?token=, header X-Admin-Token ou cookie admin_token.",
+    "token": ""
   }
 }

@@ -9,8 +9,8 @@ document liste les **écarts**, **décisions prises pendant l'exécution**, et l
 
 ## ✅ SESSION 23 mai 2026 — finalisation Phase 7 + nettoyage infra (v2.2.0)
 
-**Tout est en prod et vérifié.** App : https://quiz-odoo.picvert-senedoo.org — **v2.2.1**,
-3251 questions, HTTPS OK. VPS dédié `odoo-quiz` (178.104.211.37).
+**Tout est en prod et vérifié.** App : https://quiz-odoo.picvert-senedoo.org — **v2.3.0**,
+3251 questions, HTTPS OK, **accès protégé par login**. VPS dédié `odoo-quiz` (178.104.211.37).
 
 ### Fait cette session
 1. **Phase 7.2 — Bouton « Signaler »** : sur chaque question du quiz (en-tête de carte,
@@ -38,6 +38,15 @@ document liste les **écarts**, **décisions prises pendant l'exécution**, et l
    de démarrage ne faisait rien et « Commencer » restait grisé. Cause : `total` déclaré `const`
    puis réassigné dans `updateQuizState()` → `TypeError: Assignment to constant variable` (bug
    latent depuis v2.1.0, jamais testé côté quiz). Corrigé en `let total`. CRM = 38 q (v19) / 31 (v18).
+7. **v2.3.0 — Login global de l'appli** (demande Patrice : un seul mot de passe pour toute
+   l'appli, équipe Senedoo). Protection **HTTP Basic Auth au niveau de Caddy** sur tout le site
+   `quiz-odoo.picvert-senedoo.org`, **sauf `/health`** (laissé ouvert pour la supervision).
+   Identifiant `patrice@senedoo.com` ; mot de passe stocké **uniquement en hash bcrypt** dans
+   `/etc/caddy/Caddyfile` (jamais en clair). Backup Caddyfile : `/etc/caddy/Caddyfile.bak.*`.
+   Conséquence : le **jeton admin a été retiré** (`config.json` n'a plus de section `admin`) — la
+   page `/admin/review` s'appuie désormais sur ce login global (code adapté : sans `admin.token`,
+   l'admin est accessible aux utilisateurs déjà authentifiés). Changer le mot de passe :
+   `caddy hash-password --plaintext '...'` puis remplacer le hash dans le Caddyfile + `systemctl reload caddy`.
 
 ### Tests réalisés (prod, HTTPS)
 - Auth : `/admin/review` → 403 sans/mauvais jeton, 200 avec. `/api/admin/review` → 403 sans
@@ -45,6 +54,9 @@ document liste les **écarts**, **décisions prises pendant l'exécution**, et l
 - Wiring : flag / validate / delete sur id inexistant → 404 ; delete sans jeton → 403.
 - Round-trip réel q911 : unverified → flag (`flagged`) → validate (`verified_by_admin`) →
   **restauré en `unverified`** (données prod inchangées).
+- Login global (v2.3.0) : `/` et `/banque` → 401 sans identifiants, 200 avec ; mauvais mot de
+  passe → 401 ; `/health` → 200 (ouvert) ; `/admin/review` → 401 sans identifiants, 200 avec
+  (et plus besoin de jeton).
 
 ### Nouveau status
 - `verified_by_admin` : question validée manuellement depuis la page admin (visible au quiz,

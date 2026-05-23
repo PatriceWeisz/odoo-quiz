@@ -55,7 +55,7 @@ from quiz_llm import api_available, parse_json_value, run_prompt_with_images
 
 CONFIG_FILE = Path(__file__).parent / "config.json"
 # Incrémenter à chaque livraison (affichée dans l’UI : en-tête, onglet, pied de page ; F5 si auto_reload).
-APP_VERSION = "2.2.1"
+APP_VERSION = "2.3.0"
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12 Mo (captures)
@@ -2660,23 +2660,27 @@ def _admin_request_token() -> str:
 def _admin_authorized() -> bool:
     expected = _admin_token()
     if not expected:
-        return False
+        # Aucun jeton configuré : la page admin s'appuie sur la protection
+        # globale de l'appli (login HTTP au niveau du reverse-proxy Caddy).
+        # Accès ouvert aux utilisateurs déjà authentifiés sur l'appli.
+        return True
     return _admin_request_token() == expected
 
 
 @app.route("/admin/review")
 def admin_review_page():
     expected = _admin_token()
-    if not expected:
-        return render_template_string(ADMIN_GATE_HTML, configured=False), 503
-    if not _admin_authorized():
+    # Si un jeton admin est explicitement configuré, on l'exige. Sinon, la page
+    # s'appuie sur la protection globale de l'appli (login Caddy).
+    if expected and not _admin_authorized():
         return render_template_string(ADMIN_GATE_HTML, configured=True), 403
     resp = Response(render_template_string(ADMIN_HTML, app_version=APP_VERSION))
-    # Mémorise le jeton (cookie httponly) pour les appels API ultérieurs.
-    resp.set_cookie(
-        "admin_token", _admin_request_token(),
-        max_age=86400, httponly=True, samesite="Lax",
-    )
+    if expected:
+        # Mémorise le jeton (cookie httponly) pour les appels API ultérieurs.
+        resp.set_cookie(
+            "admin_token", _admin_request_token(),
+            max_age=86400, httponly=True, samesite="Lax",
+        )
     return resp
 
 
