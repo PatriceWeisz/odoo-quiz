@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import difflib
+import os
 import unicodedata
 from typing import Any
 
@@ -558,7 +559,25 @@ def _answer_image_paths(item: dict, screenshot_path: str | None) -> list[str]:
     if not screenshot_path or not item.get("needs_question_image"):
         return []
     p = str(screenshot_path).strip()
-    return [p] if p else []
+    if not p or not os.path.isfile(p):
+        return []
+    # On préfère n'envoyer à Claude QUE le recadrage de l'image concernée par la
+    # question (via crop_rel issu du DOM/vision) : plus lisible et insensible à la
+    # limite de taille de l'API sur les pages longues. À défaut, on retombe sur la
+    # capture entière (le filet anti-dépassement de quiz_llm la réduira au besoin).
+    cached = item.get("_answer_crop_path")
+    if cached and os.path.isfile(cached):
+        return [cached]
+    try:
+        from question_images import crop_region_to_temp_png
+
+        cropped = crop_region_to_temp_png(p, item.get("crop_rel"))
+    except Exception:
+        cropped = None
+    if cropped:
+        item["_answer_crop_path"] = cropped
+        return [cropped]
+    return [p]
 
 
 def _apply_confidence_gate(item: dict, out: dict[str, Any]) -> None:

@@ -98,6 +98,33 @@ def _messages_api_text(
     return _post_anthropic(body, timeout)
 
 
+_VISION_MAX_EDGE = 7800  # marge sous la limite stricte Anthropic (8000 px / côté)
+
+
+def _vision_safe_image(raw: bytes) -> tuple[bytes, str | None]:
+    """Filet anti-dépassement : si une dimension dépasse la limite de l'API vision
+    (8000 px), réduit l'image. Retourne (octets, media_type) ; media_type est None
+    si l'image est inchangée."""
+    try:
+        import io
+
+        from PIL import Image
+
+        with Image.open(io.BytesIO(raw)) as im:
+            w, h = im.size
+            if max(w, h) <= _VISION_MAX_EDGE:
+                return raw, None
+            scale = _VISION_MAX_EDGE / float(max(w, h))
+            im2 = im.convert("RGB").resize(
+                (max(1, int(w * scale)), max(1, int(h * scale))), Image.LANCZOS
+            )
+            buf = io.BytesIO()
+            im2.save(buf, format="PNG")
+            return buf.getvalue(), "image/png"
+    except Exception:
+        return raw, None
+
+
 def _messages_api_vision(
     prompt: str, paths: list[str], model: str, timeout: int, temperature: float | None = None
 ) -> str:
@@ -118,6 +145,9 @@ def _messages_api_vision(
             mt = "image/webp"
         elif suf == ".gif":
             mt = "image/gif"
+        raw2, mt2 = _vision_safe_image(raw)
+        if mt2:
+            raw, mt = raw2, mt2
         b64 = base64.standard_b64encode(raw).decode("ascii")
         content.append(
             {

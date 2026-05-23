@@ -132,6 +132,50 @@ def _downscale_if_needed(im, max_edge: int):
     return im.resize((nw, nh), Image.Resampling.LANCZOS)
 
 
+def crop_region_to_temp_png(
+    screenshot_path: str,
+    crop_rel: dict | None,
+    *,
+    pad: float = 0.04,
+    max_edge: int = 1400,
+) -> str | None:
+    """Découpe la région ``crop_rel`` (coordonnées relatives 0..1) d'une capture et
+    l'enregistre dans un PNG temporaire (avec une petite marge de contexte).
+
+    Sert à n'envoyer à Claude QUE l'image concernée par la question (au lieu de
+    toute la page) : plus lisible, et reste largement sous la limite de taille de
+    l'API vision. Retourne le chemin du PNG, ou None si pas de zone exploitable.
+    """
+    box = _normalize_crop_rel(crop_rel)
+    if not box:
+        return None
+    try:
+        import tempfile
+
+        from PIL import Image
+
+        with Image.open(screenshot_path) as im:
+            im = im.convert("RGB")
+            w, h = im.size
+            if w < 8 or h < 8:
+                return None
+            l = max(0, int((box["left"] - pad) * w))
+            t = max(0, int((box["top"] - pad) * h))
+            r = min(w, int((box["left"] + box["width"] + pad) * w))
+            b = min(h, int((box["top"] + box["height"] + pad) * h))
+            if r - l < 8 or b - t < 8:
+                return None
+            crop_im = _downscale_if_needed(im.crop((l, t, r, b)), max_edge)
+            fd, path = tempfile.mkstemp(suffix=".png", prefix="ans_crop_")
+            import os
+
+            os.close(fd)
+            crop_im.save(path, "PNG")
+            return path
+    except Exception:
+        return None
+
+
 def preview_region_data_url(
     screenshot_path: str,
     crop_rel: dict | None,

@@ -61,6 +61,17 @@ document liste les **écarts**, **décisions prises pendant l'exécution**, et l
    taille, le texte vient du DOM (vision = secours). Diag : modèle/clé OK, seul le dépassement
    8000 px faisait échouer la vision. Amélioration possible : pour une question qui dépend d'une
    image (« In the image… »), n'envoyer à Claude que le **recadrage** (via `crop_rel` du DOM).
+10. **v2.4.0 — capture : image recadrée + filet anti-dépassement.**
+    - `question_images.crop_region_to_temp_png()` : découpe la région `crop_rel` (marge 4 %) en
+      PNG temporaire. `import_preview_enrich._answer_image_paths()` envoie désormais à Claude **le
+      recadrage de l'image concernée** (caché dans `item['_answer_crop_path']`) au lieu de toute la
+      page → réponses plus fiables sur les questions « à image », et insensible à la taille.
+    - `quiz_llm._vision_safe_image()` : **filet central** dans `_messages_api_vision` — toute image
+      dont un côté dépasse 7800 px est réduite avant l'appel → plus jamais d'erreur « 8000 px »
+      (couvre aussi les collages manuels de captures brutes).
+    - Vérifié en prod : image 1000×9000 → vision OK (réduite), crop d'une région → PNG 816×960.
+    - Rappel : « toute la page » reste le rôle du **favori** (DOM + scroll complet) ; le partage
+      d'écran « Capturer et analyser » ne voit par nature que la partie visible.
 
 ### Tests réalisés (prod, HTTPS)
 - Auth : `/admin/review` → 403 sans/mauvais jeton, 200 avec. `/api/admin/review` → 403 sans
