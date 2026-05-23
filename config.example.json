@@ -31,5 +31,8 @@
     "sqlite_path": "data/odoo_docs.sqlite",
     "min_similarity": 0.35,
     "top_n": 5
+  },
+  "admin": {
+    "token": "GENERER_UN_JETON_ALEATOIRE_ICI"
   }
 }

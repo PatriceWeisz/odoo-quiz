@@ -7,6 +7,47 @@ document liste les **écarts**, **décisions prises pendant l'exécution**, et l
 
 ---
 
+## ✅ SESSION 23 mai 2026 — finalisation Phase 7 + nettoyage infra (v2.2.0)
+
+**Tout est en prod et vérifié.** App : https://quiz-odoo.picvert-senedoo.org — **v2.2.0**,
+3251 questions, HTTPS OK. VPS dédié `odoo-quiz` (178.104.211.37).
+
+### Fait cette session
+1. **Phase 7.2 — Bouton « Signaler »** : sur chaque question du quiz (en-tête de carte,
+   à côté du bouton FR). Appelle `POST /api/bank/<id>/flag` → `status=flagged` (donc exclue
+   du quiz). L'ancien status est conservé dans `prev_status`. Motif facultatif.
+2. **Phase 7.3 — Page de relecture admin** : `/admin/review`, protégée par jeton. Onglets
+   Tout / À revoir (unverified) / Signalées (flagged) + compteurs. Pour chaque question :
+   **Valider** (→ `verified_by_admin`, redevient visible), **Modifier** (édition inline
+   énoncé / réponses / explications via `PUT /api/bank/<id>`), **Supprimer** (DELETE).
+   Endpoints : `GET /api/admin/review`, `POST /api/admin/questions/<id>/validate`,
+   `DELETE /api/admin/questions/<id>` — gardés par le jeton (`?token=`, header
+   `X-Admin-Token`, ou cookie `admin_token`).
+3. **Jeton admin** : `config.json` → `admin.token` (gitignoré ; documenté dans
+   `config.example.json`). Accès : `…/admin/review?token=<jeton>`. Lien « 🔧 Admin » ajouté
+   dans l'en-tête du quiz.
+4. **Décommissionnement ancien VPS (niokolo-rs)** : service `odoo-quiz` arrêté + désactivé
+   (port 5001 fermé) ; bloc `quiz-odoo` retiré du Caddyfile (backup
+   `/etc/caddy/Caddyfile.bak.20260523T185712Z`), `caddy validate` OK + reload. **ResourceSpace
+   100 % intact** (port 8080, apache2, mariadb, bloc Caddy conservés ; HTTPS 200). Réversible :
+   restaurer le `.bak` + `sudo systemctl enable --now odoo-quiz`. ⚠️ toujours `niokolo` (jamais root).
+5. **Déploiement** : backups VPS (`app.py.bak.20260523T185402Z`, `config.json.bak.*`), scp
+   `app.py`, ajout jeton admin dans `config.json` in place (secrets préservés), contrôle de
+   syntaxe, restart `odoo-quiz.service`.
+
+### Tests réalisés (prod, HTTPS)
+- Auth : `/admin/review` → 403 sans/mauvais jeton, 200 avec. `/api/admin/review` → 403 sans
+  jeton ; counts `{unverified:678, flagged:0}`.
+- Wiring : flag / validate / delete sur id inexistant → 404 ; delete sans jeton → 403.
+- Round-trip réel q911 : unverified → flag (`flagged`) → validate (`verified_by_admin`) →
+  **restauré en `unverified`** (données prod inchangées).
+
+### Nouveau status
+- `verified_by_admin` : question validée manuellement depuis la page admin (visible au quiz,
+  comme `verified_by_judge`). Non listée dans la file de relecture.
+
+---
+
 ## 🚀 PROCHAINE SESSION — COMMENCER ICI
 
 **État au 20 mai 2026 (soir) — tout est en prod et fonctionne.**
@@ -158,8 +199,8 @@ utilisé par le filtre.
 | 5.8 Invalidate cache | ✅ | Intégré dans `save_bank_atomic()` |
 | 6 traduction FR Udemy | ✅ | `scripts/translate_udemy_batch.py` — 643/643 traduites, coût $1.12 |
 | 7.1 Filtre module obligatoire | ✅ | Picker module dans header, `/api/modules`, exclude unverified par défaut |
-| 7.2 Bouton Signaler | ⏳ | À faire prochaine session |
-| 7.3 Page admin review | ⏳ | À faire prochaine session |
+| 7.2 Bouton Signaler | ✅ | Bouton sur chaque question → `POST /api/bank/<id>/flag` → status=flagged (v2.2.0, 23 mai) |
+| 7.3 Page admin review | ✅ | `/admin/review` (jeton) : Valider / Modifier / Supprimer unverified+flagged (v2.2.0, 23 mai) |
 
 **App en ligne : v2.0.0 sur https://quiz-odoo.picvert-senedoo.org**
 

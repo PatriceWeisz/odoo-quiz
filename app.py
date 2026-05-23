@@ -55,7 +55,7 @@ from quiz_llm import api_available, parse_json_value, run_prompt_with_images
 
 CONFIG_FILE = Path(__file__).parent / "config.json"
 # Incrémenter à chaque livraison (affichée dans l’UI : en-tête, onglet, pied de page ; F5 si auto_reload).
-APP_VERSION = "2.1.1"
+APP_VERSION = "2.2.0"
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12 Mo (captures)
@@ -359,6 +359,12 @@ HTML = """<!DOCTYPE html>
                  border-radius: 6px; padding: .2rem .6rem; cursor: pointer;
                  color: #475569; font-weight: 600; }
   .lang-toggle.active { background: #714B67; color: white; border-color: #714B67; }
+  .progress-tools { display: flex; gap: .4rem; align-items: center; }
+  .flag-btn { font-size: .8rem; background: #fff; border: 1px solid #fecaca; color: #b91c1c;
+              border-radius: 6px; padding: .2rem .6rem; cursor: pointer; font-weight: 600; transition: .15s; }
+  .flag-btn:hover:not(:disabled) { background: #fef2f2; }
+  .flag-btn.done { background: #fee2e2; color: #7f1d1d; border-color: #fca5a5; cursor: default; }
+  .flag-btn:disabled { opacity: .7; cursor: default; }
   .answer-btn { display: block; width: 100%; text-align: left; padding: .75rem 1rem;
                 margin-bottom: .5rem; border: 2px solid #e2e8f0; border-radius: 8px;
                 background: white; cursor: pointer; transition: .15s; }
@@ -460,6 +466,7 @@ HTML = """<!DOCTYPE html>
     <a class="header-btn" href="/" title="Accueil quiz" aria-current="page">🎓 Quiz</a>
     <a class="header-btn" href="/banque">📋 Banque</a>
     <a class="header-btn" href="/import-capture">📷 Capture</a>
+    <a class="header-btn" href="/admin/review" title="Revue des questions (accès restreint)">🔧 Admin</a>
     <button type="button" class="header-btn" onclick="openModal()">💬 Question</button>
     <button type="button" class="header-btn" onclick="if(confirm('Recommencer un nouveau quiz ?')) location.reload()">↺ Recommencer</button>
     <div id="timer" title="Temps écoulé (quiz)">00:00</div>
@@ -490,7 +497,10 @@ HTML = """<!DOCTYPE html>
   <div id="question-card" style="display:none">
     <div id="progress">
       <span id="progress-text"></span>
-      <button class="lang-toggle" id="lang-btn" onclick="toggleLang()" title="Afficher la traduction française">🇫🇷 FR</button>
+      <div class="progress-tools">
+        <button class="flag-btn" id="btn-flag" onclick="flagQuestion()" title="Signaler une question erronée (elle sera retirée du quiz)">⚐ Signaler</button>
+        <button class="lang-toggle" id="lang-btn" onclick="toggleLang()" title="Afficher la traduction française">🇫🇷 FR</button>
+      </div>
     </div>
     <div id="question-text"></div>
     <div id="question-text-fr"></div>
@@ -701,6 +711,13 @@ function showQuestion() {
   document.getElementById('btn-skip').style.display = 'inline-block';
   document.getElementById('btn-next').style.display = 'none';
 
+  const flagBtn = document.getElementById('btn-flag');
+  if (flagBtn) {
+    flagBtn.disabled = false;
+    flagBtn.textContent = '⚐ Signaler';
+    flagBtn.classList.remove('done');
+  }
+
   const div = document.getElementById('answers');
   div.innerHTML = '';
   (q.answers || []).forEach((a, i) => {
@@ -724,6 +741,36 @@ function toggleLang() {
   document.querySelectorAll('.answer-btn .val-fr').forEach(el => {
     el.style.display = showFr ? 'block' : 'none';
   });
+}
+
+async function flagQuestion() {
+  const q = questions[current];
+  if (!q || q.id == null) return;
+  if (!confirm('Signaler cette question comme erronée ?\\n\\nElle sera retirée du quiz et placée dans la file de relecture (page Admin).')) return;
+  const reason = (prompt('Précisez si vous le souhaitez ce qui ne va pas (facultatif) :', '') || '').trim();
+  const btn = document.getElementById('btn-flag');
+  btn.disabled = true;
+  btn.textContent = '⏳…';
+  try {
+    const res = await fetch('/api/bank/' + encodeURIComponent(q.id) + '/flag', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({reason: reason})
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.ok) {
+      btn.textContent = '✓ Signalée';
+      btn.classList.add('done');
+    } else {
+      alert('Échec du signalement : ' + (data.error || res.status));
+      btn.disabled = false;
+      btn.textContent = '⚐ Signaler';
+    }
+  } catch (e) {
+    alert('Erreur réseau : ' + e);
+    btn.disabled = false;
+    btn.textContent = '⚐ Signaler';
+  }
 }
 
 function revealAnswer() {
@@ -854,6 +901,301 @@ function showResults() {
 BANK_HTML = (Path(__file__).parent / "banque.html").read_text(encoding="utf-8")
 CAPTURE_HTML = (Path(__file__).parent / "capture_udemy.html").read_text(encoding="utf-8")
 CAPTURE_PREVIEW_HTML = (Path(__file__).parent / "capture_preview.html").read_text(encoding="utf-8")
+
+# --- Page d'administration : revue des questions (unverified / flagged) ------
+
+ADMIN_GATE_HTML = """<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — accès restreint</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         background:#f0f4ff; color:#1a1a2e; display:flex; align-items:center;
+         justify-content:center; min-height:100vh; margin:0; }
+  .box { background:#fff; padding:2rem; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,.1);
+         max-width:420px; width:90%; text-align:center; }
+  h1 { color:#714B67; font-size:1.3rem; margin:0 0 1rem; }
+  p { color:#64748b; font-size:.92rem; line-height:1.5; }
+  input { width:100%; padding:.6rem; border:2px solid #e2e8f0; border-radius:8px;
+          font-size:1rem; margin:1rem 0; }
+  button { background:#714B67; color:#fff; border:none; border-radius:8px;
+           padding:.6rem 1.4rem; font-weight:600; cursor:pointer; font-size:.95rem; }
+  code { background:#f1f5f9; padding:.1rem .3rem; border-radius:4px; }
+</style></head>
+<body>
+  <div class="box">
+    <h1>🔧 Revue des questions</h1>
+    {% if configured %}
+      <p>Accès réservé. Entrez le jeton d'administration.</p>
+      <form method="get" action="/admin/review">
+        <input type="password" name="token" placeholder="Jeton admin" autofocus>
+        <button type="submit">Entrer</button>
+      </form>
+    {% else %}
+      <p>La page d'administration n'est pas configurée.<br>
+      Ajoutez une section <code>"admin": {"token": "..."}</code> dans
+      <code>config.json</code> puis redémarrez l'application.</p>
+    {% endif %}
+  </div>
+</body></html>"""
+
+ADMIN_HTML = """<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revue des questions — v{{ app_version }}</title>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         background:#f0f4ff; color:#1a1a2e; }
+  header { background:#714B67; color:#fff; padding:1rem 1.5rem; display:flex;
+           align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.6rem; }
+  header h1 { font-size:1.2rem; }
+  header .v { font-size:.78rem; opacity:.9; margin-left:.5rem; }
+  header nav a { color:#fff; text-decoration:none; background:rgba(255,255,255,.15);
+                 border:1px solid rgba(255,255,255,.3); border-radius:8px;
+                 padding:.4rem .8rem; font-size:.85rem; font-weight:600; margin-left:.4rem; }
+  .toolbar { max-width:920px; margin:1.2rem auto 0; padding:0 1rem; display:flex;
+             gap:.5rem; flex-wrap:wrap; align-items:center; }
+  .tab { background:#fff; border:2px solid #e2e8f0; border-radius:999px; padding:.4rem 1rem;
+         cursor:pointer; font-weight:600; font-size:.9rem; color:#475569; }
+  .tab.active { background:#714B67; color:#fff; border-color:#714B67; }
+  .tab .n { font-weight:700; }
+  .refresh { margin-left:auto; background:#e2e8f0; border:none; border-radius:8px;
+             padding:.45rem .9rem; cursor:pointer; font-weight:600; font-size:.85rem; }
+  main { max-width:920px; margin:1rem auto 3rem; padding:0 1rem; }
+  .empty { text-align:center; color:#64748b; padding:3rem 1rem; font-size:1.1rem; }
+  .card { background:#fff; border-radius:12px; padding:1.25rem 1.4rem; margin-bottom:1.1rem;
+          box-shadow:0 2px 8px rgba(0,0,0,.07); }
+  .badges { display:flex; flex-wrap:wrap; gap:.4rem; margin-bottom:.7rem; }
+  .badge { font-size:.72rem; font-weight:700; border-radius:999px; padding:.18rem .6rem; }
+  .b-flag { background:#fee2e2; color:#b91c1c; }
+  .b-unver { background:#fef3c7; color:#92400e; }
+  .b-mod { background:#ede9fe; color:#5b21b6; }
+  .b-ver { background:#e0f2fe; color:#075985; }
+  .b-score { background:#f1f5f9; color:#475569; }
+  .b-id { background:#f8fafc; color:#94a3b8; }
+  .flag-reason { background:#fff1f2; border-left:3px solid #fb7185; color:#9f1239;
+                 padding:.4rem .7rem; border-radius:0 6px 6px 0; font-size:.85rem; margin-bottom:.7rem; }
+  .q-title { font-size:1.05rem; font-weight:600; line-height:1.45; }
+  .q-title-fr { font-size:.92rem; color:#64748b; font-style:italic; margin-top:.2rem; }
+  .answers { list-style:none; margin:.9rem 0 0; }
+  .ans { display:flex; gap:.5rem; align-items:flex-start; padding:.4rem .6rem; border-radius:8px;
+         border:1px solid #eef2f7; margin-bottom:.35rem; }
+  .ans.correct { background:#f0fdf4; border-color:#bbf7d0; }
+  .ans .mark { color:#94a3b8; font-weight:700; }
+  .ans.correct .mark { color:#16a34a; }
+  .atext { display:flex; flex-direction:column; }
+  .aen { font-size:.92rem; }
+  .afr { font-size:.82rem; color:#64748b; font-style:italic; }
+  .expl { margin-top:.8rem; font-size:.88rem; }
+  .expl summary { cursor:pointer; color:#714B67; font-weight:600; }
+  .expl-s { background:#fff8e1; border-left:3px solid #f59e0b; padding:.5rem .7rem;
+            border-radius:0 6px 6px 0; margin-top:.5rem; white-space:pre-wrap; }
+  .expl-c { background:#f0f4ff; border-left:3px solid #714B67; padding:.5rem .7rem;
+            border-radius:0 6px 6px 0; margin-top:.5rem; white-space:pre-wrap; }
+  .actions { display:flex; gap:.6rem; flex-wrap:wrap; margin-top:1rem; }
+  .btn { border:none; border-radius:8px; padding:.5rem 1rem; cursor:pointer;
+         font-weight:600; font-size:.88rem; }
+  .b-validate { background:#16a34a; color:#fff; }
+  .b-edit { background:#e2e8f0; color:#1a1a2e; }
+  .b-del { background:#fee2e2; color:#b91c1c; }
+  .b-cancel { background:#e2e8f0; color:#1a1a2e; }
+  .edit-wrap { margin-top:1rem; }
+  .editform { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:1rem; }
+  .editform label { display:block; font-size:.78rem; font-weight:700; text-transform:uppercase;
+                    letter-spacing:.03em; color:#64748b; margin:.7rem 0 .25rem; }
+  .editform textarea, .editform input[type=text] {
+    width:100%; padding:.5rem; border:2px solid #e2e8f0; border-radius:8px;
+    font-family:inherit; font-size:.92rem; }
+  .editform textarea { min-height:54px; resize:vertical; }
+  .arow { display:flex; gap:.5rem; align-items:center; margin-bottom:.4rem; }
+  .arow input[type=text] { flex:1; }
+  .arow input[type=radio] { width:18px; height:18px; }
+  .opt { display:flex !important; align-items:center; gap:.4rem; text-transform:none !important;
+         letter-spacing:0 !important; font-size:.85rem !important; color:#1a1a2e !important; margin-top:.8rem !important; }
+  .editbar { display:flex; gap:.6rem; margin-top:1rem; }
+  .toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%);
+           background:#1a1a2e; color:#fff; padding:.7rem 1.2rem; border-radius:8px;
+           font-size:.9rem; opacity:0; transition:opacity .25s; pointer-events:none; }
+  .toast.show { opacity:1; }
+</style></head>
+<body>
+<header>
+  <div><h1 style="display:inline">🔧 Revue des questions</h1><span class="v">v{{ app_version }}</span></div>
+  <nav><a href="/">🎓 Quiz</a><a href="/banque">📋 Banque</a></nav>
+</header>
+<div class="toolbar">
+  <button class="tab active" data-s="all" onclick="load('all')">Tout</button>
+  <button class="tab" data-s="unverified" onclick="load('unverified')">À revoir <span class="n" id="c-unverified">0</span></button>
+  <button class="tab" data-s="flagged" onclick="load('flagged')">Signalées <span class="n" id="c-flagged">0</span></button>
+  <button class="refresh" onclick="load(CURRENT)">↻ Rafraîchir</button>
+</div>
+<main><div id="list"></div></main>
+<div class="toast" id="toast"></div>
+<script>
+let CACHE = {}, CURRENT = 'all';
+
+function el(tag, props, kids) {
+  const n = document.createElement(tag);
+  if (props) for (const k in props) {
+    if (k === 'class') n.className = props[k];
+    else if (k === 'text') n.textContent = props[k];
+    else n.setAttribute(k, props[k]);
+  }
+  (kids || []).forEach(c => { if (c != null) n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+  return n;
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+async function load(status) {
+  CURRENT = status || 'all';
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.s === CURRENT));
+  const list = document.getElementById('list');
+  list.textContent = 'Chargement…';
+  let data;
+  try {
+    const res = await fetch('/api/admin/review?status=' + encodeURIComponent(CURRENT));
+    if (res.status === 403) { list.textContent = 'Session expirée — rechargez la page avec le jeton (?token=…).'; return; }
+    data = await res.json();
+  } catch (e) { list.textContent = 'Erreur réseau : ' + e; return; }
+  document.getElementById('c-unverified').textContent = data.counts.unverified;
+  document.getElementById('c-flagged').textContent = data.counts.flagged;
+  CACHE = {};
+  (data.questions || []).forEach(q => { CACHE[q.id] = q; });
+  render(data.questions || []);
+}
+
+function render(items) {
+  const list = document.getElementById('list');
+  list.textContent = '';
+  if (!items.length) { list.appendChild(el('p', {class:'empty', text:'Rien à revoir ici 🎉'})); return; }
+  items.forEach(q => list.appendChild(card(q)));
+}
+
+function card(q) {
+  const c = el('div', {class:'card', id:'card-' + q.id});
+  const badges = el('div', {class:'badges'});
+  badges.appendChild(el('span', {class:'badge ' + (q.status === 'flagged' ? 'b-flag' : 'b-unver'),
+                                 text: q.status === 'flagged' ? '⚐ Signalée' : 'À revoir (3/5)'}));
+  if (q.module) badges.appendChild(el('span', {class:'badge b-mod', text:q.module}));
+  if (q.target_version) badges.appendChild(el('span', {class:'badge b-ver', text:'v' + q.target_version}));
+  if (q.judge_score != null) badges.appendChild(el('span', {class:'badge b-score', text:'judge ' + q.judge_score + '/5'}));
+  badges.appendChild(el('span', {class:'badge b-id', text:'#' + q.id}));
+  c.appendChild(badges);
+  if (q.flag_reason) c.appendChild(el('div', {class:'flag-reason', text:'⚐ Motif : ' + q.flag_reason}));
+  c.appendChild(el('div', {class:'q-title', text:q.title || ''}));
+  if (q.title_fr) c.appendChild(el('div', {class:'q-title-fr', text:q.title_fr}));
+  const ul = el('ul', {class:'answers'});
+  (q.answers || []).forEach(a => {
+    const li = el('li', {class: a.is_correct ? 'ans correct' : 'ans'});
+    li.appendChild(el('span', {class:'mark', text: a.is_correct ? '✓' : '○'}));
+    const tw = el('span', {class:'atext'});
+    tw.appendChild(el('span', {class:'aen', text:a.value || ''}));
+    if (a.value_fr) tw.appendChild(el('span', {class:'afr', text:a.value_fr}));
+    li.appendChild(tw);
+    ul.appendChild(li);
+  });
+  c.appendChild(ul);
+  if (q.explication_senedoo || q.explication_claude) {
+    const det = el('details', {class:'expl'});
+    det.appendChild(el('summary', {text:'Explications'}));
+    if (q.explication_senedoo) det.appendChild(el('div', {class:'expl-s', text:'📚 ' + q.explication_senedoo}));
+    if (q.explication_claude) det.appendChild(el('div', {class:'expl-c', text:'🤖 ' + q.explication_claude}));
+    c.appendChild(det);
+  }
+  const act = el('div', {class:'actions'});
+  const bV = el('button', {class:'btn b-validate', text:'✅ Valider'}); bV.onclick = () => validate(q.id);
+  const bE = el('button', {class:'btn b-edit', text:'✏️ Modifier'}); bE.onclick = () => toggleEdit(q.id);
+  const bD = el('button', {class:'btn b-del', text:'🗑️ Supprimer'}); bD.onclick = () => del(q.id);
+  act.appendChild(bV); act.appendChild(bE); act.appendChild(bD);
+  c.appendChild(act);
+  c.appendChild(el('div', {class:'edit-wrap', id:'edit-' + q.id, style:'display:none'}));
+  return c;
+}
+
+async function validate(id) {
+  const res = await fetch('/api/admin/questions/' + id + '/validate', {method:'POST'});
+  const d = await res.json().catch(() => ({}));
+  if (res.ok && d.ok) { toast('✅ Question #' + id + ' validée'); load(CURRENT); }
+  else alert('Échec : ' + (d.error || res.status));
+}
+
+async function del(id) {
+  if (!confirm('Supprimer définitivement la question #' + id + ' ?\\n\\nCette action est irréversible.')) return;
+  const res = await fetch('/api/admin/questions/' + id, {method:'DELETE'});
+  const d = await res.json().catch(() => ({}));
+  if (res.ok && d.ok) { toast('🗑️ Question #' + id + ' supprimée'); load(CURRENT); }
+  else alert('Échec : ' + (d.error || res.status));
+}
+
+function toggleEdit(id) {
+  const wrap = document.getElementById('edit-' + id);
+  if (wrap.style.display === 'block') { wrap.style.display = 'none'; wrap.textContent = ''; return; }
+  const q = CACHE[id];
+  wrap.textContent = '';
+  const form = el('div', {class:'editform'});
+  form.appendChild(el('label', {text:'Énoncé (EN)'}));
+  const tEn = el('textarea', {class:'f-title'}); tEn.value = q.title || ''; form.appendChild(tEn);
+  form.appendChild(el('label', {text:'Énoncé (FR)'}));
+  const tFr = el('textarea', {class:'f-title-fr'}); tFr.value = q.title_fr || ''; form.appendChild(tFr);
+  form.appendChild(el('label', {text:'Réponses (cocher la bonne)'}));
+  const rname = 'correct-' + id, arows = [];
+  (q.answers || []).forEach(a => {
+    const row = el('div', {class:'arow'});
+    const r = el('input', {type:'radio', name:rname}); r.checked = !!a.is_correct;
+    const ie = el('input', {type:'text', placeholder:'EN'}); ie.value = a.value || '';
+    const ifr = el('input', {type:'text', placeholder:'FR'}); ifr.value = a.value_fr || '';
+    row.appendChild(r); row.appendChild(ie); row.appendChild(ifr);
+    form.appendChild(row);
+    arows.push({a, r, ie, ifr});
+  });
+  form.appendChild(el('label', {text:'Explication Senedoo / Udemy'}));
+  const eS = el('textarea'); eS.value = q.explication_senedoo || ''; form.appendChild(eS);
+  form.appendChild(el('label', {text:'Explication Claude'}));
+  const eC = el('textarea'); eC.value = q.explication_claude || ''; form.appendChild(eC);
+  const opt = el('label', {class:'opt'});
+  const chk = el('input', {type:'checkbox'}); chk.checked = true;
+  opt.appendChild(chk); opt.appendChild(document.createTextNode(' Valider après enregistrement'));
+  form.appendChild(opt);
+  const bar = el('div', {class:'editbar'});
+  const save = el('button', {class:'btn b-validate', text:'💾 Enregistrer'});
+  save.onclick = () => saveEdit(id, {tEn, tFr, arows, eS, eC, chk});
+  const cancel = el('button', {class:'btn b-cancel', text:'Annuler'});
+  cancel.onclick = () => { wrap.style.display = 'none'; wrap.textContent = ''; };
+  bar.appendChild(save); bar.appendChild(cancel);
+  form.appendChild(bar);
+  wrap.appendChild(form);
+  wrap.style.display = 'block';
+}
+
+async function saveEdit(id, f) {
+  const title = f.tEn.value.trim();
+  if (!title) { alert('L\\'énoncé EN est obligatoire.'); return; }
+  const answers = f.arows.map(x => ({
+    id: x.a.id, value: x.ie.value.trim(), value_fr: x.ifr.value.trim(), is_correct: x.r.checked,
+  }));
+  if (answers.some(a => !a.value)) { alert('Chaque réponse doit avoir un texte EN.'); return; }
+  if (answers.filter(a => a.is_correct).length !== 1) { alert('Cochez exactement une bonne réponse.'); return; }
+  const payload = {
+    title, title_fr: f.tFr.value.trim(), answers,
+    explication_senedoo: f.eS.value, explication_claude: f.eC.value,
+  };
+  const res = await fetch('/api/bank/' + id, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+  const d = await res.json().catch(() => ({}));
+  if (!(res.ok && d.ok)) { alert('Échec enregistrement : ' + (d.error || res.status)); return; }
+  if (f.chk.checked) await fetch('/api/admin/questions/' + id + '/validate', {method:'POST'});
+  toast('💾 Question #' + id + ' enregistrée');
+  load(CURRENT);
+}
+
+load('all');
+</script>
+</body></html>"""
 
 ALLOWED_CAPTURE_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
 PENDING_CAPTURE_ROOT = Path(tempfile.gettempdir()) / "odoo_quiz_capture_pending"
@@ -2179,6 +2521,39 @@ def api_bank_put(q_id):
     return jsonify({"ok": True})
 
 
+@app.route("/api/bank/<q_id>/flag", methods=["POST"])
+def api_bank_flag(q_id):
+    """Signaler une question comme erronée → status=flagged (exclue du quiz).
+
+    Endpoint public, déclenché depuis le bouton « Signaler » de l'UI quiz.
+    Conserve l'ancien status dans ``prev_status`` pour permettre une
+    revalidation depuis la page d'administration (/admin/review).
+    """
+    from datetime import datetime, timezone
+
+    q_id = _parse_question_id_param(q_id)
+    if q_id is None:
+        return jsonify({"error": "Identifiant question invalide."}), 400
+    payload = request.get_json(silent=True) or {}
+    reason = (payload.get("reason") or "").strip()[:500]
+    data = _load_questions_file_raw()
+    if not data or not isinstance(data.get("questions"), list):
+        return jsonify({"error": "Fichier questions introuvable ou invalide."}), 500
+    idx = _find_question_index(data, q_id)
+    if idx is None:
+        return jsonify({"error": "Question introuvable."}), 404
+    q = data["questions"][idx]
+    if (q.get("status") or "") != "flagged":
+        q["prev_status"] = q.get("status")
+    q["status"] = "flagged"
+    q["flag_reason"] = reason or q.get("flag_reason") or None
+    q["flagged_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    data["questions"][idx] = q
+    _save_questions_file_raw(data)
+    reload_questions()
+    return jsonify({"ok": True, "status": "flagged"})
+
+
 @app.route("/api/ask", methods=["POST"])
 def api_ask():
     """Q&A libre via API Anthropic.
@@ -2257,6 +2632,148 @@ def api_modules():
         "include_hidden": include_hidden,
         "modules": modules,
     })
+
+
+# ---------------------------------------------------------------------------
+# Administration — revue des questions (unverified / flagged)
+# ---------------------------------------------------------------------------
+
+REVIEWABLE_STATUSES = ("unverified", "flagged")
+
+
+def _admin_token() -> Optional[str]:
+    """Jeton admin lu dans config.json -> admin.token (None si non configuré)."""
+    tok = (CFG.get("admin") or {}).get("token")
+    tok = str(tok).strip() if tok else ""
+    return tok or None
+
+
+def _admin_request_token() -> str:
+    return (
+        request.args.get("token")
+        or request.headers.get("X-Admin-Token")
+        or request.cookies.get("admin_token")
+        or ""
+    ).strip()
+
+
+def _admin_authorized() -> bool:
+    expected = _admin_token()
+    if not expected:
+        return False
+    return _admin_request_token() == expected
+
+
+@app.route("/admin/review")
+def admin_review_page():
+    expected = _admin_token()
+    if not expected:
+        return render_template_string(ADMIN_GATE_HTML, configured=False), 503
+    if not _admin_authorized():
+        return render_template_string(ADMIN_GATE_HTML, configured=True), 403
+    resp = Response(render_template_string(ADMIN_HTML, app_version=APP_VERSION))
+    # Mémorise le jeton (cookie httponly) pour les appels API ultérieurs.
+    resp.set_cookie(
+        "admin_token", _admin_request_token(),
+        max_age=86400, httponly=True, samesite="Lax",
+    )
+    return resp
+
+
+@app.route("/api/admin/review")
+def api_admin_review():
+    if not _admin_authorized():
+        return jsonify({"error": "Non autorisé."}), 403
+    from app.config import question_module
+
+    want = (request.args.get("status") or "all").strip().lower()
+    if want not in ("all", "unverified", "flagged"):
+        want = "all"
+    out = []
+    counts = {"unverified": 0, "flagged": 0}
+    for q in ALL_QUESTIONS:
+        st = (q.get("status") or "").strip()
+        if st in counts:
+            counts[st] += 1
+        if st not in REVIEWABLE_STATUSES:
+            continue
+        if want != "all" and st != want:
+            continue
+        out.append({
+            "id": q.get("id"),
+            "title": q.get("title"),
+            "title_fr": q.get("title_fr"),
+            "module": question_module(q),
+            "status": st,
+            "judge_score": q.get("judge_score"),
+            "judge_reasons": q.get("judge_reasons"),
+            "target_version": q.get("target_version"),
+            "tier": q.get("tier"),
+            "source": q.get("correct_answer_source") or q.get("source"),
+            "flag_reason": q.get("flag_reason"),
+            "explication_claude": q.get("explication_claude"),
+            "explication_senedoo": q.get("explication_senedoo"),
+            "answers": [
+                {
+                    "id": a.get("id"),
+                    "value": a.get("value"),
+                    "value_fr": a.get("value_fr"),
+                    "is_correct": bool(a.get("is_correct")),
+                }
+                for a in (q.get("answers") or [])
+            ],
+        })
+    out.sort(key=lambda r: (
+        0 if r["status"] == "flagged" else 1,
+        r["id"] if isinstance(r["id"], int) else 0,
+    ))
+    return jsonify({"questions": out, "counts": counts})
+
+
+@app.route("/api/admin/questions/<q_id>/validate", methods=["POST"])
+def api_admin_validate(q_id):
+    if not _admin_authorized():
+        return jsonify({"error": "Non autorisé."}), 403
+    from datetime import datetime, timezone
+
+    q_id = _parse_question_id_param(q_id)
+    if q_id is None:
+        return jsonify({"error": "Identifiant question invalide."}), 400
+    data = _load_questions_file_raw()
+    if not data or not isinstance(data.get("questions"), list):
+        return jsonify({"error": "Fichier questions introuvable ou invalide."}), 500
+    idx = _find_question_index(data, q_id)
+    if idx is None:
+        return jsonify({"error": "Question introuvable."}), 404
+    q = data["questions"][idx]
+    q["status"] = "verified_by_admin"
+    q.pop("flag_reason", None)
+    q.pop("flagged_at", None)
+    q.pop("prev_status", None)
+    q["validated_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    data["questions"][idx] = q
+    _save_questions_file_raw(data)
+    reload_questions()
+    return jsonify({"ok": True, "status": "verified_by_admin"})
+
+
+@app.route("/api/admin/questions/<q_id>", methods=["DELETE"])
+def api_admin_delete(q_id):
+    if not _admin_authorized():
+        return jsonify({"error": "Non autorisé."}), 403
+    q_id = _parse_question_id_param(q_id)
+    if q_id is None:
+        return jsonify({"error": "Identifiant question invalide."}), 400
+    data = _load_questions_file_raw()
+    if not data or not isinstance(data.get("questions"), list):
+        return jsonify({"error": "Fichier questions introuvable ou invalide."}), 500
+    idx = _find_question_index(data, q_id)
+    if idx is None:
+        return jsonify({"error": "Question introuvable."}), 404
+    removed = data["questions"].pop(idx)
+    _save_questions_file_raw(data)
+    reload_questions()
+    return jsonify({"ok": True, "deleted_id": removed.get("id")})
 
 
 @app.route("/health")
