@@ -7,6 +7,66 @@ document liste les **écarts**, **décisions prises pendant l'exécution**, et l
 
 ---
 
+## 🚀 SESSION 24 mai 2026 — COMMENCER ICI (v2.5.1)
+
+**État** : tout en prod sur https://quiz-odoo.picvert-senedoo.org — **v2.5.1**,
+**3 561 questions** (0 doublon de titre, 100 % avec une bonne réponse, 100 %
+encodées dans l'index vectoriel). VPS dédié `odoo-quiz` (178.104.211.37). Repo
+à jour et poussé (`PatriceWeisz/odoo-quiz`, `main`).
+
+### Accès
+- **Login appli (Caddy basic_auth, tout le site sauf `/health`)** : `patrice@senedoo.com`
+  / mot de passe stocké en hash bcrypt dans `/etc/caddy/Caddyfile` (le changer :
+  `caddy hash-password --plaintext '...'` puis remplacer le hash + `systemctl reload caddy`).
+- **Page admin** : `…/admin/review` (s'appuie sur le login global ; `config.json` n'a plus
+  de section `admin`). Lien « 🔧 Admin » dans l'en-tête.
+
+### Fait cette session (chronologique)
+1. **Phase 7.2 / 7.3** : bouton « Signaler » (→ `flagged`) + page de relecture admin
+   (Valider / Modifier / Supprimer). (v2.2.0)
+2. **Login global** Caddy basic_auth sur tout le site, `/health` ouvert ; jeton admin retiré. (v2.3.0)
+3. **Décommission de l'ancien VPS** (service quiz + bloc Caddy) — **ResourceSpace intact**.
+4. **Bugfixes** : picker module (`total` const→let, v2.2.1) ; bouton « Ignorer » de la capture
+   (validait la réponse avant le choix, v2.3.1).
+5. **Capture** : filet anti-dépassement vision (≤7800 px), image **recadrée** envoyée à Claude,
+   puis **hybride lien `<img>` (téléchargé, anti-SSRF) sinon recadrage** (v2.4.0→2.4.2) ;
+   **plafond 4→6 questions/page** (v2.4.3) ; **régression login→favori corrigée** (URLs de
+   capture exemptées du login) ; **DOM-first** : on garde le texte du DOM, on n'envoie que
+   l'image à Claude.
+6. **Suggestions** : **escalade Opus 4.6** si confiance non-haute + **accord voisin** vectoriel ;
+   forum/aide Odoo ajoutés aux sources web ; `escalation_model` dans `config.json`. (v2.5.0→2.5.1)
+7. **Harnais d'éval** `scripts/eval_suggestions.py` (leave-one-out, parallèle, ablation, A/B modèle).
+   Mesure : **~85 % sur questions Udemy jamais vues** (92 % en confiance haute) ; **la taille de
+   banque n'influe pas** → générer +3 000 questions ou changer d'embedding n'aiderait sans doute pas.
+8. **Import nouveau cours Udemy (vérifié humain)** via l'API Udemy (navigateur) :
+   - +359 nouvelles questions (820 récupérées, 461 doublons écartés), `target_version=19.0`, module
+     mappé depuis la section (`scripts/import_udemy_course.py`).
+   - 443 anciennes Udemy re-taguées **`both`** → toutes visibles au quiz.
+   - **13 réponses corrigées + 42 remplacées** par la version vérifiée (`scripts/fix_udemy_answers.py`).
+   - **30 doublons de titre préexistants supprimés** (`scripts/dedup_bank_titles.py`).
+   - **19 questions sans bonne réponse supprimées** (non exploitables, hors index vectoriel).
+   - Bilan banque : 3251 → 3610 → **3561**.
+
+### En réserve (NON faits — décidés « plus tard »)
+- **A/B modèle d'embedding** `mixedbread-ai/mxbai-embed-large-v1` vs MiniLM (actuel). Le
+  ré-encodage est gratuit ($0, fastembed local) mais touche **banque + index doc** (même modèle
+  requête/index) ; gain probablement marginal (cf. ablation). Idéalement ré-encoder sur le Mac M5.
+- **Éval complète** des ~641 Udemy (relancer `eval_suggestions.py --concurrency 6`, ~15-20 min).
+- **Autres cours Udemy** : fournir l'URL d'un cours possédé → même pipeline (API → dédup → import).
+- **68 divergences** anciennes : traitées (13 corrigées + 42 remplacées) ; le reste était
+  incomparable/hors banque.
+
+### Comment récupérer un cours Udemy (rappel méthode)
+Via Claude in Chrome (session Udemy de l'utilisateur), API : `/api-2.0/courses/<id>/subscriber-curriculum-items/`
+(liste des quiz) puis `/api-2.0/quizzes/<id>/assessments/?fields[assessment]=@all` (énoncé +
+`answers` + `correct_response` lettre). `course_id` visible dans les requêtes réseau
+`/users/me/subscribed-courses/<courseId>/...`. Export JSON → `scripts/import_udemy_course.py`.
+
+### Clôture
+- **Arrêter le pont** `cmdbridge.sh` (Ctrl+C dans le Terminal) en fin de session.
+
+---
+
 ## ✅ SESSION 23 mai 2026 — finalisation Phase 7 + nettoyage infra (v2.2.0)
 
 **Tout est en prod et vérifié.** App : https://quiz-odoo.picvert-senedoo.org — **v2.3.0**,
