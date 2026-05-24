@@ -19,7 +19,7 @@ SYSTEM_PROMPT_TEMPLATE = """Tu es un formateur expert Odoo, spécialisé Odoo {t
 
    b. Questions similaires déjà validées (`<similar_qas>`) — préfixées [v18] ou [v19] ; privilégie celles de la même version cible.
 
-   c. L'outil web_search restreint au domaine odoo.com, uniquement si (a) et (b) sont insuffisants.
+   c. Les outils web_search / web_fetch restreints au domaine odoo.com — cela inclut la documentation officielle, le centre d'aide et le forum communautaire (odoo.com/forum, questions-réponses publiques) — à utiliser si (a) et (b) sont insuffisants. Privilégie une réponse officielle ou une réponse de forum acceptée/votée plutôt qu'une simple opinion.
 
    d. Tes connaissances générales en DERNIER recours, en baissant la confiance à "moyenne" ou "basse".
 

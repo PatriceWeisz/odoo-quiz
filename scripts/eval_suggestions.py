@@ -68,6 +68,10 @@ def _options(q: dict) -> list[str]:
     return [str((a.get("value") or "")).strip() for a in (q.get("answers") or [])]
 
 
+def _src(q: dict) -> str:
+    return str((q.get("correct_answer_source") or q.get("source") or "")).strip().lower()
+
+
 def _target_version(q: dict) -> str:
     tv = q.get("target_version")
     tv = str(tv).strip() if tv is not None and str(tv).strip() else ""
@@ -79,8 +83,18 @@ def main() -> None:
     ap.add_argument("--limit", type=int, default=40)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--version", default="all", choices=["18.0", "19.0", "both", "all"])
-    ap.add_argument("--source", default="")
+    ap.add_argument("--source", default="",
+                    help="filtre la source du jeu de TEST (ex. udemy)")
+    ap.add_argument("--rag-exclude-source", default="",
+                    help="retire ces sources de la BANQUE RAG (liste séparée par virgule, "
+                         "ex. udemy) pour éviter que la question testée se retrouve via un doublon")
+    ap.add_argument("--rag-bank-fraction", type=float, default=1.0,
+                    help="ablation : ne garder qu'une fraction (0-1) de la banque RAG (sous-"
+                         "échantillon fixe, graine seed+7) pour mesurer l'effet de la TAILLE de banque")
     ap.add_argument("--escalate", action="store_true")
+    ap.add_argument("--concurrency", type=int, default=1,
+                    help="nombre d'évaluations en parallèle (les appels API, lents, sont "
+                         "concurrents ; ex. 5 pour ~5× plus rapide sur un gros run)")
     ap.add_argument("--model", default="")
     ap.add_argument("--web", action="store_true")
     ap.add_argument("--include-image", action="store_true")
@@ -118,23 +132,39 @@ def main() -> None:
 
     esc_model = escalation_model() if args.escalate else ""
     rank = {"basse": 0, "moyenne": 1, "haute": 2}
+    exclude_src = {s.strip().lower() for s in args.rag_exclude_source.split(",") if s.strip()}
+    # Ablation taille de banque : sous-ensemble fixe d'ids conservés (None = tout garder).
+    keep_ids: set | None = None
+    if args.rag_bank_fraction < 1.0:
+        eligible = [x.get("id") for x in bank if _src(x) not in exclude_src and x.get("id") is not None]
+        random.Random(args.seed + 7).shuffle(eligible)
+        keep_ids = set(eligible[: max(1, int(len(eligible) * args.rag_bank_fraction))])
+    rag_bank_size = len([x for x in bank if _src(x) not in exclude_src
+                         and (keep_ids is None or x.get("id") in keep_ids)])
 
     print(f"📋 Banque : {len(bank)} questions ; {len(pool)} évaluables (filtres appliqués).")
-    print(f"   Échantillon : {len(sample)} (seed={args.seed}) | modèle base={args.model or 'config'} "
-          f"| web={'on' if args.web else 'off'} | escalade={'on ('+esc_model+')' if esc_model else 'off'}\n")
+    print(f"   Jeu de test : source={args.source or 'toutes'} | échantillon={len(sample)} (seed={args.seed})")
+    print(f"   Banque RAG  : {rag_bank_size} questions"
+          f"{' (sources exclues: '+','.join(sorted(exclude_src))+')' if exclude_src else ''}")
+    print(f"   Modèle base={args.model or 'config'} | web={'on' if args.web else 'off'} "
+          f"| escalade={'on ('+esc_model+')' if esc_model else 'off'}\n")
 
     results = []
-    n_correct = 0
     tok_in: dict[str, int] = {}
     tok_out: dict[str, int] = {}
     t_start = time.perf_counter()
 
-    for i, q in enumerate(sample, 1):
+    def _eval_one(q: dict) -> dict:
         qid = q.get("id")
         gt = _ground_truth_index(q)
         opts = _options(q)
         tv = _target_version(q)
-        bank_loo = [x for x in bank if x.get("id") != qid]
+        bank_loo = [
+            x for x in bank
+            if x.get("id") != qid and _src(x) not in exclude_src
+            and (keep_ids is None or x.get("id") in keep_ids)
+        ]
+        toks: list[tuple] = []
         try:
             ctx = build_context(q.get("title") or "", opts, question_bank=bank_loo, target_version=tv)
             sugg, meta = suggest_answer(
@@ -145,8 +175,7 @@ def main() -> None:
             ci = reponse_to_correct_index(sugg.reponse, len(opts))
             conf = sugg.confiance
             used_model = meta.get("model") or args.model or "?"
-            tok_in[used_model] = tok_in.get(used_model, 0) + int(meta.get("input_tokens") or 0)
-            tok_out[used_model] = tok_out.get(used_model, 0) + int(meta.get("output_tokens") or 0)
+            toks.append((used_model, int(meta.get("input_tokens") or 0), int(meta.get("output_tokens") or 0)))
             escalated = False
             if esc_model and (conf != "haute" or ci is None):
                 sugg2, meta2 = suggest_answer(
@@ -155,21 +184,35 @@ def main() -> None:
                 )
                 ci2 = reponse_to_correct_index(sugg2.reponse, len(opts))
                 m2 = meta2.get("model") or esc_model
-                tok_in[m2] = tok_in.get(m2, 0) + int(meta2.get("input_tokens") or 0)
-                tok_out[m2] = tok_out.get(m2, 0) + int(meta2.get("output_tokens") or 0)
+                toks.append((m2, int(meta2.get("input_tokens") or 0), int(meta2.get("output_tokens") or 0)))
                 if ci2 is not None and rank.get(sugg2.confiance, 0) >= rank.get(conf, 0):
                     ci, conf, used_model, escalated = ci2, sugg2.confiance, m2, True
-            ok = (ci == gt)
-            n_correct += 1 if ok else 0
-            results.append({"id": qid, "ok": ok, "suggested": ci, "truth": gt,
-                            "confiance": conf, "model": used_model, "escalated": escalated,
-                            "tier": q.get("tier"), "version": tv})
-            print(f"[{i}/{len(sample)}] #{qid} {'✅' if ok else '❌'} "
-                  f"(sugg={ci} vrai={gt} conf={conf}{' ↑opus' if escalated else ''})")
+            return {"id": qid, "ok": (ci == gt), "suggested": ci, "truth": gt,
+                    "confiance": conf, "model": used_model, "escalated": escalated,
+                    "tier": q.get("tier"), "version": tv, "_toks": toks}
         except Exception as e:
-            results.append({"id": qid, "error": str(e)[:160], "truth": gt})
-            print(f"[{i}/{len(sample)}] #{qid} ⚠️ {str(e)[:80]}")
+            return {"id": qid, "error": str(e)[:160], "truth": gt, "_toks": toks}
 
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    done_n = 0
+    with ThreadPoolExecutor(max_workers=max(1, args.concurrency)) as ex:
+        futs = [ex.submit(_eval_one, q) for q in sample]
+        for fut in as_completed(futs):
+            r = fut.result()
+            done_n += 1
+            for (m, ti, to) in r.pop("_toks", []):
+                tok_in[m] = tok_in.get(m, 0) + ti
+                tok_out[m] = tok_out.get(m, 0) + to
+            results.append(r)
+            if "error" in r:
+                print(f"[{done_n}/{len(sample)}] #{r['id']} ⚠️ {r['error'][:80]}", flush=True)
+            else:
+                print(f"[{done_n}/{len(sample)}] #{r['id']} {'✅' if r['ok'] else '❌'} "
+                      f"(sugg={r['suggested']} vrai={r['truth']} conf={r['confiance']}"
+                      f"{' ↑opus' if r['escalated'] else ''})", flush=True)
+
+    n_correct = sum(1 for r in results if r.get("ok"))
     elapsed = time.perf_counter() - t_start
     done = [r for r in results if "error" not in r]
     acc = (n_correct / len(done) * 100) if done else 0.0
