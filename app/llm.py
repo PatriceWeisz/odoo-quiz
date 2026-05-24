@@ -40,6 +40,18 @@ def _answer_model() -> str:
     return text
 
 
+def escalation_model() -> str:
+    """Modèle d'escalade (plus puissant) pour les cas de confiance non-haute.
+
+    Lu dans config.json → anthropic.escalation_model. Défaut : Opus 4.6.
+    Mettre "" (chaîne vide) pour désactiver l'escalade.
+    """
+    a = _cfg().get("anthropic") or {}
+    if "escalation_model" in a:
+        return (a.get("escalation_model") or "").strip()
+    return "claude-opus-4-6"
+
+
 def api_available() -> bool:
     return bool(((_cfg().get("anthropic") or {}).get("api_key") or "").strip())
 
@@ -210,10 +222,12 @@ def suggest_answer(
     question_id: int | str | None = None,
     use_web_tools: bool = False,
     target_version: str | None = None,
+    model: str | None = None,
 ) -> tuple[AnswerSuggestion, dict[str, Any]]:
     """
     Appelle Claude et retourne (AnswerSuggestion, métadonnées d'appel).
     use_web_tools : web_search / web_fetch restreints odoo.com.
+    model : override de modèle (ex. escalade vers Opus) ; défaut = answer_model.
     """
     if not api_available():
         raise RuntimeError("Clé API Anthropic absente (config.json → anthropic.api_key).")
@@ -229,7 +243,7 @@ def suggest_answer(
 
     t0 = time.perf_counter()
     response = _create_messages(
-        messages=messages, tools=tools, target_version=tv, other_version=ov
+        messages=messages, tools=tools, target_version=tv, other_version=ov, model=model
     )
     latency_s = time.perf_counter() - t0
 
@@ -259,7 +273,7 @@ def suggest_answer(
             {"role": "user", "content": JSON_RETRY_USER_APPEND},
         ]
         response2 = _create_messages(
-            messages=retry_messages, tools=tools, target_version=tv, other_version=ov
+            messages=retry_messages, tools=tools, target_version=tv, other_version=ov, model=model
         )
         meta["latency_s"] = round(time.perf_counter() - t0, 3)
         usage2 = getattr(response2, "usage", None)
@@ -370,11 +384,12 @@ def _suggest_with_legacy_web_tools(
     tv, ov = _resolve_target_versions(context, kwargs.get("target_version"))
     t0 = time.perf_counter()
     response = _create_messages(
-        messages=messages, tools=tools, target_version=tv, other_version=ov
+        messages=messages, tools=tools, target_version=tv, other_version=ov,
+        model=kwargs.get("model"),
     )
     text = extract_text_from_content(response.content)
     meta = {
-        "model": _answer_model(),
+        "model": getattr(response, "model", None) or kwargs.get("model") or _answer_model(),
         "latency_s": round(time.perf_counter() - t0, 3),
         "retried_json": False,
         "legacy_web_tools": True,
@@ -393,7 +408,8 @@ def _suggest_with_legacy_web_tools(
             {"role": "user", "content": JSON_RETRY_USER_APPEND},
         ]
         response2 = _create_messages(
-            messages=retry_messages, tools=tools, target_version=tv, other_version=ov
+            messages=retry_messages, tools=tools, target_version=tv, other_version=ov,
+            model=kwargs.get("model"),
         )
         text2 = extract_text_from_content(response2.content)
         meta["retried_json"] = True

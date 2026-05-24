@@ -95,6 +95,19 @@ document liste les **écarts**, **décisions prises pendant l'exécution**, et l
     image publique téléchargée (80×80), statics servis.
     ⚠️ **Action requise** : **re-glisser le favori** « 📷 Quiz — pleine page » depuis
     `/import-capture` (la version est figée dans le favori : l'ancien charge les anciens scripts).
+13. **v2.4.3 — plafond capture 4 → 6 questions/page.** `MAX_QUESTIONS_PER_CAPTURE = 6`, prompts
+    vision et texte d'interface alignés. Une page à 5 (ou 6) questions est désormais entièrement
+    capturée (DOM comme vision).
+14. **v2.5.0 — escalade Opus 4.6 + accord voisin (qualité des suggestions).**
+    - `app.llm.escalation_model()` (config `anthropic.escalation_model`, défaut `claude-opus-4-6`,
+      `""` pour désactiver) ; `suggest_answer(..., model=...)` permet l'override de modèle.
+    - `_api_enrich` : si la suggestion Sonnet est de confiance non-haute ou sans réponse, **relance
+      avec Opus** (même contexte + image) et adopte le résultat s'il est au moins aussi confiant.
+    - `_apply_neighbor_agreement` : compare la réponse choisie au plus proche voisin banque ;
+      similarité ≥ 0,97 et même réponse → confiance **haute** (accord) ; ≥ 0,985 et réponse
+      différente → confiance **basse** + « à revoir » (désaccord).
+    - Vérifié prod : override Opus OK (`model=claude-opus-4-6`), accord→haute, désaccord→basse.
+    - Coût indicatif : escalade ≈ 0,04–0,06 $/question (Opus 4.6 = 5 $/25 $ le M ; Batch −50 %).
 
 ### Tests réalisés (prod, HTTPS)
 - Auth : `/admin/review` → 403 sans/mauvais jeton, 200 avec. `/api/admin/review` → 403 sans

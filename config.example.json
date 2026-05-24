@@ -8,7 +8,10 @@
   "anthropic": {
     "api_key": "ANTHROPIC_API_KEY_ICI",
     "vision_model": "claude-sonnet-4-6",
-    "text_model": "claude-haiku-4-5"
+    "text_model": "claude-haiku-4-5",
+    "answer_model": "claude-sonnet-4-6",
+    "_escalation_model_comment": "Modèle plus puissant utilisé UNIQUEMENT en escalade quand la confiance n'est pas haute. Mettre \"\" pour désactiver l'escalade.",
+    "escalation_model": "claude-opus-4-6"
   },
   "survey_name": "certification odoo",
   "questions_file": "questions.json",

@@ -615,6 +615,56 @@ def _confiance_to_legacy_confidence(confiance: str) -> str:
     return "medium"
 
 
+def _norm_txt(s: str | None) -> str:
+    import re
+
+    return re.sub(r"\s+", " ", (s or "").strip().lower())
+
+
+def _apply_neighbor_agreement(item: dict, out: dict[str, Any], ctx: dict[str, Any]) -> None:
+    """Confronte la réponse choisie au plus proche voisin de la banque.
+
+    Si une question banque **quasi identique** (similarité vectorielle très
+    élevée) possède déjà une bonne réponse validée :
+      - même réponse → confiance « haute » (accord) ;
+      - réponse nettement différente → confiance « basse » + à revoir (désaccord).
+    Seuils volontairement élevés pour éviter les faux positifs.
+    """
+    ci = out.get("correct_index")
+    answers = item.get("answers") or []
+    if not ci or ci < 1 or ci > len(answers):
+        return
+    chosen = _norm_txt(answers[ci - 1])
+    if not chosen:
+        return
+    best = None
+    for s in (ctx.get("similar_qas") or []):
+        sv = s.get("score_vector")
+        if sv is None:
+            continue
+        if best is None or sv > (best.get("score_vector") or 0):
+            best = s
+    if not best:
+        return
+    sv = best.get("score_vector") or 0
+    nb_correct = _norm_txt(best.get("correct_text") or "")
+    if not nb_correct:
+        return
+    if sv >= 0.97 and nb_correct == chosen:
+        out["suggestion_confiance"] = "haute"
+        out["confidence"] = "high"
+        out["neighbor_agreement"] = "accord"
+        out["neighbor_id"] = best.get("id")
+        if out.get("match_source") == "claude_incertain":
+            out["match_source"] = "claude_api"
+    elif sv >= 0.985 and nb_correct != chosen:
+        out["suggestion_confiance"] = "basse"
+        out["confidence"] = "low"
+        out["neighbor_agreement"] = "desaccord"
+        out["neighbor_id"] = best.get("id")
+        out["match_source"] = "claude_incertain"
+
+
 def _api_enrich(
     item: dict,
     screenshot_path: str | None = None,
@@ -622,6 +672,7 @@ def _api_enrich(
 ) -> dict[str, Any]:
     from app.llm import (
         api_available,
+        escalation_model,
         reponse_to_correct_index,
         suggest_answer_with_web_tools,
         translate_item_fr,
@@ -679,6 +730,42 @@ def _api_enrich(
         else:
             out["correct_index"] = None
         _apply_confidence_gate(item, out)
+
+        # --- Escalade vers un modèle plus puissant (Opus) si confiance non-haute ---
+        esc_model = escalation_model()
+        if esc_model and (suggestion.confiance != "haute" or out.get("correct_index") is None):
+            try:
+                sugg2, _meta2 = suggest_answer_with_web_tools(
+                    item.get("title") or "",
+                    list(item.get("answers") or []),
+                    ctx,
+                    image_paths=img_paths,
+                    question_id=item.get("id"),
+                    target_version=cert,
+                    model=esc_model,
+                )
+                ci2 = reponse_to_correct_index(sugg2.reponse, n)
+                rank = {"basse": 0, "moyenne": 1, "haute": 2}
+                better = rank.get(sugg2.confiance, 0) >= rank.get(suggestion.confiance, 0)
+                if ci2 is not None and not correct_index_points_to_idk(item, ci2) and (
+                    better or out.get("correct_index") is None
+                ):
+                    out["correct_index"] = ci2
+                    out["explication_claude"] = (
+                        sugg2.justification or out.get("explication_claude") or ""
+                    ).strip()
+                    out["suggestion_reponse"] = sugg2.reponse
+                    out["suggestion_confiance"] = sugg2.confiance
+                    out["suggestion_sources"] = [s.model_dump() for s in sugg2.sources]
+                    out["confidence"] = _confiance_to_legacy_confidence(sugg2.confiance)
+                    out["match_source"] = "claude_api"
+                    out["escalated_model"] = esc_model
+                    _apply_confidence_gate(item, out)
+            except Exception:
+                pass
+
+        # --- Accord avec un voisin quasi-identique de la banque ---
+        _apply_neighbor_agreement(item, out, ctx)
 
         try:
             tr = translate_item_fr(

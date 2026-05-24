@@ -87,13 +87,13 @@ Règles (pour chaque objet) :
 
 VISION_PROMPT = VISION_PROMPT_UDEMY  # rétrocompatibilité
 
-MAX_QUESTIONS_PER_CAPTURE = 4
+MAX_QUESTIONS_PER_CAPTURE = 6
 
 VISION_PROMPT_QUIZ = """Tu analyses une capture d'écran d'un **quiz en ligne** (Udemy, odoo.com eLearning / certification, ou interface équivalente à choix multiples).
 
 **Format de sortie (sans markdown) :**
 - **Une seule** question visible → un **objet JSON**.
-- **Plusieurs** questions distinctes sur la **même** capture (souvent **2 à 4** sur odoo.com, parfois 1 sur Udemy) → un **tableau JSON** d'objets, **un objet par question**, ordre **haut → bas**.
+- **Plusieurs** questions distinctes sur la **même** capture (souvent **2 à 6** sur odoo.com, parfois 1 sur Udemy) → un **tableau JSON** d'objets, **un objet par question**, ordre **haut → bas**.
 - Ne fusionne **jamais** deux questions : chaque objet n'a que **ses** options.
 
 Chaque objet a exactement ces clés :
@@ -112,7 +112,7 @@ Chaque objet a exactement ces clés :
 Si la capture ne montre **aucune** question de quiz (accueil, catalogue, lecteur vidéo sans quiz, connexion, chargement, etc.) :
 - renvoie **un seul objet** avec **"no_quiz_content": true**, **"no_quiz_reason"**, **"title": ""**, **"answers": []**.
 
-**INTERDIT** : ne mets **jamais** no_quiz_content à true parce qu'il y a **plusieurs** questions sur la même page — renvoie un **tableau** avec un objet par question (max **4**).
+**INTERDIT** : ne mets **jamais** no_quiz_content à true parce qu'il y a **plusieurs** questions sur la même page — renvoie un **tableau** avec un objet par question (max **6**).
 
 Sinon extrais **chaque** question visible. Sur odoo.com, parcourez **toute** la capture jusqu'au bouton « Soumettre » / « Continuer ».
 
@@ -128,11 +128,11 @@ Règles (pour chaque objet) :
 - Pas de markdown, pas de commentaires JSON, pas de virgule finale avant ] ou }.
 """
 
-VISION_PROMPT_QUIZ_MULTI_RETRY = """La capture est une page de quiz (Udemy ou odoo.com) avec **plusieurs questions empilées** (souvent **3 ou 4**, parfois 2).
+VISION_PROMPT_QUIZ_MULTI_RETRY = """La capture est une page de quiz (Udemy ou odoo.com) avec **plusieurs questions empilées** (souvent **3 à 6**, parfois 2).
 
 Relis **toute** l'image du haut jusqu'au bouton « Soumettre » / « Continuer ». Tu as peut-être omis des questions en bas.
 
-Si tu as mis no_quiz_content parce qu'il n'y a pas « une seule » question : erreur — renvoie un **tableau** avec **toutes** les questions visibles (max 4).
+Si tu as mis no_quiz_content parce qu'il n'y a pas « une seule » question : erreur — renvoie un **tableau** avec **toutes** les questions visibles (max 6).
 
 Renvoie UNIQUEMENT un **tableau JSON** (sans markdown), un objet par question (ordre haut → bas). Chaque objet :
 {
@@ -154,7 +154,7 @@ VISION_PROMPT_ODOO_MULTI_RETRY = """La capture est une page de quiz **Odoo** (od
 
 Relis **toute** l'image du haut jusqu'au bouton « Soumettre » / « Continuer ». Tu as peut-être omis des questions en bas de page.
 
-Si tu as indiqué no_quiz_content parce qu'il n'y a pas « une seule » question : c'était une erreur. Extrais **toutes** les questions visibles — **4** blocs distincts = **4** objets dans le tableau.
+Si tu as indiqué no_quiz_content parce qu'il n'y a pas « une seule » question : c'était une erreur. Extrais **toutes** les questions visibles — autant de **blocs distincts** = autant d'**objets** dans le tableau (jusqu'à **6**).
 
 Renvoie UNIQUEMENT un **tableau JSON** (sans markdown), un objet par question (ordre haut → bas). Chaque objet :
 {
@@ -169,7 +169,7 @@ Renvoie UNIQUEMENT un **tableau JSON** (sans markdown), un objet par question (o
   "crop_rel": null ou {"left": 0.0, "top": 0.0, "width": 0.0, "height": 0.0}
 }
 
-Règles : uniquement les options de **cette** question ; pas de bouton Continuer ; maximum 4 questions ; no_quiz_content true **uniquement** si aucune question de quiz n'est visible.
+Règles : uniquement les options de **cette** question ; pas de bouton Continuer ; maximum 6 questions ; no_quiz_content true **uniquement** si aucune question de quiz n'est visible.
 """
 
 
