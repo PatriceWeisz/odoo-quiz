@@ -28,6 +28,10 @@ CACHE_NPZ = CACHE_DIR / "bank_embeddings.npz"
 CACHE_META = CACHE_DIR / "bank_embeddings_meta.json"
 
 DEFAULT_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+# Délai d'embedding d'UNE requête banque (thread). Défaut bas, adapté à MiniLM ;
+# surchargeable via config.json -> bank_rag.query_timeout_s. À augmenter pour un
+# modèle plus gros/lent (ex. mxbai-embed-large), sinon la requête expire et le RAG
+# vectoriel banque retombe en silence sur le matching lexical.
 QUERY_EMBED_TIMEOUT_S = 0.25
 MIN_COSINE_DEFAULT = 0.28
 
@@ -91,6 +95,14 @@ def _min_cosine() -> float:
         return float(_load_rag_config().get("min_cosine", MIN_COSINE_DEFAULT))
     except (TypeError, ValueError):
         return MIN_COSINE_DEFAULT
+
+
+def _query_timeout_s() -> float:
+    """Délai d'embedding requête (config bank_rag.query_timeout_s, défaut module)."""
+    try:
+        return float(_load_rag_config().get("query_timeout_s", QUERY_EMBED_TIMEOUT_S))
+    except (TypeError, ValueError):
+        return QUERY_EMBED_TIMEOUT_S
 
 
 def bank_rag_fingerprint(question_bank: list[dict]) -> str:
@@ -198,7 +210,7 @@ def _embed_query(title: str) -> np.ndarray | None:
 
     th = threading.Thread(target=_run, daemon=True)
     th.start()
-    th.join(timeout=QUERY_EMBED_TIMEOUT_S)
+    th.join(timeout=_query_timeout_s())
     if th.is_alive() or result[0] is None:
         return None
     return result[0]
