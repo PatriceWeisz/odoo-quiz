@@ -78,14 +78,119 @@ def _normalize_crop_rel(crop: dict | None) -> dict | None:
     return {"left": left, "top": top, "width": width, "height": height}
 
 
+def download_image_to_temp(
+    url: str, *, timeout: int = 10, max_bytes: int = 12_000_000
+) -> str | None:
+    """Télécharge une image distante (lien <img>) dans un fichier temporaire.
+
+    Garde-fous anti-SSRF : http(s) uniquement, hôtes en IP privée/loopback/réservée
+    refusés, taille plafonnée, Content-Type image obligatoire, image validée par PIL.
+    Retourne le chemin du fichier, ou None.
+    """
+    import ipaddress
+    import os
+    import socket
+    import tempfile
+    import urllib.request
+    from urllib.parse import urlparse
+
+    try:
+        u = urlparse((url or "").strip())
+        if u.scheme not in ("http", "https") or not u.hostname:
+            return None
+        try:
+            for fam, _, _, _, sockaddr in socket.getaddrinfo(u.hostname, None):
+                ip = ipaddress.ip_address(sockaddr[0])
+                if (ip.is_private or ip.is_loopback or ip.is_link_local
+                        or ip.is_reserved or ip.is_multicast):
+                    return None
+        except (socket.gaierror, ValueError):
+            return None
+        req = urllib.request.Request(url, headers={"User-Agent": "odoo-quiz/img-fetch"})
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            ctype = (resp.headers.get("Content-Type") or "").lower()
+            if not ctype.startswith("image/"):
+                return None
+            data = resp.read(max_bytes + 1)
+        if not data or len(data) > max_bytes:
+            return None
+        import io
+
+        from PIL import Image
+
+        with Image.open(io.BytesIO(data)) as im:
+            im.verify()  # lève si ce n'est pas une vraie image
+        ext = ".png"
+        if "jpeg" in ctype or "jpg" in ctype:
+            ext = ".jpg"
+        elif "webp" in ctype:
+            ext = ".webp"
+        elif "gif" in ctype:
+            ext = ".gif"
+        fd, path = tempfile.mkstemp(suffix=ext, prefix="qimg_url_")
+        os.close(fd)
+        with open(path, "wb") as f:
+            f.write(data)
+        return path
+    except Exception:
+        return None
+
+
+def _save_question_image_from_url(url: str, qid: int) -> str:
+    """Télécharge le lien d'image et l'enregistre en WebP sous static/question_media/."""
+    tmp = download_image_to_temp(url)
+    if not tmp:
+        return ""
+    import os
+
+    from PIL import Image
+
+    try:
+        ensure_media_dir()
+        rel_out = media_relative_path(qid)
+        dest = absolute_static_path(rel_out)
+        with Image.open(tmp) as im:
+            im = im.convert("RGBA")
+            if im.size[0] < 8 or im.size[1] < 8:
+                return ""
+            im = _downscale_if_needed(im, MAX_EDGE)
+            rgb = Image.new("RGB", im.size, (255, 255, 255))
+            alpha = im.split()[3] if im.mode == "RGBA" else None
+            rgb.paste(im.convert("RGBA"), mask=alpha)
+            rgb.save(dest, "WEBP", quality=WEBP_QUALITY, method=4)
+        return rel_out
+    except Exception:
+        return ""
+    finally:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+
+
 def save_question_image_from_screenshot(
     screenshot_path: str,
     qid: int,
     crop_rel: dict | None,
     needs_question_image: bool,
+    image_url: str | None = None,
 ) -> str:
-    """Découpe (ou image entière) → WebP sous static/question_media/. Retourne chemin relatif à static/."""
+    """Image de la question → WebP sous static/question_media/. Retourne chemin relatif à static/.
+
+    Priorité : si ``image_url`` (vrai <img>) est fourni, on télécharge l'image
+    d'origine ; sinon on recadre le screenshot (``crop_rel``) ou, à défaut, la
+    capture entière.
+    """
     if not needs_question_image:
+        return ""
+
+    if image_url:
+        rel = _save_question_image_from_url(image_url, qid)
+        if rel:
+            return rel
+        # échec du lien → on retombe sur le screenshot ci-dessous
+
+    if not screenshot_path:
         return ""
 
     from PIL import Image

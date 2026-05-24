@@ -35,6 +35,41 @@
     return !!block.querySelector('canvas, svg[width], table');
   }
 
+  function absUrl(u) {
+    try {
+      return new URL(u, document.baseURI).href;
+    } catch (e) {
+      return '';
+    }
+  }
+
+  /** Plus grand visuel exploitable du bloc (img / canvas / svg / table). */
+  function pickQuestionVisual(block) {
+    if (!block) return null;
+    var nodes = block.querySelectorAll('img, canvas, svg, table');
+    var best = null, bestArea = 0;
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      var r = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+      if (!r) continue;
+      if (r.width < 60 || r.height < 30) continue;
+      var area = r.width * r.height;
+      if (area > bestArea) {
+        bestArea = area;
+        best = el;
+      }
+    }
+    return best;
+  }
+
+  /** URL absolue d'une vraie <img> (hors data:), sinon ''. */
+  function imageUrlOf(el) {
+    if (!el || el.tagName !== 'IMG') return '';
+    var s = el.currentSrc || el.src || '';
+    if (!s || s.indexOf('data:') === 0) return '';
+    return absUrl(s);
+  }
+
   function labelForRadio(r) {
     if (!r) return '';
     var id = r.id;
@@ -98,6 +133,7 @@
       });
       if (answers.length < 2) return;
       var needImg = titleNeedsImage(title) || blockHasMeaningfulImage(block);
+      var visEl = needImg ? pickQuestionVisual(block) : null;
       var ci = null;
       var ciVis = false;
       radios.forEach(function (r, idx) {
@@ -114,6 +150,8 @@
         explication_udemy: '',
         needs_question_image: needImg,
         crop_rel: null,
+        image_url: imageUrlOf(visEl) || null,
+        _imgEl: visEl,
       });
     });
     return items;
@@ -130,6 +168,8 @@
       if (t) answers.push(t);
     });
     if (!title || answers.length < 2) return [];
+    var needImgU = titleNeedsImage(title) || blockHasMeaningfulImage(root);
+    var visElU = needImgU ? pickQuestionVisual(root) : null;
     return [
       {
         title: title,
@@ -137,8 +177,10 @@
         correct_index: null,
         correct_index_visible: false,
         explication_udemy: '',
-        needs_question_image: titleNeedsImage(title) || blockHasMeaningfulImage(root),
+        needs_question_image: needImgU,
         crop_rel: null,
+        image_url: imageUrlOf(visElU) || null,
+        _imgEl: visElU,
       },
     ];
   }

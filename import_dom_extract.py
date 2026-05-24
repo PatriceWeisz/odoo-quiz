@@ -41,6 +41,7 @@ def _normalize_dom_item(raw: dict, cap_src: str) -> dict:
         "explication_udemy": (raw.get("explication_udemy") or "").strip(),
         "needs_question_image": need_img,
         "crop_rel": raw.get("crop_rel"),
+        "image_url": (raw.get("image_url") or "").strip() or None,
         "_capture_source": cap_src,
         "_extract_method": "dom",
     }

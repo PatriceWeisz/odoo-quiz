@@ -314,6 +314,7 @@ def validate_udemy_item(it: dict, index: int | None = None) -> dict:
         "explication_udemy": expl,
         "needs_question_image": needs_img,
         "crop_rel": crop_norm,
+        "image_url": ((it.get("image_url") or "").strip() or None) if needs_img else None,
     }
 
 
@@ -580,7 +581,8 @@ def apply_capture_items_to_bank(
                 err_note: str | None = None
                 try:
                     rel = save_question_image_from_screenshot(
-                        screenshot_path, qid_save, item.get("crop_rel"), True
+                        screenshot_path, qid_save, item.get("crop_rel"), True,
+                        image_url=item.get("image_url"),
                     ) or ""
                 except Exception as exc:
                     err_note = str(exc)
@@ -626,7 +628,8 @@ def apply_capture_items_to_bank(
             err_note: str | None = None
             try:
                 rel = save_question_image_from_screenshot(
-                    screenshot_path, q["id"], item.get("crop_rel"), True
+                    screenshot_path, q["id"], item.get("crop_rel"), True,
+                    image_url=item.get("image_url"),
                 ) or ""
             except Exception as exc:
                 err_note = str(exc)
@@ -730,6 +733,7 @@ def merge_udemy_items(
                         ex["id"],
                         item.get("crop_rel"),
                         True,
+                        image_url=item.get("image_url"),
                     )
                     if rel:
                         ex["question_image"] = normalize_question_media_rel(rel) or rel
@@ -754,7 +758,8 @@ def merge_udemy_items(
         qid -= 1
         if not dry_run and screenshot_path and item.get("needs_question_image"):
             rel = save_question_image_from_screenshot(
-                screenshot_path, q["id"], item.get("crop_rel"), True
+                screenshot_path, q["id"], item.get("crop_rel"), True,
+                image_url=item.get("image_url"),
             )
             if rel:
                 q["question_image"] = normalize_question_media_rel(rel) or rel

@@ -144,7 +144,7 @@
 
   function loadDomExtract(origin) {
     if (window.QuizDomExtract) return Promise.resolve(window.QuizDomExtract);
-    return loadScript(origin + '/static/quiz_dom_extract.js').then(function () {
+    return loadScript(origin + '/static/quiz_dom_extract.js?v=' + Date.now()).then(function () {
       if (!window.QuizDomExtract) throw new Error('QuizDomExtract absent');
       return window.QuizDomExtract;
     });
@@ -226,6 +226,40 @@
         if (domOut && domOut.items) domItems = domOut.items;
       } catch (domErr) {
         domItems = [];
+      }
+
+      // crop_rel = boîte de l'image dans la capture (repère root, fullW×fullH,
+      // scroll remis à 0 plus haut). Sert de repli quand il n'y a pas d'URL d'image.
+      try {
+        var rRect = root.getBoundingClientRect();
+        for (var di = 0; di < domItems.length; di++) {
+          var it = domItems[di];
+          if (!it) continue;
+          var el = it._imgEl;
+          if (el && el.getBoundingClientRect && fullW > 0 && fullH > 0) {
+            var iRect = el.getBoundingClientRect();
+            var cl = (iRect.left - rRect.left) / fullW;
+            var ct = (iRect.top - rRect.top) / fullH;
+            var cw = iRect.width / fullW;
+            var ch = iRect.height / fullH;
+            if (cw > 0.02 && ch > 0.02 && cl > -0.05 && ct > -0.05 && cl < 1 && ct < 1) {
+              it.crop_rel = {
+                left: Math.max(0, cl),
+                top: Math.max(0, ct),
+                width: Math.min(1, cw),
+                height: Math.min(1, ch)
+              };
+            }
+          }
+        }
+      } catch (cropErr) {
+        /* crop_rel reste null -> repli capture entière côté serveur */
+      }
+      // Toujours retirer la réf. DOM (non sérialisable) avant l'envoi JSON.
+      for (var dj = 0; dj < domItems.length; dj++) {
+        if (domItems[dj]) {
+          try { delete domItems[dj]._imgEl; } catch (eDel) { domItems[dj]._imgEl = null; }
+        }
       }
 
       var blob = await new Promise(function (res, rej) {

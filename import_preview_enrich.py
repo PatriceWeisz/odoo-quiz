@@ -568,6 +568,19 @@ def _answer_image_paths(item: dict, screenshot_path: str | None) -> list[str]:
     cached = item.get("_answer_crop_path")
     if cached and os.path.isfile(cached):
         return [cached]
+    # Priorité 1 : vraie image <img> → on télécharge l'original (pleine qualité).
+    url = (item.get("image_url") or "").strip()
+    if url:
+        try:
+            from question_images import download_image_to_temp
+
+            dl = download_image_to_temp(url)
+        except Exception:
+            dl = None
+        if dl:
+            item["_answer_crop_path"] = dl
+            return [dl]
+    # Priorité 2 : recadrage du screenshot (tableaux/formulaires Odoo sans URL).
     try:
         from question_images import crop_region_to_temp_png
 
@@ -577,6 +590,7 @@ def _answer_image_paths(item: dict, screenshot_path: str | None) -> list[str]:
     if cropped:
         item["_answer_crop_path"] = cropped
         return [cropped]
+    # Priorité 3 : la capture entière (le filet de quiz_llm la réduira au besoin).
     return [p]
 
 

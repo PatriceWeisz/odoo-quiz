@@ -82,6 +82,19 @@ document liste les **écarts**, **décisions prises pendant l'exécution**, et l
     l'extracteur DOM (`quiz_dom_extract.js`) la **boîte `crop_rel`** de l'image dans chaque
     question, pour n'envoyer/stocker QUE la petite image (aujourd'hui `crop_rel` du DOM = null →
     on retombe sur la page entière réduite).
+12. **v2.4.2 — image de question hybride : lien `<img>` sinon recadrage.** (a) Front (favori) :
+    `quiz_dom_extract.js` capte `image_url` (URL absolue d'une vraie `<img>`, hors `data:`) + la
+    réf. de l'élément ; `odoo_fullpage_capture.js` calcule `crop_rel` (boîte de l'élément dans la
+    capture) puis retire la réf. avant l'envoi JSON, et charge l'extracteur avec `?v=Date.now()`
+    (anti-cache). (b) Back : `question_images.download_image_to_temp()` télécharge l'URL avec
+    **garde-fous anti-SSRF** (http(s) seulement, IP privée/loopback/link-local/réservée refusées,
+    taille ≤ 12 Mo, `Content-Type: image/*`, validation PIL) ; `save_question_image_from_screenshot`
+    accepte `image_url` (priorité au lien) ; `_answer_image_paths` priorise URL → recadrage →
+    page entière ; `image_url` propagé par `_normalize_dom_item` + `validate_udemy_item` + 4 call
+    sites d'`import_udemy`. Vérifié prod : SSRF bloqué (loopback/link-local/privée/scheme → None),
+    image publique téléchargée (80×80), statics servis.
+    ⚠️ **Action requise** : **re-glisser le favori** « 📷 Quiz — pleine page » depuis
+    `/import-capture` (la version est figée dans le favori : l'ancien charge les anciens scripts).
 
 ### Tests réalisés (prod, HTTPS)
 - Auth : `/admin/review` → 403 sans/mauvais jeton, 200 avec. `/api/admin/review` → 403 sans
