@@ -1,6 +1,6 @@
 {
-  "fingerprint": "eb11d6486e4e5d462cb6",
+  "fingerprint": "d82e386641cfd0c22b90",
   "model": "sentence-transformers/all-MiniLM-L6-v2",
-  "count": 3589,
+  "count": 3561,
   "dim": 384
 }
