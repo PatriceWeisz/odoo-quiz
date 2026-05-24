@@ -72,6 +72,16 @@ document liste les **écarts**, **décisions prises pendant l'exécution**, et l
     - Vérifié en prod : image 1000×9000 → vision OK (réduite), crop d'une région → PNG 816×960.
     - Rappel : « toute la page » reste le rôle du **favori** (DOM + scroll complet) ; le partage
       d'écran « Capturer et analyser » ne voit par nature que la partie visible.
+11. **v2.4.1 — garder le texte du DOM, n'envoyer que l'image à Claude.** Avant, dès qu'UNE
+    question s'appuyait sur une image, `dom_items_need_vision_fallback()` jetait toute
+    l'extraction DOM et refaisait TOUT (texte compris) par vision. Désormais on ne rebascule en
+    vision que si le **texte** (énoncé/options) manque réellement ; une question « à image »
+    garde son texte du DOM, et seule l'**image** part vers Claude (recadrage à l'étape réponse).
+    Vérifié : `needs_image`+texte complet → pas de fallback ; texte manquant → fallback.
+    Reste à faire (amélioration, nécessite de **re-glisser le favori**) : faire calculer par
+    l'extracteur DOM (`quiz_dom_extract.js`) la **boîte `crop_rel`** de l'image dans chaque
+    question, pour n'envoyer/stocker QUE la petite image (aujourd'hui `crop_rel` du DOM = null →
+    on retombe sur la page entière réduite).
 
 ### Tests réalisés (prod, HTTPS)
 - Auth : `/admin/review` → 403 sans/mauvais jeton, 200 avec. `/api/admin/review` → 403 sans

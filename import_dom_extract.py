@@ -76,7 +76,13 @@ def items_from_dom_payload(payload: Any, capture_source: str = "udemy") -> list[
 
 
 def dom_items_need_vision_fallback(items: list[dict]) -> tuple[bool, str]:
-    """True si la capture image + Vision est nécessaire."""
+    """True si une RE-EXTRACTION complète par Vision est nécessaire.
+
+    On ne bascule en Vision que si le **texte** (énoncé + options) manque dans le
+    DOM. Une question qui s'appuie sur une image n'est PLUS une raison de tout
+    refaire en Vision : on garde le texte du DOM et on n'envoie à Claude que
+    l'image concernée (recadrage), à l'étape d'enrichissement de la réponse.
+    """
     if not items:
         return True, "aucune question extraite du DOM"
     for it in items:
@@ -86,8 +92,4 @@ def dom_items_need_vision_fallback(items: list[dict]) -> tuple[bool, str]:
             return True, "énoncé vide dans le DOM"
         if not isinstance(answers, list) or len(answers) < 2:
             return True, "options insuffisantes dans le DOM"
-        if it.get("needs_question_image"):
-            return True, "la question repose sur une image ou une UI visible"
-        if title_requires_capture_image(title):
-            return True, "l'énoncé renvoie à une image ou un écran"
     return False, ""
