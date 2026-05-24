@@ -44,6 +44,12 @@ logs/
 # Sauvegardes questions.json
 questions.json.bak.*
 
+# Exports bruts Udemy (réimportables) + sorties d'évaluation (runtime)
+data/udemy_new_course.json
+data/udemy_odoo_course_*.json
+data/eval_*.json
+data/eval_*.log
+
 # Artefacts transitoires de pipeline / debug (reconstructibles)
 data/*.from-vps
 data/generated_pending/
