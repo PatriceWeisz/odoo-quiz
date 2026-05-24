@@ -55,7 +55,7 @@ from quiz_llm import api_available, parse_json_value, run_prompt_with_images
 
 CONFIG_FILE = Path(__file__).parent / "config.json"
 # Incrémenter à chaque livraison (affichée dans l’UI : en-tête, onglet, pied de page ; F5 si auto_reload).
-APP_VERSION = "2.5.1"
+APP_VERSION = "2.6.0"
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12 Mo (captures)
@@ -453,9 +453,15 @@ HTML = """<!DOCTYPE html>
         <option value="18.0"{% if target_certification == '18.0' %} selected{% endif %}>v18</option>
         <option value="19.0"{% if target_certification == '19.0' %} selected{% endif %}>v19</option>
       </select>
+      <label for="quiz-source-select" style="font-weight:600;margin:0 0 0 .35rem">Source</label>
+      <select id="quiz-source-select" style="background:#fff;color:#1a1a2e;border:none;border-radius:6px;padding:.25rem .4rem;font:inherit;font-weight:600">
+        <option value="udemy" selected>Udemy</option>
+        <option value="">Toutes</option>
+        <option value="claude">Générées (Claude)</option>
+      </select>
       <label for="quiz-module-select" style="font-weight:600;margin:0 0 0 .35rem">Module</label>
       <select id="quiz-module-select" style="background:#fff;color:#1a1a2e;border:none;border-radius:6px;padding:.25rem .4rem;font:inherit;font-weight:600;max-width:280px">
-        <option value="">— Choisis un module —</option>
+        <option value="__all__">Tous les modules</option>
       </select>
       <label style="font-size:.72rem;display:flex;align-items:center;gap:.25rem;margin:0 0 0 .35rem;cursor:pointer" title="Inclure les questions générées notées 3/5 par le judge (qualité moyenne)">
         <input type="checkbox" id="quiz-include-hidden" style="margin:0">
@@ -482,8 +488,30 @@ HTML = """<!DOCTYPE html>
   <div id="start-screen">
     <h2>Quiz Odoo</h2>
     <p id="start-info">{{ total }} questions disponibles.<br>Scoring : +1 bonne / −1 mauvaise / 0 saut.</p>
-    <div style="margin-bottom:1.5rem">
-      <label>Nombre de questions : <input type="number" id="q-count" value="20" min="1" max="{{ total }}"></label>
+    <div style="display:flex;flex-direction:column;gap:.9rem;max-width:420px;margin:0 auto 1.4rem;text-align:left">
+      <label style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+        <span>Nombre de questions</span>
+        <input type="number" id="q-count" value="20" min="1" max="{{ total_bank }}" style="width:6rem">
+      </label>
+      <label style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+        <span>Temps imparti (min, 0 = illimité)</span>
+        <input type="number" id="q-time" value="0" min="0" max="600" style="width:6rem">
+      </label>
+      <fieldset style="border:1px solid #cdb4db;border-radius:10px;padding:.6rem .8rem;margin:0;display:flex;flex-direction:column;gap:.55rem">
+        <legend style="font-weight:700;color:#5b21b6;font-size:.85rem;padding:0 .35rem">🤖 Réglages suggestions Claude</legend>
+        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer" title="Claude prédit chaque réponse ; le % de confiance vient des questions embedded proches.">
+          <input type="checkbox" id="q-predict" checked style="margin:0">
+          <span>Afficher les prédictions de Claude</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer" title="Coché = Claude ne voit AUCUNE question/réponse Udemy en contexte (RAG sans Udemy + leave-one-out) → teste ses prédictions « en aveugle ». Décoché = Claude peut s'appuyer sur la banque Udemy (quasi-doublons inclus).">
+          <input type="checkbox" id="q-exclude-udemy" checked style="margin:0">
+          <span>Exclure les questions Udemy du contexte (test en aveugle)</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.88rem;color:#475569" title="Escalade vers Opus quand la confiance n'est pas haute : plus précis mais plus lent et plus coûteux.">
+          <input type="checkbox" id="q-escalate" style="margin:0">
+          <span>Escalade Opus si confiance non haute (plus lent / précis)</span>
+        </label>
+      </fieldset>
     </div>
     <button class="btn btn-primary" onclick="startQuiz()">Commencer</button>
     <p style="margin-top:1.5rem;font-size:.9rem">
@@ -506,6 +534,28 @@ HTML = """<!DOCTYPE html>
     <div id="question-text-fr"></div>
     <div id="question-media" class="question-media" style="display:none" role="img" aria-label="Illustration de la question">
       <img id="question-image" src="" alt="" loading="lazy">
+    </div>
+    <div id="claude-predict" style="display:none;margin:0 0 1rem;padding:.75rem .9rem;border:1px solid #cdb4db;background:#faf5ff;border-radius:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;font-weight:700;color:#5b21b6;font-size:.9rem">
+        <span>🤖 Prédiction de Claude</span>
+        <span id="cp-mode-badge" style="font-weight:600;font-size:.72rem;color:#7c3aed;background:#ede9fe;border-radius:6px;padding:.1rem .4rem" title="Selon le réglage « Exclure les questions Udemy » : en aveugle (RAG sans Udemy + leave-one-out) ou avec le contexte de la banque Udemy. Le % de confiance vient des questions embedded proches.">🔒 en aveugle d'Udemy</span>
+      </div>
+      <div id="cp-loading" style="margin-top:.5rem;color:#7c3aed;font-size:.9rem">⏳ Claude réfléchit…</div>
+      <div id="cp-result" style="display:none;margin-top:.5rem">
+        <div style="font-size:1rem"><strong id="cp-letter" style="color:#5b21b6"></strong> <span id="cp-text"></span></div>
+        <div style="display:flex;align-items:center;gap:.6rem;margin-top:.45rem">
+          <div style="flex:1;height:10px;background:#e9d5ff;border-radius:6px;overflow:hidden">
+            <div id="cp-bar-fill" style="height:100%;width:0%;background:#7c3aed;transition:width .4s"></div>
+          </div>
+          <span id="cp-pct" style="font-weight:700;color:#5b21b6;font-variant-numeric:tabular-nums;min-width:3.2rem;text-align:right"></span>
+        </div>
+        <div id="cp-meta" style="margin-top:.35rem;font-size:.74rem;color:#7c3aed"></div>
+        <details style="margin-top:.4rem;font-size:.84rem;color:#4c1d95">
+          <summary style="cursor:pointer;font-weight:600">Justification</summary>
+          <div id="cp-just-text" style="margin-top:.25rem;white-space:pre-wrap"></div>
+        </details>
+      </div>
+      <div id="cp-error" style="display:none;margin-top:.5rem;color:#b91c1c;font-size:.85rem"></div>
     </div>
     <div id="answers"></div>
     <div id="actions">
@@ -541,6 +591,13 @@ let showFr = false;
 let total = {{ total }};
 const withClaude  = {{ with_claude }};
 const withSenedoo = {{ with_senedoo }};
+// Mode « test des prédictions de Claude »
+let predictOn = true, escalateOn = false, claudeExcludeUdemy = true;
+let claudeStats = [];          // par index de question : {status, predicted_index, confidence_pct, confiance, correct}
+let predictSeq = 0;            // anti-collision des réponses asynchrones
+// Temps imparti (compte à rebours) — 0 = illimité (compte croissant)
+let timeLimitSec = 0;
+let allModulesTotal = 0;       // total cert (toutes catégories) pour « Tous les modules »
 
 document.getElementById('start-info').innerHTML =
   `${total} questions disponibles.<br>` +
@@ -550,6 +607,7 @@ document.getElementById('start-info').innerHTML =
 const quizCertSelect = document.getElementById('quiz-cert-select');
 const quizCertCount = document.getElementById('quiz-cert-count');
 const quizModuleSelect = document.getElementById('quiz-module-select');
+const quizSourceSelect = document.getElementById('quiz-source-select');
 const quizIncludeHidden = document.getElementById('quiz-include-hidden');
 let startBtnRef = null;
 function getStartBtn() {
@@ -567,13 +625,15 @@ async function populateModules() {
     const res = await fetch(url);
     data = await res.json();
   } catch (e) { return; }
-  const currentValue = quizModuleSelect.value;
-  quizModuleSelect.innerHTML = '<option value="">— Choisis un module —</option>';
+  const currentValue = quizModuleSelect.value || '__all__';
+  quizModuleSelect.innerHTML = '<option value="__all__">Tous les modules</option>';
   // Group by tier for readability
   const tierLabel = { cert: 'Cert (obligatoire)', tier1: 'Tier 1 (fréquent)', tier2: 'Tier 2 (occasionnel)', other: 'Autres' };
   const byTier = { cert: [], tier1: [], tier2: [], other: [] };
+  allModulesTotal = 0;
   for (const m of (data.modules || [])) {
     if (m.count === 0) continue;
+    allModulesTotal += m.count;
     (byTier[m.tier] || byTier.other).push(m);
   }
   for (const tier of ['cert', 'tier1', 'tier2', 'other']) {
@@ -594,32 +654,39 @@ async function populateModules() {
   updateQuizState();
 }
 
+function srcLabel() {
+  const s = quizSourceSelect ? quizSourceSelect.value : '';
+  if (s === 'udemy') return 'Udemy';
+  if (s === 'claude') return 'générées';
+  return 'toutes sources';
+}
+
 function updateQuizState() {
   if (!quizModuleSelect) return;
-  const mod = quizModuleSelect.value;
+  const mod = quizModuleSelect.value || '__all__';
   const startBtn = getStartBtn();
-  if (!mod) {
-    if (startBtn) { startBtn.disabled = true; startBtn.style.opacity = '0.5'; }
-    if (quizCertCount) quizCertCount.textContent = '— sélectionne un module —';
-    document.getElementById('start-info').innerHTML =
-      '<em>👆 Sélectionne un module en haut pour commencer.</em>';
-    total = 0;
-    return;
+  const v = String(quizCertSelect.value || '19.0').replace('.0', '');
+  const srcNote = srcLabel();
+  let n, scopeName;
+  if (mod === '__all__') {
+    n = allModulesTotal;
+    scopeName = 'tous les modules';
+  } else {
+    const opt = quizModuleSelect.options[quizModuleSelect.selectedIndex];
+    n = parseInt(opt.dataset.count || '0', 10);
+    scopeName = mod === '_unclassified' ? 'Non classées' : mod;
   }
-  const opt = quizModuleSelect.options[quizModuleSelect.selectedIndex];
-  const n = parseInt(opt.dataset.count || '0', 10);
   total = n;
   if (startBtn) { startBtn.disabled = n === 0; startBtn.style.opacity = n === 0 ? '0.5' : '1'; }
   const qc = document.getElementById('q-count');
   if (qc) { qc.max = Math.max(1, n); if (parseInt(qc.value, 10) > n) qc.value = Math.min(20, n); }
+  const approx = mod === '__all__' ? '≈ ' : '';
   if (quizCertCount) {
-    const v = String(quizCertSelect.value || '19.0').replace('.0', '');
-    const displayName = mod === '_unclassified' ? 'Non classées' : mod;
-    quizCertCount.textContent = `${n} q. dans ${displayName} (cert v${v})`;
+    quizCertCount.textContent = `${approx}${n} q. — ${scopeName} (cert v${v}, source : ${srcNote})`;
   }
   document.getElementById('start-info').innerHTML =
-    `<strong>${n}</strong> questions disponibles dans <code>${mod === '_unclassified' ? 'Non classées' : mod}</code>.<br>` +
-    `💡 ${withClaude} explications Claude · 📚 ${withSenedoo} explications Senedoo/Udemy<br>` +
+    `${approx}<strong>${n}</strong> questions — <code>${scopeName}</code> · source : <strong>${srcNote}</strong> (cert v${v}).<br>` +
+    `Le compte exact dépend de la source choisie ; l'échantillon est plafonné au lancement.<br>` +
     `Scoring : +1 bonne / −1 mauvaise / 0 saut.`;
 }
 
@@ -637,30 +704,57 @@ if (quizCertSelect) {
   });
 }
 if (quizModuleSelect) quizModuleSelect.addEventListener('change', updateQuizState);
+if (quizSourceSelect) quizSourceSelect.addEventListener('change', updateQuizState);
 if (quizIncludeHidden) quizIncludeHidden.addEventListener('change', populateModules);
 // Init au chargement
 populateModules();
 
 async function startQuiz() {
-  const mod = quizModuleSelect ? quizModuleSelect.value : '';
-  if (!mod) { alert('Choisis un module avant de lancer le quiz.'); return; }
-  const count = Math.min(parseInt(document.getElementById('q-count').value) || 20, total);
+  const mod = quizModuleSelect ? (quizModuleSelect.value || '__all__') : '__all__';
+  const source = quizSourceSelect ? quizSourceSelect.value : '';
+  const count = Math.max(1, parseInt(document.getElementById('q-count').value) || 20);
   const includeHidden = quizIncludeHidden && quizIncludeHidden.checked ? '1' : '0';
-  const res = await fetch(`/api/questions?n=${count}&module=${encodeURIComponent(mod)}&include_hidden=${includeHidden}`);
+  predictOn = !!document.getElementById('q-predict').checked;
+  escalateOn = !!document.getElementById('q-escalate').checked;
+  claudeExcludeUdemy = !!document.getElementById('q-exclude-udemy').checked;
+  timeLimitSec = Math.max(0, parseInt(document.getElementById('q-time').value) || 0) * 60;
+  let url = `/api/questions?n=${count}&module=${encodeURIComponent(mod)}&include_hidden=${includeHidden}`;
+  if (source) url += `&source=${encodeURIComponent(source)}`;
+  const res = await fetch(url);
   questions = await res.json();
+  if (!Array.isArray(questions) || questions.length === 0) {
+    alert('Aucune question disponible pour ces critères (source / module / certification).');
+    return;
+  }
   current = 0; score = 0; good = 0; bad = 0; skip = 0;
+  claudeStats = new Array(questions.length).fill(null);
+  predictSeq = 0;
   document.getElementById('start-screen').style.display = 'none';
   document.getElementById('score-bar').style.display = 'flex';
   document.getElementById('question-card').style.display = 'block';
   startTime = Date.now();
   timerInterval = setInterval(updateTimer, 1000);
+  updateTimer();
   showQuestion();
 }
 
 function updateTimer() {
-  const s = Math.floor((Date.now() - startTime) / 1000);
+  const el = document.getElementById('timer');
+  let s;
+  if (timeLimitSec > 0) {
+    s = timeLimitSec - Math.floor((Date.now() - startTime) / 1000);
+    if (s <= 0) {
+      el.textContent = '00:00';
+      el.style.color = '#fecaca';
+      finishByTimeout();
+      return;
+    }
+    el.style.color = s <= 30 ? '#fde68a' : '';
+  } else {
+    s = Math.floor((Date.now() - startTime) / 1000);
+  }
   const m = Math.floor(s / 60);
-  document.getElementById('timer').textContent =
+  el.textContent =
     String(m).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0');
 }
 
@@ -728,6 +822,104 @@ function showQuestion() {
     btn.onclick = () => selectAnswer(i, a.is_correct);
     div.appendChild(btn);
   });
+
+  setupPrediction(q, current);
+}
+
+// --- Prédiction « test » de Claude (en aveugle d'Udemy) ----------------------
+function setupPrediction(q, idx) {
+  const box = document.getElementById('claude-predict');
+  if (!predictOn || q.id == null) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  const badge = document.getElementById('cp-mode-badge');
+  if (badge) badge.textContent = claudeExcludeUdemy ? "🔒 en aveugle d'Udemy" : "📚 avec contexte Udemy";
+  document.getElementById('cp-loading').style.display = 'block';
+  document.getElementById('cp-result').style.display = 'none';
+  document.getElementById('cp-error').style.display = 'none';
+  document.getElementById('cp-bar-fill').style.width = '0%';
+  // Déjà calculé (retour arrière) ? réutilise.
+  const cached = claudeStats[idx];
+  if (cached && cached.status === 'done') { renderPrediction(cached, idx); return; }
+  predictSeq++;
+  fetch('/api/suggest-quiz', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ id: q.id, escalate: escalateOn, exclude_udemy: claudeExcludeUdemy })
+  }).then(r => r.json().then(d => ({ ok: r.ok, d })))
+    .then(({ ok, d }) => {
+      if (!ok || d.error) {
+        claudeStats[idx] = { status: 'error', error: d.error || 'erreur' };
+        if (idx === current) showPredictionError(d.error || 'erreur inconnue');
+        return;
+      }
+      claudeStats[idx] = {
+        status: 'done',
+        predicted_index: d.predicted_index,
+        predicted_letter: d.predicted_letter,
+        confidence_pct: d.confidence_pct,
+        confidence_source: d.confidence_source,
+        confiance: d.confiance,
+        correct_index: d.correct_index,
+        is_correct: d.is_correct,
+        justification: d.justification,
+        model: d.model,
+        escalated: d.escalated,
+        n_neighbors_voting: d.n_neighbors_voting,
+        text: predictedText(d.predicted_index, idx)
+      };
+      // N'affiche que si on est toujours sur cette question (anti-collision).
+      if (idx === current) renderPrediction(claudeStats[idx], idx);
+    })
+    .catch(e => {
+      claudeStats[idx] = { status: 'error', error: String(e) };
+      if (idx === current) showPredictionError(String(e));
+    });
+}
+
+function predictedText(pi, idx) {
+  const q = questions[idx];
+  if (!q || !pi || pi < 1) return '';
+  const a = (q.answers || [])[pi - 1];
+  return a ? (a.value || '') : '';
+}
+
+function showPredictionError(msg) {
+  document.getElementById('cp-loading').style.display = 'none';
+  document.getElementById('cp-result').style.display = 'none';
+  const e = document.getElementById('cp-error');
+  e.style.display = 'block';
+  e.textContent = '⚠️ Prédiction indisponible : ' + msg;
+}
+
+function renderPrediction(st, idx) {
+  document.getElementById('cp-loading').style.display = 'none';
+  document.getElementById('cp-error').style.display = 'none';
+  document.getElementById('cp-result').style.display = 'block';
+  const letter = st.predicted_letter || '?';
+  document.getElementById('cp-letter').textContent = (st.predicted_index ? letter + '.' : '—');
+  document.getElementById('cp-text').textContent = st.text || predictedText(st.predicted_index, idx) || '(aucune option claire)';
+  const pct = (st.confidence_pct == null) ? 0 : st.confidence_pct;
+  const fill = document.getElementById('cp-bar-fill');
+  fill.style.width = Math.max(0, Math.min(100, pct)) + '%';
+  fill.style.background = pct >= 80 ? '#16a34a' : (pct >= 50 ? '#7c3aed' : '#dc2626');
+  document.getElementById('cp-pct').textContent = (st.confidence_pct == null ? '—' : pct + ' %');
+  const srcTxt = st.confidence_source === 'voisins'
+    ? `confiance ${st.confiance} · ${pct} % d'accord des ${st.n_neighbors_voting} questions proches`
+    : `confiance ${st.confiance} (estimation modèle, peu de voisins)`;
+  let meta = srcTxt;
+  if (st.escalated) meta += ' · ↑Opus';
+  // Si la question est déjà révélée, montre si Claude avait juste.
+  if (answered && st.is_correct != null) {
+    meta += st.is_correct ? ' · ✅ Claude a vu juste' : ' · ❌ Claude s\\'est trompé';
+  }
+  document.getElementById('cp-meta').textContent = meta;
+  document.getElementById('cp-just-text').textContent = st.justification || '';
+}
+
+function revealClaudeOutcome() {
+  if (!predictOn) return;
+  const st = claudeStats[current];
+  if (st && st.status === 'done') renderPrediction(st, current);
 }
 
 function toggleLang() {
@@ -777,6 +969,7 @@ function revealAnswer() {
   document.getElementById('btn-skip').style.display = 'none';
   document.getElementById('btn-next').style.display = 'inline-block';
   showExplanation();
+  revealClaudeOutcome();
 }
 
 function selectAnswer(idx, isCorrect) {
@@ -874,15 +1067,82 @@ async function askClaude() {
   btn.textContent = 'Envoyer';
 }
 
+function finishByTimeout() {
+  if (document.getElementById('results').style.display === 'block') return;
+  clearInterval(timerInterval);
+  alert('⏱️ Temps imparti écoulé — fin du quiz.');
+  showResults();
+}
+
+function claudeRecapHtml() {
+  // Récap « Toi vs Claude » à partir des prédictions calculées.
+  const done = claudeStats.filter(s => s && s.status === 'done' && s.predicted_index && s.correct_index);
+  if (done.length === 0) return '';
+  const cCorrect = done.filter(s => s.is_correct).length;
+  const cAcc = Math.round(cCorrect / done.length * 100);
+  // Score utilisateur sur les questions répondues (hors passées) pour comparaison équitable.
+  const answeredN = good + bad;
+  const uAcc = answeredN > 0 ? Math.round(good / answeredN * 100) : 0;
+  // Ventilation par bande de confiance affichée.
+  const bands = [
+    { label: 'Confiance ≥ 80 %', test: p => p >= 80 },
+    { label: 'Confiance 50–79 %', test: p => p >= 50 && p < 80 },
+    { label: 'Confiance < 50 %', test: p => p < 50 }
+  ];
+  let rows = '';
+  for (const b of bands) {
+    const grp = done.filter(s => b.test(s.confidence_pct == null ? 0 : s.confidence_pct));
+    if (grp.length === 0) continue;
+    const ok = grp.filter(s => s.is_correct).length;
+    const acc = Math.round(ok / grp.length * 100);
+    rows += `<tr><td style="text-align:left;padding:.2rem .6rem">${b.label}</td>`
+         +  `<td style="padding:.2rem .6rem">${grp.length}</td>`
+         +  `<td style="padding:.2rem .6rem"><strong>${acc}%</strong> (${ok}/${grp.length})</td></tr>`;
+  }
+  const modeTxt = claudeExcludeUdemy ? "en aveugle d'Udemy" : "avec contexte Udemy";
+  const noteTxt = claudeExcludeUdemy
+    ? "Claude n'a vu ni les questions ni les réponses Udemy (RAG sans Udemy + leave-one-out)."
+    : "Claude pouvait s'appuyer sur la banque Udemy (la question testée reste exclue ; quasi-doublons possibles).";
+  return `
+    <div style="margin-top:1.4rem;padding:1rem;border:1px solid #cdb4db;background:#faf5ff;border-radius:12px;text-align:left">
+      <h3 style="margin:0 0 .6rem;color:#5b21b6">🤖 Toi vs Claude <span style="font-weight:500;font-size:.8rem;color:#7c3aed">(prédictions ${modeTxt})</span></h3>
+      <div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin-bottom:.8rem">
+        <div style="flex:1;min-width:140px;background:#fff;border-radius:8px;padding:.6rem .8rem">
+          <div style="font-size:.78rem;color:#64748b">Toi (questions répondues)</div>
+          <div style="font-size:1.5rem;font-weight:800;color:#1a1a2e">${uAcc}%</div>
+          <div style="font-size:.78rem;color:#64748b">${good}/${answeredN} bonnes</div>
+        </div>
+        <div style="flex:1;min-width:140px;background:#fff;border-radius:8px;padding:.6rem .8rem">
+          <div style="font-size:.78rem;color:#64748b">Claude</div>
+          <div style="font-size:1.5rem;font-weight:800;color:#5b21b6">${cAcc}%</div>
+          <div style="font-size:.78rem;color:#64748b">${cCorrect}/${done.length} bonnes</div>
+        </div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+        <thead><tr style="color:#7c3aed;border-bottom:1px solid #e9d5ff">
+          <th style="text-align:left;padding:.2rem .6rem">Précision de Claude par confiance</th>
+          <th style="padding:.2rem .6rem">n</th><th style="padding:.2rem .6rem">exactitude</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p style="margin:.6rem 0 0;font-size:.74rem;color:#7c3aed">
+        ${noteTxt}
+        Le % de confiance provient de l'accord des questions embedded proches.
+      </p>
+    </div>`;
+}
+
 function showResults() {
   clearInterval(timerInterval);
   document.getElementById('question-card').style.display = 'none';
   document.getElementById('results').style.display = 'block';
-  const pct = questions.length > 0 ? Math.round((good / questions.length) * 100) : 0;
+  const answeredCount = good + bad + skip;
+  const pct = answeredCount > 0 ? Math.round((good / Math.max(1, good + bad)) * 100) : 0;
   document.getElementById('final-score').textContent = `${score} pts`;
   document.getElementById('final-stats').innerHTML =
     `✔ ${good} bonnes &nbsp;|&nbsp; ✘ ${bad} mauvaises &nbsp;|&nbsp; — ${skip} passées<br>` +
-    `Taux de réussite : ${pct}%`;
+    `Taux de réussite : ${pct}% (sur questions répondues)` +
+    claudeRecapHtml();
 }
 
 (function () {
@@ -2607,16 +2867,64 @@ def api_ask():
 def api_questions():
     from app.config import filter_questions_for_cert, get_target_certification
 
-    module = (request.args.get("module") or "").strip() or None
+    # module="" ou "__all__" => tous les modules (pas de filtre module).
+    raw_module = (request.args.get("module") or "").strip()
+    module = None if raw_module in ("", "__all__") else raw_module
     include_hidden = (request.args.get("include_hidden") or "").lower() in ("1", "true", "yes")
     pool = filter_questions_for_cert(
         ALL_QUESTIONS, module=module, include_hidden=include_hidden,
     )
+    # Filtre source (ex. source=udemy => uniquement les questions issues d'Udemy).
+    source = (request.args.get("source") or "").strip().lower()
+    if source:
+        from app.quiz_predict import effective_source
+        pool = [q for q in pool if effective_source(q) == source]
     if not pool:
         return jsonify([])
     n = min(int(request.args.get("n", 20)), len(pool))
     sample = random.sample(pool, n) if n <= len(pool) else pool[:]
     return jsonify(sample)
+
+
+@app.route("/api/suggest-quiz", methods=["POST"])
+def api_suggest_quiz():
+    """Prédiction « test » de Claude pour une question du quiz, en aveugle d'Udemy.
+
+    Body JSON : {"id": <id question>, "escalate": false}
+    Retour : prédiction + % de confiance issu des voisins embedded (cf.
+    app/quiz_predict.predict_quiz_answer). La banque RAG est privée de TOUTES les
+    questions Udemy + de la question testée (leave-one-out) pour ne pas fuiter la
+    réponse via un quasi-doublon.
+    """
+    from app.llm import api_available
+    if not api_available():
+        return jsonify({"error": "Clé API Anthropic absente dans config.json."}), 500
+
+    data = request.get_json(silent=True) or {}
+    qid = data.get("id")
+    escalate = bool(data.get("escalate"))
+    # Défaut True (test « en aveugle ») ; False = Claude peut voir la banque Udemy.
+    exclude_udemy = bool(data.get("exclude_udemy", True))
+    if qid is None:
+        return jsonify({"error": "Champ 'id' requis."}), 400
+
+    question = next((q for q in ALL_QUESTIONS if q.get("id") == qid), None)
+    if question is None:
+        # tolère l'id transmis en chaîne
+        question = next((q for q in ALL_QUESTIONS if str(q.get("id")) == str(qid)), None)
+    if question is None:
+        return jsonify({"error": f"Question {qid} introuvable."}), 404
+
+    from app.quiz_predict import predict_quiz_answer
+    try:
+        result = predict_quiz_answer(
+            question, ALL_QUESTIONS, escalate=escalate, exclude_udemy=exclude_udemy
+        )
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 422
+    except Exception as e:  # erreurs API Anthropic, etc.
+        return jsonify({"error": f"Échec de la prédiction : {e}"}), 502
+    return jsonify(result)
 
 
 @app.route("/api/modules")

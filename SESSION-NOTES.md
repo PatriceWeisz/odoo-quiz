@@ -7,6 +7,46 @@ document liste les **écarts**, **décisions prises pendant l'exécution**, et l
 
 ---
 
+## 🆕 SESSION 24 mai 2026 (soir) — Mode « test des prédictions de Claude » au quiz (v2.6.0)
+
+**But (demande Patrice)** : passer un quiz aléatoire en choisissant **Source = Udemy**,
+pouvoir prendre **tous les modules**, fixer **temps imparti** + **nombre de questions**,
+et afficher **la prédiction de Claude avec un % de confiance issu des questions embedded
+proches** — Claude prédisant **en aveugle d'Udemy** pour mesurer honnêtement la qualité.
+
+### Fait
+1. **`app/quiz_predict.py`** (nouveau) : `predict_quiz_answer()` reproduit le pipeline
+   d'éval à l'unité — banque RAG **leave-one-out + sans AUCUNE question Udemy**
+   (`build_loo_bank`), appel `suggest_answer` (escalade Opus optionnelle), puis **%
+   de confiance par accord des voisins embedded** (`_neighbor_confidence` : chaque
+   voisin vote pour l'option la plus proche de sa bonne réponse, pondéré par la
+   similarité ; repli bande catégorielle si trop peu de voisins). Vérifié : banque RAG
+   3561 → **2587** (974 Udemy + question retirées, zéro fuite).
+2. **`/api/questions`** : nouveau paramètre **`source`** (ex. `udemy`) + `module=__all__`
+   (= tous les modules).
+3. **`POST /api/suggest-quiz`** : `{id, escalate}` → prédiction + % confiance + justif.
+4. **UI quiz** (`HTML` dans `app.py`) : sélecteur **Source** (Udemy par défaut), option
+   **Tous les modules**, champ **temps imparti** (min, 0=illimité, **compte à rebours**
+   + fin auto). Encadré **« Réglages suggestions Claude »** : bascules **« prédictions »**,
+   **« exclure les questions Udemy du contexte »** (coché = test en aveugle ; décoché =
+   Claude voit la banque Udemy, paramètre `exclude_udemy` de `/api/suggest-quiz`) et
+   **escalade Opus**. Encart **🤖 prédiction** (avant la réponse = indice) avec badge de
+   mode dynamique + barre de confiance ; écran final **« Toi vs Claude »** (précision
+   globale + ventilation par bande de confiance, libellés adaptés au mode).
+
+### À faire pour mettre en service
+- **Redémarrer Flask** (local : `scripts/restart_flask.sh` ou `run.sh` ; VPS : scp `app.py`
+  + `app/quiz_predict.py` puis `systemctl restart odoo-quiz`).
+- Coût : chaque question prédite = 1 appel API (≥1 si escalade). Le toggle permet de couper.
+
+### Dette / notes
+- Le `%` affiché « Tous les modules » est le total cert (la source est filtrée au lancement,
+  l'échantillon est plafonné côté serveur) — volontairement approximatif (`≈`).
+- `_text_sim` (option↔réponse voisin) reste lexical ; la sélection des voisins, elle, est
+  bien vectorielle. Piste : matcher les réponses par embedding aussi.
+
+---
+
 ## 🚀 SESSION 24 mai 2026 — COMMENCER ICI (v2.5.1)
 
 **État** : tout en prod sur https://quiz-odoo.picvert-senedoo.org — **v2.5.1**,
