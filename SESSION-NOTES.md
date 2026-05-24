@@ -45,6 +45,36 @@ proches** — Claude prédisant **en aveugle d'Udemy** pour mesurer honnêtement
 - `_text_sim` (option↔réponse voisin) reste lexical ; la sélection des voisins, elle, est
   bien vectorielle. Piste : matcher les réponses par embedding aussi.
 
+### Réencodage embeddings vers un modèle robuste (`scripts/reencode_embeddings.py`)
+
+Script **standalone**, à lancer **sur le serveur, hors session Claude** (idempotent,
+backups, dry-run). Réencode **banque + index doc Odoo** avec un nouveau modèle
+fastembed et met à jour `config.json`. ⚠️ le modèle est partagé banque/doc et
+`search_doc_chunks` rejette toute requête de dimension différente → on réencode
+les deux. Le `query_timeout_s` (nouveau, `config.json → bank_rag`) est relâché à
+3 s car un gros modèle est plus lent que MiniLM (sinon la requête banque expire et
+retombe en lexical ; `bank_embeddings._query_timeout_s` lit cette clé).
+
+Modèle retenu : **mixedbread-ai/mxbai-embed-large-v1** (dim 1024, 0,64 Go — tient
+dans les 3,7 Go du VPS ; dry-run OK, ~121 ms/texte).
+
+```bash
+cd /opt/odoo-quiz
+# 1) validation (rien écrit) :
+./.venv/bin/python -m scripts.reencode_embeddings --dry-run
+# 2) réencodage complet, détaché (banque ~7-10 min, doc ~30-45 min sur 2 cœurs) :
+nohup ./.venv/bin/python -m scripts.reencode_embeddings \
+    --model mixedbread-ai/mxbai-embed-large-v1 --yes \
+    > logs/reencode_$(date +%Y%m%dT%H%M%S).log 2>&1 &
+# 3) une fois terminé :
+sudo systemctl restart odoo-quiz && curl -s localhost:5001/health
+```
+
+Backups auto : `config.json.bak.*`, `bank_embeddings.npz.bak.*`,
+`odoo_docs.sqlite.bak.*`. Rollback = restaurer ces fichiers + remettre l'ancien
+`bank_rag.model` dans `config.json` + restart. Options : `--target bank|docs|both`,
+`--batch-size`, `--no-config`, `--restart` (root).
+
 ---
 
 ## 🚀 SESSION 24 mai 2026 — COMMENCER ICI (v2.5.1)
