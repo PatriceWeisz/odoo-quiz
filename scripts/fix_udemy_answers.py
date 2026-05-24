@@ -54,6 +54,9 @@ def main() -> None:
     ap.add_argument("infile")
     ap.add_argument("--questions", default=str(ROOT / "questions.json"))
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--replace-unmappable", action="store_true",
+                    help="quand les options banque diffèrent du cours, REMPLACE tout le jeu "
+                         "de réponses par la version vérifiée du cours (options + bonne réponse)")
     args = ap.parse_args()
 
     src = json.loads(Path(args.infile).read_text(encoding="utf-8"))
@@ -71,7 +74,10 @@ def main() -> None:
         if k:
             key2q.setdefault(k, q)
 
-    corrected = already_ok = unmappable = no_bank = 0
+    max_aid = max((a.get("id", 0) for q in questions for a in (q.get("answers") or [])
+                   if isinstance(a.get("id"), int)), default=0)
+
+    corrected = already_ok = unmappable = replaced = no_bank = 0
     examples = []
     for it in items:
         title = html.unescape((it.get("question") or "").strip())
@@ -93,17 +99,29 @@ def main() -> None:
         # chercher l'option banque correspondant au texte de la bonne réponse vérifiée
         match_idx = next((i for i, a in enumerate(bank_answers) if _na(a.get("value")) == new_correct), None)
         if match_idx is None:
-            unmappable += 1
-            if len(examples) < 6:
-                examples.append({"id": q.get("id"), "title": title[:70],
-                                 "verified": ans[ci - 1][:60], "bank_opts": [(_na(a.get('value'))[:40]) for a in bank_answers]})
+            if args.replace_unmappable:
+                new_ans = []
+                for j, a_txt in enumerate(ans):
+                    max_aid += 1
+                    new_ans.append({"id": max_aid, "value": html.unescape(a_txt).strip(),
+                                    "value_fr": "", "is_correct": (j + 1 == ci), "score": 0.0})
+                q["answers"] = new_ans
+                q["correct_answer_source"] = "udemy"
+                q["title_fr"] = ""  # l'ancienne trad FR ne correspond plus aux nouvelles options
+                replaced += 1
+            else:
+                unmappable += 1
+                if len(examples) < 6:
+                    examples.append({"id": q.get("id"), "title": title[:70],
+                                     "verified": ans[ci - 1][:60]})
             continue
         for i, a in enumerate(bank_answers):
             a["is_correct"] = (i == match_idx)
         q["correct_answer_source"] = "udemy"
         corrected += 1
 
-    print(f"corrigées : {corrected} | déjà OK : {already_ok} | non mappables (sautées) : {unmappable} | hors banque : {no_bank}")
+    print(f"corrigées : {corrected} | remplacées : {replaced} | déjà OK : {already_ok} | "
+          f"non mappables (sautées) : {unmappable} | hors banque : {no_bank}")
     if examples:
         print("exemples non mappables :")
         for e in examples:
@@ -112,7 +130,7 @@ def main() -> None:
     if args.dry_run:
         print("DRY-RUN — rien écrit.")
         return
-    if not corrected:
+    if not corrected and not replaced:
         print("Aucune correction à appliquer.")
         return
     ts = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
@@ -121,7 +139,7 @@ def main() -> None:
     tmp = qpath.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     tmp.replace(qpath)
-    print(f"Écrit {corrected} corrections. Backup : {bak.name}")
+    print(f"Écrit : {corrected} corrigées + {replaced} remplacées. Backup : {bak.name}")
 
 
 if __name__ == "__main__":
