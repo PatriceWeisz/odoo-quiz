@@ -13,7 +13,8 @@
 # redémarre odoo-quiz et fait un contrôle santé. 100 % côté serveur : insensible
 # à une coupure SSH / mise en veille du poste.
 #
-# Modèle par défaut surchargé par 1er argument :  reencode_supervisor.sh <model>
+# Usage : reencode_supervisor.sh <model> [args additionnels du script]
+#   ex : reencode_supervisor.sh mixedbread-ai/mxbai-embed-large-v1 --target docs --doc-batch-size 4
 
 set -u
 
@@ -21,15 +22,18 @@ APP_DIR="/opt/odoo-quiz"
 APP_USER="senedoo"
 SERVICE="odoo-quiz"
 MODEL="${1:-mixedbread-ai/mxbai-embed-large-v1}"
+[ $# -gt 0 ] && shift
+EXTRA_ARGS="$*"   # transmis tels quels au script (ex: --target docs --doc-batch-size 4)
 
 TS=$(date +%Y%m%dT%H%M%S)
 LOG="${APP_DIR}/logs/reencode_${TS}.log"
 mkdir -p "${APP_DIR}/logs"
 
-echo "[$(date)] superviseur : réencodage modèle=${MODEL} -> ${LOG}"
+echo "[$(date)] superviseur : réencodage modèle=${MODEL} args=[${EXTRA_ARGS}] -> ${LOG}"
 
-sudo -u "${APP_USER}" bash -c \
-  "cd '${APP_DIR}' && ./.venv/bin/python -m scripts.reencode_embeddings --model '${MODEL}' --yes" \
+# Bride les threads BLAS/ONNX : réduit le pic mémoire (VPS ~3.7 Go partagé avec gunicorn).
+sudo -u "${APP_USER}" env OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 MKL_NUM_THREADS=2 bash -c \
+  "cd '${APP_DIR}' && ./.venv/bin/python -m scripts.reencode_embeddings --model '${MODEL}' --yes ${EXTRA_ARGS}" \
   > "${LOG}" 2>&1
 ec=$?
 echo "REENCODE_EXIT=${ec}" | tee -a "${LOG}"

@@ -271,7 +271,11 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Réencode les index vectoriels (banque + doc Odoo).")
     ap.add_argument("--model", default=DEFAULT_MODEL, help=f"modèle fastembed (défaut {DEFAULT_MODEL})")
     ap.add_argument("--target", choices=["bank", "docs", "both"], default="both")
-    ap.add_argument("--batch-size", type=int, default=32)
+    ap.add_argument("--batch-size", type=int, default=16,
+                    help="lot d'embedding pour la BANQUE (titres courts). Défaut 16.")
+    ap.add_argument("--doc-batch-size", type=int, default=4,
+                    help="lot d'embedding pour la DOC (chunks longs, ~512 tokens). "
+                         "Petit par défaut (4) pour éviter l'OOM sur petit VPS.")
     ap.add_argument("--query-timeout-s", type=float, default=3.0)
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--no-config", action="store_true")
@@ -304,7 +308,8 @@ def main() -> None:
     print(f"  Cible          : {args.target}")
     print(f"  Banque         : {n_bank} questions")
     print(f"  Doc Odoo       : {n_docs} chunks  ({doc_db})")
-    print(f"  Batch size     : {args.batch_size}")
+    print(f"  Batch (banque) : {args.batch_size}")
+    print(f"  Batch (doc)    : {args.doc_batch_size}")
     print(f"  query_timeout_s: {args.query_timeout_s} (écrit dans config)" + (" [no-config]" if args.no_config else ""))
     print("=" * 64 + "\n")
 
@@ -345,7 +350,7 @@ def main() -> None:
             sys.exit(f"❌ Dim banque {bmeta['dim']} != {dim} — abandon.")
 
     if args.target in ("docs", "both"):
-        reencode_docs(model, cfg, args.batch_size, dim)
+        reencode_docs(model, cfg, args.doc_batch_size, dim)
 
     if not args.no_config:
         update_config(args.model, args.query_timeout_s)
