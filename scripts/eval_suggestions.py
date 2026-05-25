@@ -226,6 +226,10 @@ def main() -> None:
         aw = len(ans) - ac
         allc = sum(1 for r in done_r if r.get("ok"))
         allw = len(done_r) - allc
+        cost_now = 0.0
+        for m in set(list(tok_in) + list(tok_out)):
+            pin, pout = _price_for(m)
+            cost_now += tok_in.get(m, 0) / 1e6 * pin + tok_out.get(m, 0) / 1e6 * pout
         rows = []
         for r in results:
             err = "error" in r
@@ -236,6 +240,7 @@ def main() -> None:
                 "escalated": r.get("escalated"), "latency_s": r.get("latency_s"),
                 "suggested": r.get("suggested"), "truth": r.get("truth"),
                 "suggested_text": r.get("suggested_text"), "truth_text": r.get("truth_text"),
+                "options": r.get("options"),
                 "ok": r.get("ok"), "abstain": (None if err else _absta(r)),
                 "error": r.get("error"), "timeout": r.get("timeout"),
             })
@@ -254,6 +259,7 @@ def main() -> None:
                        "odoo_all": round(allc * 1.0 - allw * 0.5, 1),
                        "odoo_max": n_test,
                        "timeouts": len(tmo), "api_errors": len(errs),
+                       "cost_usd": round(cost_now, 3),
                        "elapsed_s": round(time.perf_counter() - t_start, 1)},
             "results": rows,
         }
@@ -314,6 +320,7 @@ def main() -> None:
             return {"id": qid, "ok": (ci == gt), "suggested": ci, "truth": gt,
                     "latency_s": round(lat, 2),
                     "suggested_text": _txt(ci), "truth_text": _txt(gt),
+                    "options": opts,
                     "title": (q.get("title") or "").strip(),
                     "module": q.get("module"),
                     "confiance": conf, "model": used_model, "escalated": escalated,
@@ -325,7 +332,7 @@ def main() -> None:
                 "timeout", "timed out", "déla", "delai", "read timed out",
                 "deadline", "etimedout", "503", "529", "overloaded"))
             return {"id": qid, "error": msg[:200], "timeout": is_timeout, "truth": gt,
-                    "title": (q.get("title") or "").strip(), "_toks": toks}
+                    "options": opts, "title": (q.get("title") or "").strip(), "_toks": toks}
 
     from concurrent.futures import ThreadPoolExecutor, as_completed
 

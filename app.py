@@ -1192,9 +1192,13 @@ EVAL_LIVE_HTML = """<!DOCTYPE html>
   tr.ok { background:#f0fdf4; } tr.ko { background:#fef2f2; } tr.abst { background:#f8fafc; } tr.err { background:#fff7ed; }
   .badge { font-weight:700; font-size:.74rem; padding:.1rem .45rem; border-radius:6px; white-space:nowrap; }
   .b-ok{background:#bbf7d0;color:#166534;} .b-ko{background:#fecaca;color:#991b1b;} .b-ab{background:#e0e7ff;color:#3730a3;} .b-to{background:#fed7aa;color:#9a3412;} .b-er{background:#e5e7eb;color:#374151;}
-  .q { max-width:440px; } .ans { max-width:260px; }
+  .q { max-width:480px; } .ans { max-width:240px; }
   .tag { font-size:.68rem; background:#ede9fe; color:#5b21b6; border-radius:5px; padding:.05rem .35rem; margin-right:.3rem; }
   .muted { color:#94a3b8; }
+  .opts { margin-top:.35rem; display:flex; flex-direction:column; gap:.12rem; }
+  .opt { font-size:.7rem; color:#64748b; line-height:1.25; }
+  .opt-ok { color:#166534; font-weight:700; }
+  .opt-cl { background:#ede9fe; border-radius:4px; padding:0 .25rem; }
   .params { font-size:.74rem; color:#475569; margin:.3rem 0 0; }
 </style></head>
 <body>
@@ -1215,6 +1219,16 @@ EVAL_LIVE_HTML = """<!DOCTYPE html>
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function card(lab,val,sub){ return '<div class="card"><div class="lab">'+lab+'</div><div class="val">'+val+'</div>'+(sub?'<div class="sub2">'+sub+'</div>':'')+'</div>'; }
 function vtag(v,m){ var s=''; if(v) s+='<span class="tag">v'+String(v).replace('.0','')+'</span>'; if(m) s+='<span class="tag">'+esc(m)+'</span>'; return s; }
+function opts(r){
+  if(!r.options || !r.options.length) return '';
+  var L='ABCDEFGHIJ';
+  return '<div class="opts">'+r.options.map(function(o,i){
+    var n=i+1, cls='opt', mk='';
+    if(n===r.truth){ cls+=' opt-ok'; mk+=' ✅'; }
+    if(n===r.suggested){ cls+=' opt-cl'; mk+=' 🤖'; }
+    return '<span class="'+cls+'">'+(L[i]||(n+'.'))+'. '+esc(o)+mk+'</span>';
+  }).join('')+'</div>';
+}
 function rowClass(r){ if(r.error) return 'err'; if(r.abstain) return 'abst'; return r.ok?'ok':'ko'; }
 function badge(r){
   if(r.error&&r.timeout) return '<span class="badge b-to">⏱️ Timeout</span>';
@@ -1240,12 +1254,13 @@ async function tick(){
     card('Répondu', (t.answered||0), 'sur '+(d.done||0)+' traitées') +
     card('Abstentions', (t.abstained||0), 'confiance basse') +
     card('Timeouts', (t.timeouts||0), (t.api_errors||0)+' erreurs API') +
+    card('Coût API', '$'+(t.cost_usd!=null?t.cost_usd:0), 'cumulé (tokens)') +
     card('Temps', Math.round(t.elapsed_s||0)+' s', 'budget '+(p.budget_min||0)+' min');
   const rows=(d.results||[]).slice().sort(function(a,b){return (b.seq||0)-(a.seq||0);});
   document.getElementById('rows').innerHTML = rows.map(function(r){
     return '<tr class="'+rowClass(r)+'">'+
       '<td>'+(r.seq||'')+'</td>'+
-      '<td class="q">'+vtag(r.version,r.module)+'<br>'+esc((r.title||'').slice(0,180))+'</td>'+
+      '<td class="q">'+vtag(r.version,r.module)+'<br>'+esc((r.title||'').slice(0,180))+opts(r)+'</td>'+
       '<td class="ans">'+(r.error?'<span class="muted">—</span>':esc(r.suggested_text||'?'))+'</td>'+
       '<td class="ans">'+esc(r.truth_text||'')+'</td>'+
       '<td>'+badge(r)+'</td>'+
