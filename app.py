@@ -55,7 +55,7 @@ from quiz_llm import api_available, parse_json_value, run_prompt_with_images
 
 CONFIG_FILE = Path(__file__).parent / "config.json"
 # Incrémenter à chaque livraison (affichée dans l’UI : en-tête, onglet, pied de page ; F5 si auto_reload).
-APP_VERSION = "2.6.1"
+APP_VERSION = "2.7.0"
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12 Mo (captures)
@@ -1163,121 +1163,7 @@ CAPTURE_HTML = (Path(__file__).parent / "capture_udemy.html").read_text(encoding
 CAPTURE_PREVIEW_HTML = (Path(__file__).parent / "capture_preview.html").read_text(encoding="utf-8")
 
 # --- Tableau de bord live de l'éval held-out (page /eval-live) ----------------
-EVAL_LIVE_HTML = """<!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Éval held-out — prédictions Claude</title>
-<style>
-  :root { --p:#714B67; --p2:#8f5c82; }
-  * { box-sizing:border-box; }
-  body { margin:0; font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:#f5f3f7; color:#1a1a2e; }
-  header { background:linear-gradient(135deg,var(--p),var(--p2)); color:#fff; padding:1rem 1.4rem; }
-  header h1 { margin:0; font-size:1.15rem; }
-  .sub { opacity:.9; font-size:.8rem; margin-top:.25rem; }
-  .pill { display:inline-block; padding:.15rem .55rem; border-radius:999px; font-size:.72rem; font-weight:700; }
-  .pill.run { background:#fde68a; color:#92400e; }
-  .pill.done { background:#bbf7d0; color:#166534; }
-  .pill.absent { background:#e5e7eb; color:#374151; }
-  .wrap { padding:1rem 1.4rem; max-width:1200px; margin:0 auto; }
-  .bar { height:14px; background:#e9d5ff; border-radius:8px; overflow:hidden; margin:.6rem 0; }
-  .bar > div { height:100%; background:var(--p); width:0%; transition:width .4s; }
-  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:.7rem; margin:1rem 0; }
-  .card { background:#fff; border-radius:12px; padding:.8rem 1rem; box-shadow:0 1px 3px rgba(0,0,0,.08); }
-  .card .lab { font-size:.72rem; color:#64748b; }
-  .card .val { font-size:1.6rem; font-weight:800; }
-  .card .sub2 { font-size:.72rem; color:#64748b; }
-  table { width:100%; border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.08); }
-  th,td { padding:.5rem .6rem; text-align:left; font-size:.82rem; vertical-align:top; border-bottom:1px solid #eee; }
-  th { background:#faf5ff; color:var(--p); position:sticky; top:0; font-size:.72rem; text-transform:uppercase; letter-spacing:.03em; }
-  tr.ok { background:#f0fdf4; } tr.ko { background:#fef2f2; } tr.abst { background:#f8fafc; } tr.err { background:#fff7ed; }
-  .badge { font-weight:700; font-size:.74rem; padding:.1rem .45rem; border-radius:6px; white-space:nowrap; }
-  .b-ok{background:#bbf7d0;color:#166534;} .b-ko{background:#fecaca;color:#991b1b;} .b-ab{background:#e0e7ff;color:#3730a3;} .b-to{background:#fed7aa;color:#9a3412;} .b-er{background:#e5e7eb;color:#374151;}
-  .q { max-width:480px; } .ans { max-width:240px; }
-  .tag { font-size:.68rem; background:#ede9fe; color:#5b21b6; border-radius:5px; padding:.05rem .35rem; margin-right:.3rem; }
-  .muted { color:#94a3b8; }
-  .opts { margin-top:.35rem; display:flex; flex-direction:column; gap:.12rem; }
-  .opt { font-size:.7rem; color:#64748b; line-height:1.25; }
-  .opt-ok { color:#166534; font-weight:700; }
-  .opt-cl { background:#ede9fe; border-radius:4px; padding:0 .25rem; }
-  .params { font-size:.74rem; color:#475569; margin:.3rem 0 0; }
-</style></head>
-<body>
-<header>
-  <h1>🤖 Test held-out — prédictions de Claude en aveugle d'Udemy <span id="pill" class="pill absent">…</span></h1>
-  <div class="sub" id="sub">En attente de données…</div>
-</header>
-<div class="wrap">
-  <div class="bar"><div id="barfill"></div></div>
-  <div class="params" id="params"></div>
-  <div class="cards" id="cards"></div>
-  <table>
-    <thead><tr><th>#</th><th>Question</th><th>🤖 Claude</th><th>✅ Banque</th><th>Résultat</th><th>Conf.</th><th>Temps</th></tr></thead>
-    <tbody id="rows"></tbody>
-  </table>
-</div>
-<script>
-function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function fmtMS(s){ s=Math.round(s||0); var m=Math.floor(s/60), r=s%60; return m>0?(m+' min '+(r<10?'0'+r:r)+' s'):(r+' s'); }
-function fmtAvg(s){ if(!s) return '0 s'; if(s>=60) return fmtMS(s); return (Math.round(s*10)/10)+' s'; }
-function card(lab,val,sub){ return '<div class="card"><div class="lab">'+lab+'</div><div class="val">'+val+'</div>'+(sub?'<div class="sub2">'+sub+'</div>':'')+'</div>'; }
-function vtag(v,m){ var s=''; if(v) s+='<span class="tag">v'+String(v).replace('.0','')+'</span>'; if(m) s+='<span class="tag">'+esc(m)+'</span>'; return s; }
-function opts(r){
-  if(!r.options || !r.options.length) return '';
-  var L='ABCDEFGHIJ';
-  return '<div class="opts">'+r.options.map(function(o,i){
-    var n=i+1, cls='opt', mk='';
-    if(n===r.truth){ cls+=' opt-ok'; mk+=' ✅'; }
-    if(n===r.suggested){ cls+=' opt-cl'; mk+=' 🤖'; }
-    return '<span class="'+cls+'">'+(L[i]||(n+'.'))+'. '+esc(o)+mk+'</span>';
-  }).join('')+'</div>';
-}
-function rowClass(r){ if(r.error) return 'err'; if(r.abstain) return 'abst'; return r.ok?'ok':'ko'; }
-function badge(r){
-  if(r.error&&r.timeout) return '<span class="badge b-to">⏱️ Timeout</span>';
-  if(r.error) return '<span class="badge b-er">⚠️ Erreur</span>';
-  if(r.abstain) return '<span class="badge b-ab">⏭️ Abstention</span>';
-  return r.ok?'<span class="badge b-ok">✅ Correct</span>':'<span class="badge b-ko">❌ Faux</span>';
-}
-var polling=true;
-async function tick(){
-  let d; try{ d=await (await fetch('/api/eval-live',{cache:'no-store'})).json(); }catch(e){ return; }
-  const pill=document.getElementById('pill');
-  if(!d || d.status==='absent'){ pill.className='pill absent'; pill.textContent='aucun test'; document.getElementById('sub').textContent='Aucun test en cours.'; return; }
-  const st=d.status==='done'?'done':'run';
-  pill.className='pill '+st; pill.textContent=d.status==='done'?'terminé':'en cours';
-  document.getElementById('sub').textContent='Maj '+(d.updated_at||'')+' — '+(d.done||0)+'/'+(d.n_test||0)+' questions';
-  const p=d.params||{}, t=d.totals||{};
-  var lats=(d.results||[]).map(function(r){return r.latency_s;}).filter(function(x){return x!=null;});
-  var avgLat = lats.length ? lats.reduce(function(a,b){return a+b;},0)/lats.length : (t.avg_latency_s||0);
-  document.getElementById('params').textContent='Modèle '+(p.model||'')+' · escalade '+(p.escalate?'on':'off')+' · held-out '+(p.holdout?'oui':'non')+' · abstention si conf ≤ '+(p.abstain_below||'-')+' · concurrence '+(p.concurrency||'')+' · budget '+(p.budget_min||0)+' min';
-  const pct=d.n_test?Math.round(d.done/d.n_test*100):0;
-  document.getElementById('barfill').style.width=pct+'%';
-  document.getElementById('cards').innerHTML =
-    card('Score Odoo (abstention)', (t.odoo_abstain!=null?t.odoo_abstain:0)+' / '+(t.odoo_max||0), 'si répond à tout : '+(t.odoo_all!=null?t.odoo_all:0)) +
-    card('Précision (répondu)', (t.accuracy_answered!=null?t.accuracy_answered:0)+' %', (t.correct||0)+' bonnes / '+(t.wrong||0)+' fausses') +
-    card('Répondu', (t.answered||0), 'sur '+(d.done||0)+' traitées') +
-    card('Abstentions', (t.abstained||0), 'confiance basse') +
-    card('Timeouts', (t.timeouts||0), (t.api_errors||0)+' erreurs API') +
-    card('Coût API', '$'+(t.cost_usd!=null?t.cost_usd:0), 'cumulé (tokens)') +
-    card('Temps total', fmtMS(t.elapsed_s||0), 'budget '+(p.budget_min||0)+' min') +
-    card('Temps moy./réponse', fmtAvg(avgLat), 'réflexion par question');
-  const rows=(d.results||[]).slice().sort(function(a,b){return (b.seq||0)-(a.seq||0);});
-  document.getElementById('rows').innerHTML = rows.map(function(r){
-    return '<tr class="'+rowClass(r)+'">'+
-      '<td>'+(r.seq||'')+'</td>'+
-      '<td class="q">'+vtag(r.version,r.module)+'<br>'+esc((r.title||'').slice(0,180))+opts(r)+'</td>'+
-      '<td class="ans">'+(r.error?'<span class="muted">—</span>':esc(r.suggested_text||'?'))+'</td>'+
-      '<td class="ans">'+esc(r.truth_text||'')+'</td>'+
-      '<td>'+badge(r)+'</td>'+
-      '<td>'+esc(r.confiance||'')+(r.escalated?' ↑':'')+'</td>'+
-      '<td>'+(r.latency_s!=null?r.latency_s+'s':'')+'</td>'+
-    '</tr>';
-  }).join('');
-  if(d.status==='done'){ polling=false; }
-}
-tick(); setInterval(function(){ if(polling) tick(); }, 2000);
-</script>
-</body></html>"""
+EVAL_HUB_HTML = (Path(__file__).parent / "eval_hub.html").read_text(encoding="utf-8")
 
 # --- Page d'administration : revue des questions (unverified / flagged) ------
 
@@ -3045,25 +2931,169 @@ def api_suggest_quiz():
 
 
 # ---------------------------------------------------------------------------
-# Tableau de bord live de l'éval held-out (lit data/eval_live_progress.json)
+# Hub d'évaluations : lancer (subprocess détaché) + historique + détail en ligne.
+# Chaque run = data/evals/<run_id>.json (progression + résultats + params).
 # ---------------------------------------------------------------------------
-_EVAL_PROGRESS_FILE = Path(__file__).parent / "data" / "eval_live_progress.json"
+_EVALS_DIR = Path(__file__).parent / "data" / "evals"
+_EVAL_LEGACY = Path(__file__).parent / "data" / "eval_live_progress.json"
+
+
+def _safe_run_id(rid: str) -> bool:
+    return (bool(rid) and rid.startswith("run_") and len(rid) <= 90
+            and all(c.isalnum() or c in "_-" for c in rid))
+
+
+def _eval_run_path(run_id: str) -> Path:
+    return _EVALS_DIR / f"{run_id}.json"
+
+
+def _list_eval_runs() -> list:
+    out = []
+    try:
+        _EVALS_DIR.mkdir(parents=True, exist_ok=True)
+        for p in _EVALS_DIR.glob("run_*.json"):
+            if p.name.endswith("_out.json"):
+                continue
+            try:
+                d = json.loads(p.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            out.append({
+                "run_id": p.stem, "status": d.get("status"),
+                "params": d.get("params"), "totals": d.get("totals"),
+                "n_test": d.get("n_test"), "done": d.get("done"),
+                "updated_at": d.get("updated_at"),
+            })
+    except OSError:
+        pass
+    out.sort(key=lambda r: (r.get("params") or {}).get("started_at") or r.get("updated_at") or "",
+             reverse=True)
+    return out
+
+
+def _active_eval_run():
+    from datetime import datetime, timedelta
+    for r in _list_eval_runs():
+        if r.get("status") == "running":
+            ua = r.get("updated_at") or ""
+            try:
+                if datetime.now() - datetime.fromisoformat(ua) < timedelta(minutes=4):
+                    return r
+            except ValueError:
+                return r
+    return None
+
+
+@app.route("/eval")
+@app.route("/eval-live")
+def eval_hub():
+    return Response(EVAL_HUB_HTML, mimetype="text/html")
+
+
+@app.route("/api/eval/runs")
+def api_eval_runs():
+    return jsonify({"runs": _list_eval_runs(), "active": bool(_active_eval_run())})
+
+
+@app.route("/api/eval/run/<run_id>")
+def api_eval_run(run_id):
+    if not _safe_run_id(run_id):
+        return jsonify({"error": "id invalide"}), 400
+    p = _eval_run_path(run_id)
+    if not p.exists():
+        return jsonify({"status": "absent"})
+    try:
+        return Response(p.read_text(encoding="utf-8"), mimetype="application/json")
+    except OSError as e:
+        return jsonify({"status": "error", "error": str(e)[:200]})
 
 
 @app.route("/api/eval-live")
 def api_eval_live():
+    """Compat : renvoie le run actif sinon le plus récent."""
+    run = _active_eval_run()
+    runs = _list_eval_runs()
+    if not run and runs:
+        run = runs[0]
+    if run:
+        p = _eval_run_path(run["run_id"])
+        if p.exists():
+            return Response(p.read_text(encoding="utf-8"), mimetype="application/json")
+    if _EVAL_LEGACY.exists():
+        return Response(_EVAL_LEGACY.read_text(encoding="utf-8"), mimetype="application/json")
+    return jsonify({"status": "absent"})
+
+
+@app.route("/api/eval/launch", methods=["POST"])
+def api_eval_launch():
+    import subprocess
+    import sys as _sys
+    import time as _time
+
+    from app.llm import api_available
+    if not api_available():
+        return jsonify({"error": "Clé API Anthropic absente dans config.json."}), 500
+    if _active_eval_run():
+        return jsonify({"error": "Une évaluation est déjà en cours — attends la fin."}), 409
+
+    data = request.get_json(silent=True) or {}
+
+    def clampi(v, lo, hi, dft):
+        try:
+            return max(lo, min(hi, int(v)))
+        except (TypeError, ValueError):
+            return dft
+
+    source = (data.get("source") or "udemy").strip().lower()
+    if source not in ("udemy", "claude", ""):
+        source = "udemy"
+    limit = clampi(data.get("limit"), 1, 300, 120)
+    seed = clampi(data.get("seed"), 0, 10**9, 42)
+    concurrency = clampi(data.get("concurrency"), 1, 4, 2)
+    budget = clampi(data.get("budget_min"), 1, 60, 58)
+    abstain = (data.get("abstain_below") or "basse").strip().lower()
+    if abstain not in ("none", "basse", "moyenne"):
+        abstain = "basse"
+    holdout = bool(data.get("holdout", True))
+    exclude_all = bool(data.get("exclude_all_udemy", False))
+    escalate = bool(data.get("escalate", True))
+    model = (data.get("model") or "").strip()
+    if model and not all(c.isalnum() or c in ".-_" for c in model):
+        model = ""
+    label = "".join(c for c in (data.get("label") or "").strip()
+                    if c.isalnum() or c in " -_éèàçÉ").strip()[:40]
+
+    ts = _time.strftime("%Y%m%dT%H%M%S")
+    slug = "".join(c for c in label.lower().replace(" ", "-")
+                   if c.isalnum() or c in "-_")[:24]
+    run_id = "run_" + ts + (("_" + slug) if slug else "")
+    _EVALS_DIR.mkdir(parents=True, exist_ok=True)
+    (Path(__file__).parent / "logs").mkdir(parents=True, exist_ok=True)
+    progress = _eval_run_path(run_id)
+    out = _EVALS_DIR / f"{run_id}_out.json"
+    logf = Path(__file__).parent / "logs" / f"{run_id}.log"
+
+    cmd = [_sys.executable, "-m", "scripts.eval_suggestions",
+           "--source", source, "--limit", str(limit), "--seed", str(seed),
+           "--concurrency", str(concurrency), "--time-budget-min", str(budget),
+           "--abstain-below", abstain, "--progress-file", str(progress),
+           "--out", str(out), "--label", label]
+    if holdout:
+        cmd.append("--holdout-sample")
+    if escalate:
+        cmd.append("--escalate")
+    if exclude_all:
+        cmd += ["--rag-exclude-source", "udemy"]
+    if model:
+        cmd += ["--model", model]
+
     try:
-        if not _EVAL_PROGRESS_FILE.exists():
-            return jsonify({"status": "absent"})
-        with open(_EVAL_PROGRESS_FILE, encoding="utf-8") as f:
-            return Response(f.read(), mimetype="application/json")
-    except (OSError, ValueError) as e:
-        return jsonify({"status": "error", "error": str(e)[:200]})
-
-
-@app.route("/eval-live")
-def eval_live():
-    return Response(EVAL_LIVE_HTML, mimetype="text/html")
+        lf = open(logf, "w")
+        subprocess.Popen(cmd, cwd=str(Path(__file__).parent),
+                         stdout=lf, stderr=subprocess.STDOUT, start_new_session=True)
+    except OSError as e:
+        return jsonify({"error": f"Lancement impossible : {e}"}), 500
+    return jsonify({"ok": True, "run_id": run_id})
 
 
 @app.route("/api/modules")

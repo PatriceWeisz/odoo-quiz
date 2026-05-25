@@ -126,6 +126,7 @@ def main() -> None:
     ap.add_argument("--progress-file", default="",
                     help="écrit la progression incrémentale (JSON) après chaque question, pour "
                          "le tableau de bord web live (/eval-live).")
+    ap.add_argument("--label", default="", help="libellé lisible de l'éval (affiché dans le hub).")
     ap.add_argument("--out", default=str(ROOT / "data" / "eval_suggestions.json"))
     args = ap.parse_args()
 
@@ -206,6 +207,7 @@ def main() -> None:
     tok_in: dict[str, int] = {}
     tok_out: dict[str, int] = {}
     t_start = time.perf_counter()
+    started_at = datetime.now().isoformat(timespec="seconds")
 
     progress_path = Path(args.progress_file) if args.progress_file else None
 
@@ -251,7 +253,9 @@ def main() -> None:
             "params": {"model": args.model or "config", "escalate": bool(esc_model),
                        "holdout": holdout, "abstain_below": args.abstain_below,
                        "concurrency": args.concurrency, "budget_min": args.time_budget_min,
-                       "source": args.source},
+                       "source": args.source, "seed": args.seed, "limit": args.limit,
+                       "label": args.label, "started_at": started_at,
+                       "rag_exclude": args.rag_exclude_source, "version": args.version},
             "totals": {"answered": len(ans), "abstained": len(absd),
                        "correct": ac, "wrong": aw,
                        "accuracy_answered": round(ac / len(ans) * 100, 1) if ans else 0.0,
