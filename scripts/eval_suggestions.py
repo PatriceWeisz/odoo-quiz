@@ -260,6 +260,9 @@ def main() -> None:
                        "odoo_max": n_test,
                        "timeouts": len(tmo), "api_errors": len(errs),
                        "cost_usd": round(cost_now, 3),
+                       "avg_latency_s": round(
+                           sum(float(r.get("latency_s") or 0) for r in done_r) / len(done_r), 2)
+                           if done_r else 0.0,
                        "elapsed_s": round(time.perf_counter() - t_start, 1)},
             "results": rows,
         }

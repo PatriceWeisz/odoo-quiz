@@ -1217,6 +1217,8 @@ EVAL_LIVE_HTML = """<!DOCTYPE html>
 </div>
 <script>
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtMS(s){ s=Math.round(s||0); var m=Math.floor(s/60), r=s%60; return m>0?(m+' min '+(r<10?'0'+r:r)+' s'):(r+' s'); }
+function fmtAvg(s){ if(!s) return '0 s'; if(s>=60) return fmtMS(s); return (Math.round(s*10)/10)+' s'; }
 function card(lab,val,sub){ return '<div class="card"><div class="lab">'+lab+'</div><div class="val">'+val+'</div>'+(sub?'<div class="sub2">'+sub+'</div>':'')+'</div>'; }
 function vtag(v,m){ var s=''; if(v) s+='<span class="tag">v'+String(v).replace('.0','')+'</span>'; if(m) s+='<span class="tag">'+esc(m)+'</span>'; return s; }
 function opts(r){
@@ -1245,6 +1247,8 @@ async function tick(){
   pill.className='pill '+st; pill.textContent=d.status==='done'?'terminé':'en cours';
   document.getElementById('sub').textContent='Maj '+(d.updated_at||'')+' — '+(d.done||0)+'/'+(d.n_test||0)+' questions';
   const p=d.params||{}, t=d.totals||{};
+  var lats=(d.results||[]).map(function(r){return r.latency_s;}).filter(function(x){return x!=null;});
+  var avgLat = lats.length ? lats.reduce(function(a,b){return a+b;},0)/lats.length : (t.avg_latency_s||0);
   document.getElementById('params').textContent='Modèle '+(p.model||'')+' · escalade '+(p.escalate?'on':'off')+' · held-out '+(p.holdout?'oui':'non')+' · abstention si conf ≤ '+(p.abstain_below||'-')+' · concurrence '+(p.concurrency||'')+' · budget '+(p.budget_min||0)+' min';
   const pct=d.n_test?Math.round(d.done/d.n_test*100):0;
   document.getElementById('barfill').style.width=pct+'%';
@@ -1255,7 +1259,8 @@ async function tick(){
     card('Abstentions', (t.abstained||0), 'confiance basse') +
     card('Timeouts', (t.timeouts||0), (t.api_errors||0)+' erreurs API') +
     card('Coût API', '$'+(t.cost_usd!=null?t.cost_usd:0), 'cumulé (tokens)') +
-    card('Temps', Math.round(t.elapsed_s||0)+' s', 'budget '+(p.budget_min||0)+' min');
+    card('Temps total', fmtMS(t.elapsed_s||0), 'budget '+(p.budget_min||0)+' min') +
+    card('Temps moy./réponse', fmtAvg(avgLat), 'réflexion par question');
   const rows=(d.results||[]).slice().sort(function(a,b){return (b.seq||0)-(a.seq||0);});
   document.getElementById('rows').innerHTML = rows.map(function(r){
     return '<tr class="'+rowClass(r)+'">'+
