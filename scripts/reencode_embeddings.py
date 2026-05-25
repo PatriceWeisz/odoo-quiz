@@ -180,12 +180,15 @@ def reencode_bank(model, model_name: str, batch_size: int) -> dict:
     dim = int(matrix.shape[1]) if matrix.ndim == 2 else 0
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    tmp_npz = BANK_NPZ.with_suffix(".npz.tmp")
+    # ⚠️ np.savez_compressed AJOUTE « .npz » si le nom ne finit pas par .npz :
+    # le fichier temporaire doit donc déjà finir par .npz, sinon os.replace
+    # cible un fichier inexistant.
+    tmp_npz = BANK_NPZ.with_name(BANK_NPZ.stem + ".tmp.npz")
     np.savez_compressed(tmp_npz, ids=ids, matrix=matrix)
     _atomic_replace(tmp_npz, BANK_NPZ)
 
     meta = {"fingerprint": fp, "model": model_name, "count": int(ids.size), "dim": dim}
-    tmp_meta = BANK_META.with_suffix(".json.tmp")
+    tmp_meta = BANK_META.with_name(BANK_META.name + ".tmp")
     tmp_meta.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
     _atomic_replace(tmp_meta, BANK_META)
     _log(f"✅ Banque réencodée : {ids.size} vecteurs, dim {dim} -> {BANK_NPZ.name}")
@@ -199,7 +202,7 @@ def reencode_docs(model, cfg: dict, batch_size: int, expected_dim: int) -> dict:
     src = _doc_db_path(cfg)
     if not src.exists():
         sys.exit(f"❌ Base doc introuvable : {src}")
-    tmp = src.with_suffix(".sqlite.reencode.tmp")
+    tmp = src.with_name(src.name + ".reencode.tmp")
     if tmp.exists():
         tmp.unlink()
     _log(f"Doc : copie de travail {tmp.name}…")
@@ -255,7 +258,7 @@ def update_config(model_name: str, query_timeout_s: float) -> None:
         cfg["bank_rag"] = br
     br["model"] = model_name
     br["query_timeout_s"] = query_timeout_s
-    tmp = CONFIG_PATH.with_suffix(".json.tmp")
+    tmp = CONFIG_PATH.with_name(CONFIG_PATH.name + ".tmp")
     tmp.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
     _atomic_replace(tmp, CONFIG_PATH)
     _log(f"✅ config.json : bank_rag.model={model_name}, query_timeout_s={query_timeout_s}")
