@@ -118,6 +118,9 @@ def main() -> None:
                     help="n'escalade (Opus) que tant que le temps écoulé < cette fraction du "
                          "budget global ; au-delà, on garde la réponse de base pour ne pas "
                          "dépasser le temps imparti.")
+    ap.add_argument("--verbose", action="store_true",
+                    help="affichage temps réel : pour chaque question, énoncé + réponse de "
+                         "Claude + bonne réponse banque (pratique avec tail -f, concurrency basse).")
     ap.add_argument("--out", default=str(ROOT / "data" / "eval_suggestions.json"))
     args = ap.parse_args()
 
@@ -275,9 +278,17 @@ def main() -> None:
                 tag = "⏱️ TIMEOUT" if r.get("timeout") else "⚠️"
                 print(f"[{done_n}/{len(sample)}] #{r['id']} {tag} {r['error'][:80]}", flush=True)
             else:
-                print(f"[{done_n}/{len(sample)}] #{r['id']} {'✅' if r['ok'] else '❌'} "
+                mark = "✅" if r["ok"] else "❌"
+                print(f"[{done_n}/{len(sample)}] #{r['id']} {mark} "
                       f"(sugg={r['suggested']} vrai={r['truth']} conf={r['confiance']}"
-                      f"{' ↑opus' if r['escalated'] else ''})", flush=True)
+                      f"{' ↑opus' if r['escalated'] else ''}{' ' + str(r.get('latency_s'))+'s' if r.get('latency_s') else ''})",
+                      flush=True)
+                if args.verbose:
+                    print(f"      Q [v{str(r.get('version','')).replace('.0','')}/{r.get('module') or '-'}] : "
+                          f"{(r.get('title') or '')[:160]}", flush=True)
+                    print(f"      🤖 Claude : {r.get('suggested_text')}", flush=True)
+                    print(f"      ✅ Banque : {r.get('truth_text')}", flush=True)
+                    print("      " + "-" * 50, flush=True)
             if budget_s and (time.perf_counter() - t_start) > budget_s:
                 stopped_budget = True
                 print(f"⏱️ Budget {args.time_budget_min} min atteint — arrêt "
