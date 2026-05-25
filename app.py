@@ -55,7 +55,7 @@ from quiz_llm import api_available, parse_json_value, run_prompt_with_images
 
 CONFIG_FILE = Path(__file__).parent / "config.json"
 # Incrémenter à chaque livraison (affichée dans l’UI : en-tête, onglet, pied de page ; F5 si auto_reload).
-APP_VERSION = "2.6.0"
+APP_VERSION = "2.6.1"
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12 Mo (captures)
@@ -1161,6 +1161,103 @@ function showResults() {
 BANK_HTML = (Path(__file__).parent / "banque.html").read_text(encoding="utf-8")
 CAPTURE_HTML = (Path(__file__).parent / "capture_udemy.html").read_text(encoding="utf-8")
 CAPTURE_PREVIEW_HTML = (Path(__file__).parent / "capture_preview.html").read_text(encoding="utf-8")
+
+# --- Tableau de bord live de l'éval held-out (page /eval-live) ----------------
+EVAL_LIVE_HTML = """<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Éval held-out — prédictions Claude</title>
+<style>
+  :root { --p:#714B67; --p2:#8f5c82; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:#f5f3f7; color:#1a1a2e; }
+  header { background:linear-gradient(135deg,var(--p),var(--p2)); color:#fff; padding:1rem 1.4rem; }
+  header h1 { margin:0; font-size:1.15rem; }
+  .sub { opacity:.9; font-size:.8rem; margin-top:.25rem; }
+  .pill { display:inline-block; padding:.15rem .55rem; border-radius:999px; font-size:.72rem; font-weight:700; }
+  .pill.run { background:#fde68a; color:#92400e; }
+  .pill.done { background:#bbf7d0; color:#166534; }
+  .pill.absent { background:#e5e7eb; color:#374151; }
+  .wrap { padding:1rem 1.4rem; max-width:1200px; margin:0 auto; }
+  .bar { height:14px; background:#e9d5ff; border-radius:8px; overflow:hidden; margin:.6rem 0; }
+  .bar > div { height:100%; background:var(--p); width:0%; transition:width .4s; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:.7rem; margin:1rem 0; }
+  .card { background:#fff; border-radius:12px; padding:.8rem 1rem; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  .card .lab { font-size:.72rem; color:#64748b; }
+  .card .val { font-size:1.6rem; font-weight:800; }
+  .card .sub2 { font-size:.72rem; color:#64748b; }
+  table { width:100%; border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  th,td { padding:.5rem .6rem; text-align:left; font-size:.82rem; vertical-align:top; border-bottom:1px solid #eee; }
+  th { background:#faf5ff; color:var(--p); position:sticky; top:0; font-size:.72rem; text-transform:uppercase; letter-spacing:.03em; }
+  tr.ok { background:#f0fdf4; } tr.ko { background:#fef2f2; } tr.abst { background:#f8fafc; } tr.err { background:#fff7ed; }
+  .badge { font-weight:700; font-size:.74rem; padding:.1rem .45rem; border-radius:6px; white-space:nowrap; }
+  .b-ok{background:#bbf7d0;color:#166534;} .b-ko{background:#fecaca;color:#991b1b;} .b-ab{background:#e0e7ff;color:#3730a3;} .b-to{background:#fed7aa;color:#9a3412;} .b-er{background:#e5e7eb;color:#374151;}
+  .q { max-width:440px; } .ans { max-width:260px; }
+  .tag { font-size:.68rem; background:#ede9fe; color:#5b21b6; border-radius:5px; padding:.05rem .35rem; margin-right:.3rem; }
+  .muted { color:#94a3b8; }
+  .params { font-size:.74rem; color:#475569; margin:.3rem 0 0; }
+</style></head>
+<body>
+<header>
+  <h1>🤖 Test held-out — prédictions de Claude en aveugle d'Udemy <span id="pill" class="pill absent">…</span></h1>
+  <div class="sub" id="sub">En attente de données…</div>
+</header>
+<div class="wrap">
+  <div class="bar"><div id="barfill"></div></div>
+  <div class="params" id="params"></div>
+  <div class="cards" id="cards"></div>
+  <table>
+    <thead><tr><th>#</th><th>Question</th><th>🤖 Claude</th><th>✅ Banque</th><th>Résultat</th><th>Conf.</th><th>Temps</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+</div>
+<script>
+function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function card(lab,val,sub){ return '<div class="card"><div class="lab">'+lab+'</div><div class="val">'+val+'</div>'+(sub?'<div class="sub2">'+sub+'</div>':'')+'</div>'; }
+function vtag(v,m){ var s=''; if(v) s+='<span class="tag">v'+String(v).replace('.0','')+'</span>'; if(m) s+='<span class="tag">'+esc(m)+'</span>'; return s; }
+function rowClass(r){ if(r.error) return 'err'; if(r.abstain) return 'abst'; return r.ok?'ok':'ko'; }
+function badge(r){
+  if(r.error&&r.timeout) return '<span class="badge b-to">⏱️ Timeout</span>';
+  if(r.error) return '<span class="badge b-er">⚠️ Erreur</span>';
+  if(r.abstain) return '<span class="badge b-ab">⏭️ Abstention</span>';
+  return r.ok?'<span class="badge b-ok">✅ Correct</span>':'<span class="badge b-ko">❌ Faux</span>';
+}
+var polling=true;
+async function tick(){
+  let d; try{ d=await (await fetch('/api/eval-live',{cache:'no-store'})).json(); }catch(e){ return; }
+  const pill=document.getElementById('pill');
+  if(!d || d.status==='absent'){ pill.className='pill absent'; pill.textContent='aucun test'; document.getElementById('sub').textContent='Aucun test en cours.'; return; }
+  const st=d.status==='done'?'done':'run';
+  pill.className='pill '+st; pill.textContent=d.status==='done'?'terminé':'en cours';
+  document.getElementById('sub').textContent='Maj '+(d.updated_at||'')+' — '+(d.done||0)+'/'+(d.n_test||0)+' questions';
+  const p=d.params||{}, t=d.totals||{};
+  document.getElementById('params').textContent='Modèle '+(p.model||'')+' · escalade '+(p.escalate?'on':'off')+' · held-out '+(p.holdout?'oui':'non')+' · abstention si conf ≤ '+(p.abstain_below||'-')+' · concurrence '+(p.concurrency||'')+' · budget '+(p.budget_min||0)+' min';
+  const pct=d.n_test?Math.round(d.done/d.n_test*100):0;
+  document.getElementById('barfill').style.width=pct+'%';
+  document.getElementById('cards').innerHTML =
+    card('Score Odoo (abstention)', (t.odoo_abstain!=null?t.odoo_abstain:0)+' / '+(t.odoo_max||0), 'si répond à tout : '+(t.odoo_all!=null?t.odoo_all:0)) +
+    card('Précision (répondu)', (t.accuracy_answered!=null?t.accuracy_answered:0)+' %', (t.correct||0)+' bonnes / '+(t.wrong||0)+' fausses') +
+    card('Répondu', (t.answered||0), 'sur '+(d.done||0)+' traitées') +
+    card('Abstentions', (t.abstained||0), 'confiance basse') +
+    card('Timeouts', (t.timeouts||0), (t.api_errors||0)+' erreurs API') +
+    card('Temps', Math.round(t.elapsed_s||0)+' s', 'budget '+(p.budget_min||0)+' min');
+  const rows=(d.results||[]).slice().sort(function(a,b){return (b.seq||0)-(a.seq||0);});
+  document.getElementById('rows').innerHTML = rows.map(function(r){
+    return '<tr class="'+rowClass(r)+'">'+
+      '<td>'+(r.seq||'')+'</td>'+
+      '<td class="q">'+vtag(r.version,r.module)+'<br>'+esc((r.title||'').slice(0,180))+'</td>'+
+      '<td class="ans">'+(r.error?'<span class="muted">—</span>':esc(r.suggested_text||'?'))+'</td>'+
+      '<td class="ans">'+esc(r.truth_text||'')+'</td>'+
+      '<td>'+badge(r)+'</td>'+
+      '<td>'+esc(r.confiance||'')+(r.escalated?' ↑':'')+'</td>'+
+      '<td>'+(r.latency_s!=null?r.latency_s+'s':'')+'</td>'+
+    '</tr>';
+  }).join('');
+  if(d.status==='done'){ polling=false; }
+}
+tick(); setInterval(function(){ if(polling) tick(); }, 2000);
+</script>
+</body></html>"""
 
 # --- Page d'administration : revue des questions (unverified / flagged) ------
 
@@ -2925,6 +3022,28 @@ def api_suggest_quiz():
     except Exception as e:  # erreurs API Anthropic, etc.
         return jsonify({"error": f"Échec de la prédiction : {e}"}), 502
     return jsonify(result)
+
+
+# ---------------------------------------------------------------------------
+# Tableau de bord live de l'éval held-out (lit data/eval_live_progress.json)
+# ---------------------------------------------------------------------------
+_EVAL_PROGRESS_FILE = Path(__file__).parent / "data" / "eval_live_progress.json"
+
+
+@app.route("/api/eval-live")
+def api_eval_live():
+    try:
+        if not _EVAL_PROGRESS_FILE.exists():
+            return jsonify({"status": "absent"})
+        with open(_EVAL_PROGRESS_FILE, encoding="utf-8") as f:
+            return Response(f.read(), mimetype="application/json")
+    except (OSError, ValueError) as e:
+        return jsonify({"status": "error", "error": str(e)[:200]})
+
+
+@app.route("/eval-live")
+def eval_live():
+    return Response(EVAL_LIVE_HTML, mimetype="text/html")
 
 
 @app.route("/api/modules")

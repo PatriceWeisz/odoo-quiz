@@ -32,9 +32,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -121,6 +123,9 @@ def main() -> None:
     ap.add_argument("--verbose", action="store_true",
                     help="affichage temps réel : pour chaque question, énoncé + réponse de "
                          "Claude + bonne réponse banque (pratique avec tail -f, concurrency basse).")
+    ap.add_argument("--progress-file", default="",
+                    help="écrit la progression incrémentale (JSON) après chaque question, pour "
+                         "le tableau de bord web live (/eval-live).")
     ap.add_argument("--out", default=str(ROOT / "data" / "eval_suggestions.json"))
     args = ap.parse_args()
 
@@ -173,6 +178,8 @@ def main() -> None:
 
     esc_model = escalation_model() if args.escalate else ""
     rank = {"basse": 0, "moyenne": 1, "haute": 2}
+    abstain_level = {"none": -1, "basse": 0, "moyenne": 1}[args.abstain_below]
+    n_test = len(sample)
     exclude_src = {s.strip().lower() for s in args.rag_exclude_source.split(",") if s.strip()}
     # Ablation taille de banque : sous-ensemble fixe d'ids conservés (None = tout garder).
     keep_ids: set | None = None
@@ -199,6 +206,66 @@ def main() -> None:
     tok_in: dict[str, int] = {}
     tok_out: dict[str, int] = {}
     t_start = time.perf_counter()
+
+    progress_path = Path(args.progress_file) if args.progress_file else None
+
+    def _write_progress(status: str = "running") -> None:
+        """Écrit l'état courant (JSON atomique) pour le tableau de bord web live."""
+        if progress_path is None:
+            return
+        done_r = [r for r in results if "error" not in r]
+        errs = [r for r in results if "error" in r]
+        tmo = [r for r in errs if r.get("timeout")]
+
+        def _absta(r: dict) -> bool:
+            return rank.get(r.get("confiance"), 0) <= abstain_level
+
+        ans = [r for r in done_r if not _absta(r)]
+        absd = [r for r in done_r if _absta(r)]
+        ac = sum(1 for r in ans if r.get("ok"))
+        aw = len(ans) - ac
+        allc = sum(1 for r in done_r if r.get("ok"))
+        allw = len(done_r) - allc
+        rows = []
+        for r in results:
+            err = "error" in r
+            rows.append({
+                "seq": r.get("seq"), "id": r.get("id"),
+                "title": r.get("title"), "version": r.get("version"),
+                "module": r.get("module"), "confiance": r.get("confiance"),
+                "escalated": r.get("escalated"), "latency_s": r.get("latency_s"),
+                "suggested": r.get("suggested"), "truth": r.get("truth"),
+                "suggested_text": r.get("suggested_text"), "truth_text": r.get("truth_text"),
+                "ok": r.get("ok"), "abstain": (None if err else _absta(r)),
+                "error": r.get("error"), "timeout": r.get("timeout"),
+            })
+        payload = {
+            "status": status,
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+            "n_test": n_test, "done": len(results),
+            "params": {"model": args.model or "config", "escalate": bool(esc_model),
+                       "holdout": holdout, "abstain_below": args.abstain_below,
+                       "concurrency": args.concurrency, "budget_min": args.time_budget_min,
+                       "source": args.source},
+            "totals": {"answered": len(ans), "abstained": len(absd),
+                       "correct": ac, "wrong": aw,
+                       "accuracy_answered": round(ac / len(ans) * 100, 1) if ans else 0.0,
+                       "odoo_abstain": round(ac * 1.0 - aw * 0.5, 1),
+                       "odoo_all": round(allc * 1.0 - allw * 0.5, 1),
+                       "odoo_max": n_test,
+                       "timeouts": len(tmo), "api_errors": len(errs),
+                       "elapsed_s": round(time.perf_counter() - t_start, 1)},
+            "results": rows,
+        }
+        try:
+            tmp = progress_path.with_name(progress_path.name + ".tmp")
+            tmp.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+            os.replace(tmp, progress_path)
+        except OSError:
+            pass
+
+    if progress_path is not None:
+        _write_progress("running")
 
     def _eval_one(q: dict) -> dict:
         qid = q.get("id")
@@ -270,6 +337,7 @@ def main() -> None:
         for fut in as_completed(futs):
             r = fut.result()
             done_n += 1
+            r["seq"] = done_n
             for (m, ti, to) in r.pop("_toks", []):
                 tok_in[m] = tok_in.get(m, 0) + ti
                 tok_out[m] = tok_out.get(m, 0) + to
@@ -289,6 +357,7 @@ def main() -> None:
                     print(f"      🤖 Claude : {r.get('suggested_text')}", flush=True)
                     print(f"      ✅ Banque : {r.get('truth_text')}", flush=True)
                     print("      " + "-" * 50, flush=True)
+            _write_progress("running")
             if budget_s and (time.perf_counter() - t_start) > budget_s:
                 stopped_budget = True
                 print(f"⏱️ Budget {args.time_budget_min} min atteint — arrêt "
@@ -431,6 +500,7 @@ def main() -> None:
         "results": results,
     }, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\nDétail JSON écrit : {out_path}")
+    _write_progress("done")
 
 
 if __name__ == "__main__":
