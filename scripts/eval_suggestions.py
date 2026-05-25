@@ -98,6 +98,26 @@ def main() -> None:
     ap.add_argument("--model", default="")
     ap.add_argument("--web", action="store_true")
     ap.add_argument("--include-image", action="store_true")
+    ap.add_argument("--holdout-sample", action="store_true",
+                    help="HELD-OUT : exclut TOUT l'échantillon de test de la banque RAG (les N "
+                         "questions testées ET leurs réponses) au lieu du simple leave-one-out. "
+                         "Les autres questions (autres Udemy, générées, doc) restent disponibles.")
+    ap.add_argument("--warm-index", dest="warm_index", action="store_true", default=True,
+                    help="réchauffe l'index vectoriel banque (défaut on) — sinon repli lexical.")
+    ap.add_argument("--no-warm-index", dest="warm_index", action="store_false")
+    ap.add_argument("--query-timeout-s", type=float, default=60.0,
+                    help="timeout d'embedding requête pendant l'éval (généreux : batch offline).")
+    ap.add_argument("--time-budget-min", type=int, default=0,
+                    help="plafond global en minutes (0 = illimité) : arrête de collecter au-delà "
+                         "et rapporte les résultats partiels.")
+    ap.add_argument("--abstain-below", choices=["none", "basse", "moyenne"], default="basse",
+                    help="abstention (0 pt au lieu de -0.5) quand la confiance est <= ce niveau. "
+                         "Défaut 'basse'. EV(répondre)=1.5p-0.5 > 0 ssi p>1/3, donc on s'abstient "
+                         "seulement quand la confiance/justesse est trop faible.")
+    ap.add_argument("--escalate-cutoff-frac", type=float, default=0.75,
+                    help="n'escalade (Opus) que tant que le temps écoulé < cette fraction du "
+                         "budget global ; au-delà, on garde la réponse de base pour ne pas "
+                         "dépasser le temps imparti.")
     ap.add_argument("--out", default=str(ROOT / "data" / "eval_suggestions.json"))
     args = ap.parse_args()
 
@@ -130,6 +150,24 @@ def main() -> None:
     rng.shuffle(pool)
     sample = pool[: args.limit]
 
+    # Held-out : on retire TOUT l'échantillon de test du RAG (pas seulement la
+    # question courante), pour tester en aveugle ces N tout en gardant le reste.
+    holdout = bool(args.holdout_sample)
+    test_ids = {q.get("id") for q in sample}
+
+    # Index vectoriel : warm-up (charge le cache mxbai) + timeout requête généreux,
+    # sinon le RAG banque retombe sur le lexical au lieu d'utiliser les embeddings.
+    if args.warm_index:
+        try:
+            import bank_embeddings as _be
+            _be._query_timeout_s = lambda: float(args.query_timeout_s)
+            _be.QUERY_EMBED_TIMEOUT_S = float(args.query_timeout_s)
+            ok_idx = _be.warmup_bank_embeddings(bank)
+            idx = _be.get_bank_vector_index()
+            print(f"   Index vectoriel : {'prêt ('+idx.model_name+', dim '+str(idx.matrix.shape[1])+')' if (ok_idx and idx) else 'indisponible → repli lexical'}")
+        except Exception as e:
+            print(f"   Index vectoriel : échec warmup ({e}) → repli lexical")
+
     esc_model = escalation_model() if args.escalate else ""
     rank = {"basse": 0, "moyenne": 1, "haute": 2}
     exclude_src = {s.strip().lower() for s in args.rag_exclude_source.split(",") if s.strip()}
@@ -140,12 +178,17 @@ def main() -> None:
         random.Random(args.seed + 7).shuffle(eligible)
         keep_ids = set(eligible[: max(1, int(len(eligible) * args.rag_bank_fraction))])
     rag_bank_size = len([x for x in bank if _src(x) not in exclude_src
+                         and not (holdout and x.get("id") in test_ids)
                          and (keep_ids is None or x.get("id") in keep_ids)])
 
     print(f"📋 Banque : {len(bank)} questions ; {len(pool)} évaluables (filtres appliqués).")
     print(f"   Jeu de test : source={args.source or 'toutes'} | échantillon={len(sample)} (seed={args.seed})")
     print(f"   Banque RAG  : {rag_bank_size} questions"
           f"{' (sources exclues: '+','.join(sorted(exclude_src))+')' if exclude_src else ''}")
+    if holdout:
+        other_udemy = len([x for x in bank if _src(x) == "udemy" and x.get("id") not in test_ids])
+        print(f"   Mode HELD-OUT : les {len(test_ids)} questions de test sont retirées du RAG ; "
+              f"{other_udemy} autres Udemy restent disponibles dans le contexte.")
     print(f"   Modèle base={args.model or 'config'} | web={'on' if args.web else 'off'} "
           f"| escalade={'on ('+esc_model+')' if esc_model else 'off'}\n")
 
@@ -159,11 +202,17 @@ def main() -> None:
         gt = _ground_truth_index(q)
         opts = _options(q)
         tv = _target_version(q)
+        # Held-out : on exclut tout l'échantillon de test ; sinon leave-one-out.
+        excl_ids = test_ids if holdout else {qid}
         bank_loo = [
             x for x in bank
-            if x.get("id") != qid and _src(x) not in exclude_src
+            if x.get("id") not in excl_ids and _src(x) not in exclude_src
             and (keep_ids is None or x.get("id") in keep_ids)
         ]
+
+        def _txt(idx: int | None) -> str | None:
+            return opts[idx - 1] if isinstance(idx, int) and 1 <= idx <= len(opts) else None
+
         toks: list[tuple] = []
         try:
             ctx = build_context(q.get("title") or "", opts, question_bank=bank_loo, target_version=tv)
@@ -175,26 +224,43 @@ def main() -> None:
             ci = reponse_to_correct_index(sugg.reponse, len(opts))
             conf = sugg.confiance
             used_model = meta.get("model") or args.model or "?"
+            lat = float(meta.get("latency_s") or 0)
             toks.append((used_model, int(meta.get("input_tokens") or 0), int(meta.get("output_tokens") or 0)))
             escalated = False
-            if esc_model and (conf != "haute" or ci is None):
+            # Escalade Opus seulement si le budget global le permet (sinon on garde la base
+            # pour ne pas dépasser le temps imparti — "optimiser le temps de réflexion").
+            esc_allowed = (budget_s is None) or ((time.perf_counter() - t_start) < budget_s * args.escalate_cutoff_frac)
+            if esc_model and esc_allowed and (conf != "haute" or ci is None):
                 sugg2, meta2 = suggest_answer(
                     q.get("title") or "", opts, ctx,
                     question_id=qid, use_web_tools=args.web, target_version=tv, model=esc_model,
                 )
                 ci2 = reponse_to_correct_index(sugg2.reponse, len(opts))
                 m2 = meta2.get("model") or esc_model
+                lat += float(meta2.get("latency_s") or 0)
                 toks.append((m2, int(meta2.get("input_tokens") or 0), int(meta2.get("output_tokens") or 0)))
                 if ci2 is not None and rank.get(sugg2.confiance, 0) >= rank.get(conf, 0):
                     ci, conf, used_model, escalated = ci2, sugg2.confiance, m2, True
             return {"id": qid, "ok": (ci == gt), "suggested": ci, "truth": gt,
+                    "latency_s": round(lat, 2),
+                    "suggested_text": _txt(ci), "truth_text": _txt(gt),
+                    "title": (q.get("title") or "").strip(),
+                    "module": q.get("module"),
                     "confiance": conf, "model": used_model, "escalated": escalated,
                     "tier": q.get("tier"), "version": tv, "_toks": toks}
         except Exception as e:
-            return {"id": qid, "error": str(e)[:160], "truth": gt, "_toks": toks}
+            msg = str(e)
+            low = msg.lower()
+            is_timeout = any(k in low for k in (
+                "timeout", "timed out", "déla", "delai", "read timed out",
+                "deadline", "etimedout", "503", "529", "overloaded"))
+            return {"id": qid, "error": msg[:200], "timeout": is_timeout, "truth": gt,
+                    "title": (q.get("title") or "").strip(), "_toks": toks}
 
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
+    budget_s = args.time_budget_min * 60 if args.time_budget_min > 0 else None
+    stopped_budget = False
     done_n = 0
     with ThreadPoolExecutor(max_workers=max(1, args.concurrency)) as ex:
         futs = [ex.submit(_eval_one, q) for q in sample]
@@ -206,16 +272,45 @@ def main() -> None:
                 tok_out[m] = tok_out.get(m, 0) + to
             results.append(r)
             if "error" in r:
-                print(f"[{done_n}/{len(sample)}] #{r['id']} ⚠️ {r['error'][:80]}", flush=True)
+                tag = "⏱️ TIMEOUT" if r.get("timeout") else "⚠️"
+                print(f"[{done_n}/{len(sample)}] #{r['id']} {tag} {r['error'][:80]}", flush=True)
             else:
                 print(f"[{done_n}/{len(sample)}] #{r['id']} {'✅' if r['ok'] else '❌'} "
                       f"(sugg={r['suggested']} vrai={r['truth']} conf={r['confiance']}"
                       f"{' ↑opus' if r['escalated'] else ''})", flush=True)
+            if budget_s and (time.perf_counter() - t_start) > budget_s:
+                stopped_budget = True
+                print(f"⏱️ Budget {args.time_budget_min} min atteint — arrêt "
+                      f"({done_n}/{len(sample)} traitées, résultats partiels).", flush=True)
+                for f in futs:
+                    f.cancel()
+                break
 
-    n_correct = sum(1 for r in results if r.get("ok"))
     elapsed = time.perf_counter() - t_start
-    done = [r for r in results if "error" not in r]
+    n_test = len(sample)
+    done = [r for r in results if "error" not in r]          # avec suggestion exploitable
+    errs_api = [r for r in results if "error" in r]
+    timeouts = [r for r in errs_api if r.get("timeout")]
+    n_correct = sum(1 for r in done if r.get("ok"))
     acc = (n_correct / len(done) * 100) if done else 0.0
+
+    # --- Abstention : 0 pt (mieux que -0.5) si confiance <= seuil --abstain-below ---
+    rank = {"basse": 0, "moyenne": 1, "haute": 2}
+    abstain_level = {"none": -1, "basse": 0, "moyenne": 1}[args.abstain_below]
+
+    def is_abstain(r: dict) -> bool:
+        return rank.get(r.get("confiance"), 0) <= abstain_level
+
+    answered = [r for r in done if not is_abstain(r)]
+    abstained = [r for r in done if is_abstain(r)]
+    ans_correct = sum(1 for r in answered if r.get("ok"))
+    ans_wrong = len(answered) - ans_correct
+
+    def odoo(c: int, w: int) -> float:
+        return c * 1.0 - w * 0.5
+
+    score_abstain = odoo(ans_correct, ans_wrong)            # avec abstention
+    score_all = odoo(n_correct, len(done) - n_correct)      # si on répond à tout
 
     # Coût estimé
     cost = 0.0
@@ -223,32 +318,108 @@ def main() -> None:
         pin, pout = _price_for(m)
         cost += tok_in.get(m, 0) / 1e6 * pin + tok_out.get(m, 0) / 1e6 * pout
 
-    # Ventilation par version / par confiance
     def acc_by(key: str) -> dict:
         groups: dict[str, list[bool]] = {}
         for r in done:
             groups.setdefault(str(r.get(key)), []).append(bool(r["ok"]))
         return {k: f"{sum(v)}/{len(v)} ({round(sum(v)/len(v)*100)}%)" for k, v in sorted(groups.items())}
 
-    print("\n" + "=" * 56)
-    print(f"ACCURACY : {n_correct}/{len(done)} = {acc:.1f}%   (erreurs: {len(results)-len(done)})")
-    print(f"Durée : {elapsed:.0f}s ({elapsed/max(1,len(sample)):.1f}s/question)")
-    print(f"Jetons : { {m: (tok_in.get(m,0), tok_out.get(m,0)) for m in set(list(tok_in)+list(tok_out))} }")
-    print(f"Coût estimé : ${cost:.3f}")
-    print(f"Par version  : {acc_by('version')}")
-    print(f"Par tier     : {acc_by('tier')}")
-    print(f"Par confiance: {acc_by('confiance')}")
-    print("=" * 56)
+    lats = sorted(float(r.get("latency_s") or 0) for r in done)
+
+    def _pct(p: float) -> float:
+        return lats[min(len(lats) - 1, int(len(lats) * p))] if lats else 0.0
+
+    print("\n" + "=" * 64)
+    print(f"RÉSULTAT — held-out {n_test} Udemy en aveugle (autres Udemy + générées + doc gardées)")
+    print(f"  Traitées : {len(done)} avec suggestion | {len(errs_api)} erreurs API "
+          f"(dont {len(timeouts)} timeouts)")
+    print(f"  Exactitude brute (toutes suggestions) : {n_correct}/{len(done)} = {acc:.1f}%")
+    print("-" * 64)
+    print(f"  Politique d'abstention : confiance <= '{args.abstain_below}' → s'abstenir (0 pt)")
+    print(f"  Répondu : {len(answered)}  ({ans_correct} bonnes, {ans_wrong} mauvaises)  |  "
+          f"Abstentions : {len(abstained)}")
+    if answered:
+        print(f"  Exactitude sur répondu : {ans_correct}/{len(answered)} = {round(ans_correct/len(answered)*100)}%")
+    print(f"  SCORE Odoo (+1 / -0.5 / 0) AVEC abstention : {score_abstain:+.1f} / {n_test} "
+          f"({round(score_abstain/max(1,n_test)*100)}% du max)")
+    print(f"  SCORE Odoo si on répond à TOUT            : {score_all:+.1f} / {n_test}")
+    print("-" * 64)
+    print("  Par confiance — n | exactitude | EV/question si on répond (EV=1.5p-0.5) :")
+    for lvl in ("haute", "moyenne", "basse"):
+        grp = [r for r in done if r.get("confiance") == lvl]
+        if not grp:
+            continue
+        c = sum(1 for r in grp if r.get("ok"))
+        n = len(grp)
+        a = c / n
+        ev = 1.5 * a - 0.5
+        print(f"     {lvl:8s}: {n:3d} | {c}/{n} ({round(a*100)}%) | EV={ev:+.2f} "
+              f"{'→ répondre' if ev > 0 else '→ s’abstenir'}")
+    print("-" * 64)
+    print(f"  Par version : {acc_by('version')}")
+    print(f"  Par tier    : {acc_by('tier')}")
+    print(f"  Temps : total {elapsed:.0f}s | /question moy {(sum(lats)/len(lats) if lats else 0):.1f}s "
+          f"médiane {_pct(0.5):.1f}s p90 {_pct(0.9):.1f}s max {(max(lats) if lats else 0):.1f}s")
+    if budget_s:
+        print(f"  Budget global : {args.time_budget_min} min — "
+              f"{'⚠️ ATTEINT (arrêt anticipé)' if stopped_budget else 'respecté'}")
+    print(f"  Coût estimé : ${cost:.3f}")
+    print("=" * 64)
+
+    # --- Timeouts détectés ---
+    if timeouts:
+        print(f"\n=== ⏱️ TIMEOUTS détectés : {len(timeouts)} ===")
+        for r in timeouts:
+            print(f"   #{r['id']} : {r['error'][:120]}")
+
+    # --- Détail de TOUTES les erreurs répondues : banque vs Claude ---
+    wrongs = [r for r in answered if not r.get("ok")]
+    print(f"\n=== ERREURS RÉPONDUES (détail) : {len(wrongs)} — bonne réponse banque vs suggestion Claude ===")
+    for r in sorted(wrongs, key=lambda x: (str(x.get("version")), str(x.get("module")))):
+        v = str(r.get("version", "")).replace(".0", "")
+        print(f"#{r['id']} [v{v}] {r.get('module') or '-'} | conf={r.get('confiance')}"
+              f"{' ↑opus' if r.get('escalated') else ''} | {r.get('latency_s')}s")
+        print(f"   Q : {(r.get('title') or '')[:160]}")
+        print(f"   ✅ banque : {r.get('truth_text')}")
+        print(f"   ❌ Claude : {r.get('suggested_text')}")
+
+    # --- Abstentions (auraient rapporté quoi ?) ---
+    if abstained:
+        would_ok = sum(1 for r in abstained if r.get("ok"))
+        print(f"\n=== ABSTENTIONS : {len(abstained)} (confiance <= {args.abstain_below}) "
+              f"— dont {would_ok} auraient été justes / {len(abstained)-would_ok} fausses ===")
+        for r in sorted(abstained, key=lambda x: str(x.get("confiance"))):
+            print(f"   #{r['id']} conf={r.get('confiance')} "
+                  f"({'aurait eu juste' if r.get('ok') else 'aurait eu faux'}) : "
+                  f"{(r.get('title') or '')[:100]}")
+
+    if errs_api:
+        print(f"\n=== ERREURS API : {len(errs_api)} (non scorées) ===")
+        for r in errs_api:
+            print(f"   #{r['id']}{' ⏱️' if r.get('timeout') else ''} : {r['error'][:140]}")
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps({
-        "params": vars(args), "accuracy_pct": round(acc, 1),
-        "n_correct": n_correct, "n_done": len(done), "elapsed_s": round(elapsed, 1),
+        "params": vars(args),
+        "n_test": n_test, "n_done": len(done),
+        "accuracy_pct": round(acc, 1),
+        "n_correct": n_correct,
+        "abstain_below": args.abstain_below,
+        "answered": len(answered), "answered_correct": ans_correct, "answered_wrong": ans_wrong,
+        "abstained": len(abstained),
+        "odoo_score_abstain": score_abstain, "odoo_score_answer_all": score_all,
+        "odoo_max": n_test,
+        "n_timeouts": len(timeouts), "n_api_errors": len(errs_api),
+        "stopped_budget": stopped_budget,
+        "elapsed_s": round(elapsed, 1),
+        "latency_per_q": {"mean": round(sum(lats)/len(lats), 2) if lats else 0,
+                           "median": round(_pct(0.5), 2), "p90": round(_pct(0.9), 2),
+                           "max": round(max(lats), 2) if lats else 0},
         "cost_usd_est": round(cost, 3), "tokens_in": tok_in, "tokens_out": tok_out,
         "results": results,
     }, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Détail écrit : {out_path}")
+    print(f"\nDétail JSON écrit : {out_path}")
 
 
 if __name__ == "__main__":
