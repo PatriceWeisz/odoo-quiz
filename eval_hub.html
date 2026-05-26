@@ -56,6 +56,11 @@
   .opts { margin-top:.35rem; display:flex; flex-direction:column; gap:.12rem; }
   .opt { font-size:.7rem; color:#64748b; line-height:1.25; } .opt-ok{color:#166534;font-weight:700;} .opt-cl{background:#ede9fe;border-radius:4px;padding:0 .25rem;}
   .err-msg { color:#b91c1c; font-size:.85rem; margin-top:.5rem; }
+  .err-panel { background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:.7rem .9rem; margin:.8rem 0; }
+  .err-panel h4 { color:#9a3412; margin:0 0 .35rem; font-size:.9rem; }
+  .err-panel ul { margin:0; padding-left:1.2rem; font-size:.82rem; color:#374151; }
+  .err-panel li { margin:.25rem 0; line-height:1.35; }
+  .err-panel li code { background:#fef3c7; padding:0 .25rem; border-radius:3px; font-size:.78rem; color:#92400e; }
 </style></head>
 <body>
 <header>
@@ -128,6 +133,7 @@
     <div class="params" id="d-params"></div>
     <div class="bar"><div id="d-bar"></div></div>
     <div class="cards" id="d-cards"></div>
+    <div id="d-errors"></div>
     <table><thead><tr><th>#</th><th>Question</th><th>🤖 Claude</th><th>✅ Banque</th><th>Résultat</th><th>Conf.</th><th>Temps</th></tr></thead>
       <tbody id="d-rows"></tbody></table>
   </div>
@@ -166,7 +172,7 @@ async function loadRuns(){
     const p=r.params||{}, t=r.totals||{}; const st=r.status==='done'?'done':(r.status==='running'?'run':'absent');
     const lab=(p.label&&p.label.trim())?p.label:r.run_id;
     const acc=(t.accuracy_answered!=null?t.accuracy_answered+' %':'—');
-    const odoo=(t.odoo_abstain!=null?(t.odoo_abstain+' / '+(t.odoo_max||0)):'—');
+    const odoo=(function(){ if(t.odoo_abstain==null) return '—'; var m=t.odoo_max||0; var p=m>0?Math.round(t.odoo_abstain/m*100):0; var col=p>70?'#16a34a':'#dc2626'; return '<span style="color:'+col+';font-weight:700">'+t.odoo_abstain+' / '+m+' ('+p+' %)</span>'; })();
     return '<tr class="clk" data-id="'+r.run_id+'">'+
       '<td><strong>'+esc(lab)+'</strong><br><span class="muted">'+esc(p.started_at||'')+'</span></td>'+
       '<td><span class="pill '+st+'">'+(r.status==='done'?'terminé':(r.status==='running'?('en cours '+(r.done||0)+'/'+(r.n_test||0)):r.status))+'</span></td>'+
@@ -193,14 +199,58 @@ async function renderDetail(){
   const pct=d.n_test?Math.round((d.done||0)/d.n_test*100):0; document.getElementById('d-bar').style.width=pct+'%';
   var lats=(d.results||[]).map(function(r){return r.latency_s;}).filter(function(x){return x!=null;});
   var avg=lats.length?lats.reduce(function(a,b){return a+b;},0)/lats.length:(t.avg_latency_s||0);
+  var oMax = t.odoo_max || 0;
+  var oAbs = t.odoo_abstain != null ? t.odoo_abstain : 0;
+  var oAll = t.odoo_all != null ? t.odoo_all : 0;
+  var oPctA = oMax > 0 ? Math.round(oAbs / oMax * 100) : 0;
+  var oPctB = oMax > 0 ? Math.round(oAll / oMax * 100) : 0;
   document.getElementById('d-cards').innerHTML =
-    card('Score Odoo (abstention)', (t.odoo_abstain!=null?t.odoo_abstain:0)+' / '+(t.odoo_max||0), 'si répond à tout : '+(t.odoo_all!=null?t.odoo_all:0)) +
+    card('Score Odoo (abstention)', oAbs + ' / ' + oMax + ' (' + oPctA + ' %)', 'si répond à tout : ' + oAll + ' (' + oPctB + ' %)') +
     card('Précision (répondu)', (t.accuracy_answered!=null?t.accuracy_answered:0)+' %', (t.correct||0)+' bonnes / '+(t.wrong||0)+' fausses') +
     card('Répondu', (t.answered||0)+' / '+(d.done||0), (t.abstained||0)+' abstentions') +
     card('Timeouts', (t.timeouts||0), (t.api_errors||0)+' erreurs API') +
     card('Coût API', '$'+(t.cost_usd!=null?t.cost_usd:0), 'cumulé') +
     card('Temps total', fmtMS(t.elapsed_s||0), 'budget '+(p.budget_min||0)+' min') +
     card('Temps moy./réponse', fmtAvg(avg), 'réflexion / question');
+
+  // --- Panneau erreurs API ---
+  var errs = (d.results||[]).filter(function(r){return r.error;});
+  var ep = document.getElementById('d-errors');
+  if (errs.length && ep) {
+    var nTO = errs.filter(function(r){return r.timeout;}).length;
+    var nOther = errs.length - nTO;
+    // catégorisation simple par mots-clés du message
+    function classify(m){
+      m = (m||'').toLowerCase();
+      if (/overload|529/.test(m)) return 'API surchargée (529)';
+      if (/timeout|timed out|deadline/.test(m)) return 'Timeout';
+      if (/json|parse|schema|validation/.test(m)) return 'JSON / parsing';
+      if (/rate|429/.test(m)) return 'Rate limit (429)';
+      if (/503/.test(m)) return 'Service indispo (503)';
+      if (/network|connection|connexion/.test(m)) return 'Réseau';
+      return 'Autre';
+    }
+    var byCat = {};
+    errs.forEach(function(r){
+      var c = classify(r.error);
+      byCat[c] = (byCat[c]||0) + 1;
+    });
+    var catSum = Object.keys(byCat).sort().map(function(k){return k+': '+byCat[k];}).join(' · ');
+    var items = errs.map(function(r){
+      var icon = r.timeout ? '⏱️' : '⚠️';
+      var cat = classify(r.error);
+      return '<li>' + icon + ' <strong>#' + r.id + '</strong> <code>' + esc(cat) + '</code><br>'
+           + '<span class="muted">' + esc((r.title||'').slice(0,140)) + '</span><br>'
+           + '<span style="font-size:.78rem;color:#7c2d12">' + esc((r.error||'').slice(0,260)) + '</span></li>';
+    }).join('');
+    ep.innerHTML = '<div class="err-panel">'
+      + '<h4>⚠️ Erreurs API : ' + errs.length + ' question(s) non scorée(s) — ' + catSum + '</h4>'
+      + '<ul>' + items + '</ul>'
+      + '<div style="font-size:.74rem;color:#7c2d12;margin-top:.4rem">Ces questions comptent 0 point dans le score Odoo (comme une abstention). Causes typiques : surcharge temporaire de l\'API Anthropic (529), parsing JSON raté après retry, ou timeout réseau.</div>'
+      + '</div>';
+  } else if (ep) {
+    ep.innerHTML = '';
+  }
   const rows=(d.results||[]).slice().sort(function(a,b){return (b.seq||0)-(a.seq||0);});
   document.getElementById('d-rows').innerHTML = rows.map(function(r){
     return '<tr class="'+rowClass(r)+'"><td>'+(r.seq||'')+'</td>'+
