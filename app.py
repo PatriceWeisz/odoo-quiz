@@ -55,7 +55,7 @@ from quiz_llm import api_available, parse_json_value, run_prompt_with_images
 
 CONFIG_FILE = Path(__file__).parent / "config.json"
 # Incrémenter à chaque livraison (affichée dans l’UI : en-tête, onglet, pied de page ; F5 si auto_reload).
-APP_VERSION = "2.7.2"
+APP_VERSION = "2.7.3"
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12 Mo (captures)
@@ -309,10 +309,15 @@ HTML = """<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quiz Odoo — v{{ app_version }}</title>
 <style>
+  :root { --senedoo: #6E2D9E; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
          background: #f0f4ff; color: #1a1a2e; min-height: 100vh; }
-  header { background: #714B67; color: white; padding: 1rem 2rem;
+  .brand { display:flex; align-items:center; gap:.55rem; text-decoration:none; color:#fff; }
+  .brand img { height:30px; width:auto; display:block; background:#fff; border-radius:6px; padding:2px 5px; }
+  .brand .sep { opacity:.55; }
+  .brand .title { font-size:1rem; font-weight:700; }
+  header { background: var(--senedoo); color: white; padding: 1rem 2rem;
            display: flex; align-items: center; justify-content: space-between;
            flex-wrap: wrap; gap: .5rem .75rem; width: 100%; }
   header .title-block { display: flex; flex-direction: column; align-items: flex-start; gap: .1rem;
@@ -358,7 +363,7 @@ HTML = """<!DOCTYPE html>
   .lang-toggle { font-size: .8rem; background: #f1f5f9; border: 1px solid #e2e8f0;
                  border-radius: 6px; padding: .2rem .6rem; cursor: pointer;
                  color: #475569; font-weight: 600; }
-  .lang-toggle.active { background: #714B67; color: white; border-color: #714B67; }
+  .lang-toggle.active { background: var(--senedoo); color: white; border-color: var(--senedoo); }
   .progress-tools { display: flex; gap: .4rem; align-items: center; }
   .flag-btn { font-size: .8rem; background: #fff; border: 1px solid #fecaca; color: #b91c1c;
               border-radius: 6px; padding: .2rem .6rem; cursor: pointer; font-weight: 600; transition: .15s; }
@@ -368,7 +373,7 @@ HTML = """<!DOCTYPE html>
   .answer-btn { display: block; width: 100%; text-align: left; padding: .75rem 1rem;
                 margin-bottom: .5rem; border: 2px solid #e2e8f0; border-radius: 8px;
                 background: white; cursor: pointer; transition: .15s; }
-  .answer-btn:hover:not(:disabled) { border-color: #714B67; background: #faf5ff; }
+  .answer-btn:hover:not(:disabled) { border-color: var(--senedoo); background: #faf5ff; }
   .answer-btn.correct { border-color: #16a34a; background: #f0fdf4; }
   .answer-btn.wrong   { border-color: #dc2626; background: #fef2f2; }
   .answer-btn.missed  { border-color: #f59e0b; background: #fffbeb; }
@@ -377,7 +382,7 @@ HTML = """<!DOCTYPE html>
   #actions { margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap; }
   .btn { padding: .6rem 1.4rem; border-radius: 8px; border: none; cursor: pointer;
          font-size: .95rem; font-weight: 600; transition: .15s; }
-  .btn-primary { background: #714B67; color: white; }
+  .btn-primary { background: var(--senedoo); color: white; }
   .btn-primary:hover { background: #5a3a52; }
   .btn-secondary { background: #e2e8f0; color: #1a1a2e; }
   .btn-secondary:hover { background: #cbd5e1; }
@@ -385,15 +390,15 @@ HTML = """<!DOCTYPE html>
   .expl-block { padding: 1rem; font-size: .9rem; line-height: 1.6;
                 white-space: pre-wrap; border-radius: 0 8px 8px 0; }
   .expl-senedoo { background: #fff8e1; border-left: 4px solid #f59e0b; }
-  .expl-claude  { background: #f0f4ff; border-left: 4px solid #714B67; }
+  .expl-claude  { background: #f0f4ff; border-left: 4px solid var(--senedoo); }
   .expl-label { font-size: .75rem; font-weight: 700; text-transform: uppercase;
                 letter-spacing: .05em; margin-bottom: .4rem; opacity: .6; }
   #results { display: none; text-align: center; padding: 2rem; }
   #results h2 { font-size: 2rem; margin-bottom: 1rem; }
-  #results .final-score { font-size: 3rem; font-weight: bold; color: #714B67; }
+  #results .final-score { font-size: 3rem; font-weight: bold; color: var(--senedoo); }
   #results .stats { margin: 1.5rem 0; font-size: 1rem; color: #64748b; }
   #start-screen { text-align: center; padding: 3rem 1rem; }
-  #start-screen h2 { font-size: 1.8rem; margin-bottom: 1rem; color: #714B67; }
+  #start-screen h2 { font-size: 1.8rem; margin-bottom: 1rem; color: var(--senedoo); }
   #start-screen p { color: #64748b; margin-bottom: 2rem; }
   input[type=number] { padding: .5rem; border: 2px solid #e2e8f0; border-radius: 8px;
                        width: 80px; text-align: center; font-size: 1rem; }
@@ -403,11 +408,11 @@ HTML = """<!DOCTYPE html>
   #modal-overlay.open { display: flex; }
   #modal-box { background: white; border-radius: 12px; padding: 1.5rem; width: 90%;
                max-width: 600px; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
-  #modal-box h3 { font-size: 1.1rem; margin-bottom: 1rem; color: #714B67; }
+  #modal-box h3 { font-size: 1.1rem; margin-bottom: 1rem; color: var(--senedoo); }
   #modal-question { width: 100%; padding: .7rem; font-size: .95rem; border: 2px solid #e2e8f0;
                     border-radius: 8px; resize: vertical; min-height: 80px; font-family: inherit; }
   #modal-answer { margin-top: 1rem; padding: 1rem; background: #f0f4ff;
-                  border-left: 4px solid #714B67; border-radius: 0 8px 8px 0;
+                  border-left: 4px solid var(--senedoo); border-radius: 0 8px 8px 0;
                   font-size: .9rem; line-height: 1.6; white-space: pre-wrap; display: none; }
   #modal-actions { margin-top: 1rem; display: flex; gap: .75rem; justify-content: flex-end; }
   /* Boutons header */
@@ -442,10 +447,11 @@ HTML = """<!DOCTYPE html>
   </div>
 </div>
 <header>
-  <div class="title-block">
-    <h1>🎓 Quiz Odoo</h1>
-    <span class="app-version" title="Version de l'application">v{{ app_version }}</span>
-  </div>
+  <a class="brand" href="/" title="Accueil">
+    <img src="/static/senedoo-logo.png" alt="Senedoo" onerror="this.style.display='none'">
+    <span class="sep">·</span>
+    <span class="title">🎓 Quiz Odoo <span class="app-version" title="Version de l'application">v{{ app_version }}</span></span>
+  </a>
   <nav class="header-nav" aria-label="Navigation principale">
     <a class="header-btn" href="/" title="Accueil quiz" aria-current="page">🎓 Quiz</a>
     <a class="header-btn" href="/banque">📋 Banque</a>
@@ -521,9 +527,9 @@ HTML = """<!DOCTYPE html>
     </div>
     <button class="btn btn-primary" onclick="startQuiz()">Commencer</button>
     <p style="margin-top:1.5rem;font-size:.9rem">
-      <a href="/banque" style="color:#714B67;font-weight:600">📋 Banque de questions</a>
+      <a href="/banque" style="color:var(--senedoo);font-weight:600">📋 Banque de questions</a>
       <span style="color:#64748b"> — consulter ou modifier les entrées de <code>questions.json</code></span><br>
-      <a href="/import-capture" style="color:#714B67;font-weight:600">📷 Capture quiz (Udemy / Odoo)</a>
+      <a href="/import-capture" style="color:var(--senedoo);font-weight:600">📷 Capture quiz (Udemy / Odoo)</a>
       <span style="color:#64748b"> — importer une question depuis une capture (API Anthropic)</span>
     </p>
   </div>
@@ -1185,11 +1191,11 @@ ADMIN_GATE_HTML = """<!DOCTYPE html>
          justify-content:center; min-height:100vh; margin:0; }
   .box { background:#fff; padding:2rem; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,.1);
          max-width:420px; width:90%; text-align:center; }
-  h1 { color:#714B67; font-size:1.3rem; margin:0 0 1rem; }
+  h1 { color:var(--senedoo); font-size:1.3rem; margin:0 0 1rem; }
   p { color:#64748b; font-size:.92rem; line-height:1.5; }
   input { width:100%; padding:.6rem; border:2px solid #e2e8f0; border-radius:8px;
           font-size:1rem; margin:1rem 0; }
-  button { background:#714B67; color:#fff; border:none; border-radius:8px;
+  button { background:var(--senedoo); color:#fff; border:none; border-radius:8px;
            padding:.6rem 1.4rem; font-weight:600; cursor:pointer; font-size:.95rem; }
   code { background:#f1f5f9; padding:.1rem .3rem; border-radius:4px; }
 </style></head>
@@ -1215,10 +1221,14 @@ ADMIN_HTML = """<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Revue des questions — v{{ app_version }}</title>
 <style>
+  :root { --senedoo: #6E2D9E; }
+  .brand { display:flex; align-items:center; gap:.55rem; text-decoration:none; color:#fff; }
+  .brand img { height:28px; width:auto; display:block; background:#fff; border-radius:6px; padding:2px 4px; }
+  .brand .sep { opacity:.55; }
   * { box-sizing:border-box; margin:0; padding:0; }
   body { font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
          background:#f0f4ff; color:#1a1a2e; }
-  header { background:#714B67; color:#fff; padding:1rem 1.5rem; display:flex;
+  header { background:var(--senedoo); color:#fff; padding:1rem 1.5rem; display:flex;
            align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.6rem; }
   header h1 { font-size:1.2rem; }
   header .v { font-size:.78rem; opacity:.9; margin-left:.5rem; }
@@ -1229,7 +1239,7 @@ ADMIN_HTML = """<!DOCTYPE html>
              gap:.5rem; flex-wrap:wrap; align-items:center; }
   .tab { background:#fff; border:2px solid #e2e8f0; border-radius:999px; padding:.4rem 1rem;
          cursor:pointer; font-weight:600; font-size:.9rem; color:#475569; }
-  .tab.active { background:#714B67; color:#fff; border-color:#714B67; }
+  .tab.active { background:var(--senedoo); color:#fff; border-color:var(--senedoo); }
   .tab .n { font-weight:700; }
   .refresh { margin-left:auto; background:#e2e8f0; border:none; border-radius:8px;
              padding:.45rem .9rem; cursor:pointer; font-weight:600; font-size:.85rem; }
@@ -1259,10 +1269,10 @@ ADMIN_HTML = """<!DOCTYPE html>
   .aen { font-size:.92rem; }
   .afr { font-size:.82rem; color:#64748b; font-style:italic; }
   .expl { margin-top:.8rem; font-size:.88rem; }
-  .expl summary { cursor:pointer; color:#714B67; font-weight:600; }
+  .expl summary { cursor:pointer; color:var(--senedoo); font-weight:600; }
   .expl-s { background:#fff8e1; border-left:3px solid #f59e0b; padding:.5rem .7rem;
             border-radius:0 6px 6px 0; margin-top:.5rem; white-space:pre-wrap; }
-  .expl-c { background:#f0f4ff; border-left:3px solid #714B67; padding:.5rem .7rem;
+  .expl-c { background:#f0f4ff; border-left:3px solid var(--senedoo); padding:.5rem .7rem;
             border-radius:0 6px 6px 0; margin-top:.5rem; white-space:pre-wrap; }
   .actions { display:flex; gap:.6rem; flex-wrap:wrap; margin-top:1rem; }
   .btn { border:none; border-radius:8px; padding:.5rem 1rem; cursor:pointer;
@@ -1292,8 +1302,18 @@ ADMIN_HTML = """<!DOCTYPE html>
 </style></head>
 <body>
 <header>
-  <div><h1 style="display:inline">🔧 Revue des questions</h1><span class="v">v{{ app_version }}</span></div>
-  <nav><a href="/">🎓 Quiz</a><a href="/banque">📋 Banque</a></nav>
+  <a class="brand" href="/" title="Accueil">
+    <img src="/static/senedoo-logo.png" alt="Senedoo" onerror="this.style.display='none'">
+    <span class="sep">·</span>
+    <span>🔧 Revue <span class="v">v{{ app_version }}</span></span>
+  </a>
+  <nav>
+    <a href="/">🎓 Quiz</a>
+    <a href="/banque">📋 Banque</a>
+    <a href="/import-capture">📷 Capture</a>
+    <a href="/eval">📊 Éval Claude</a>
+    <a href="/admin/review" aria-current="page">🔧 Admin</a>
+  </nav>
 </header>
 <div class="toolbar">
   <button class="tab active" data-s="all" onclick="load('all')">Tout</button>

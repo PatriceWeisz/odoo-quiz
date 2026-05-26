@@ -3,7 +3,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Évaluations — prédictions Claude</title>
 <style>
-  :root { --p:#714B67; --p2:#8f5c82; }
+  :root { --senedoo:#6E2D9E; --p:#6E2D9E; --p2:#8E3FBC; }
+  .brand { display:flex; align-items:center; gap:.55rem; text-decoration:none; color:#fff; }
+  .brand img { height:28px; width:auto; display:block; background:#fff; border-radius:6px; padding:2px 4px; }
+  .brand .sep { opacity:.55; }
+  .navrow { display:flex; flex-wrap:wrap; gap:.35rem; }
+  .header-btn { background: rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); color:#fff;
+                border-radius:8px; padding:.35rem .55rem; font-size:.78rem; font-weight:600;
+                text-decoration:none; white-space:nowrap; }
+  .header-btn:hover { background: rgba(255,255,255,.25); }
   * { box-sizing:border-box; }
   body { margin:0; font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:#f5f3f7; color:#1a1a2e; }
   header { background:linear-gradient(135deg,var(--p),var(--p2)); color:#fff; padding:1rem 1.4rem; }
@@ -48,8 +56,21 @@
 </style></head>
 <body>
 <header>
-  <h1>📊 Évaluations — prédictions de Claude</h1>
-  <div class="sub">Lance des évaluations paramétrables et consulte le détail en ligne. <a href="/" style="color:#fff;text-decoration:underline">← Quiz</a></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem .75rem">
+    <a class="brand" href="/" title="Accueil">
+      <img src="/static/senedoo-logo.png" alt="Senedoo" onerror="this.style.display='none'">
+      <span class="sep">·</span>
+      <span><strong>📊 Évaluations</strong> — prédictions de Claude</span>
+    </a>
+    <nav class="navrow">
+      <a class="header-btn" href="/">🎓 Quiz</a>
+      <a class="header-btn" href="/banque">📋 Banque</a>
+      <a class="header-btn" href="/import-capture">📷 Capture</a>
+      <a class="header-btn" href="/eval" aria-current="page">📊 Éval Claude</a>
+      <a class="header-btn" href="/admin/review">🔧 Admin</a>
+    </nav>
+  </div>
+  <div class="sub" style="margin-top:.4rem">Lance des évaluations paramétrables et consulte le détail en ligne.</div>
 </header>
 <div class="wrap">
   <div class="toolbar">

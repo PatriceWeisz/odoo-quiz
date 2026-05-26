@@ -6,9 +6,13 @@
 <title>Capture quiz — v{{ app_version }}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --senedoo: #6E2D9E; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
          background: #f0f4ff; color: #1a1a2e; min-height: 100vh; }
-  header { background: #714B67; color: white; padding: .55rem 1.1rem;
+  .brand { display:flex; align-items:center; gap:.55rem; text-decoration:none; color:#fff; }
+  .brand img { height:28px; width:auto; display:block; background:#fff; border-radius:6px; padding:2px 4px; }
+  .brand .sep { opacity:.55; }
+  header { background: var(--senedoo); color: white; padding: .55rem 1.1rem;
            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
            gap: .5rem .75rem; width: 100%; }
   header .title-block { display: flex; flex-direction: row; align-items: baseline; gap: .65rem;
@@ -39,11 +43,11 @@
   }
   main { max-width: 560px; margin: 0 auto; padding: 1.5rem; }
   .box { background: white; border-radius: 12px; padding: 1.75rem; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
-  h2 { font-size: 1.1rem; color: #714B67; margin-bottom: .75rem; }
+  h2 { font-size: 1.1rem; color: var(--senedoo); margin-bottom: .75rem; }
   p { color: #64748b; font-size: .95rem; line-height: 1.55; margin: .75rem 0; }
   .steps { background: #faf5ff; border-radius: 8px; padding: 1rem; margin: 1rem 0;
            font-size: .88rem; color: #334155; line-height: 1.5; }
-  .steps strong { color: #714B67; }
+  .steps strong { color: var(--senedoo); }
   .capture-scroll-tip { margin-top: .85rem; padding: .65rem .75rem; background: #fff7ed;
     border: 1px solid #fdba74; border-radius: 6px; font-size: .84rem; }
   .capture-scroll-tip ul { margin: .4rem 0 0 1.1rem; padding: 0; }
@@ -52,7 +56,7 @@
   .capture-fullpage-box strong { color: #1e40af; }
   .capture-fullpage-box ol { margin: .45rem 0 0 1.1rem; padding: 0; }
   .capture-fullpage-box li { margin: .3rem 0; }
-  .bookmarklet-link { display: inline-block; margin: .5rem 0 .35rem; padding: .45rem .75rem; background: #714B67; color: #fff !important;
+  .bookmarklet-link { display: inline-block; margin: .5rem 0 .35rem; padding: .45rem .75rem; background: var(--senedoo); color: #fff !important;
     border-radius: 6px; font-weight: 600; font-size: .82rem; text-decoration: none; cursor: grab; }
   .bookmarklet-link:active { cursor: grabbing; }
   .btn-odoo-open { margin-top: .35rem; font-size: .82rem; padding: .4rem .65rem; border-radius: 6px; border: 1px solid #93c5fd;
@@ -63,14 +67,14 @@
                display: flex; flex-direction: column; align-items: center; justify-content: center;
                padding: 1rem; text-align: center; cursor: pointer; background: #fafafa;
                transition: .15s; margin: 1rem 0; outline: none; }
-  #pastezone:hover, #pastezone:focus { border-color: #714B67; background: #faf5ff; }
+  #pastezone:hover, #pastezone:focus { border-color: var(--senedoo); background: #faf5ff; }
   #pastezone.ready { border-style: solid; border-color: #16a34a; background: #f0fdf4; }
   #pastezone .hint { font-size: .95rem; color: #475569; font-weight: 600; }
   #pastezone .sub { font-size: .8rem; color: #64748b; margin-top: .35rem; }
   #preview { max-width: 100%; max-height: 220px; margin-top: .75rem; border-radius: 8px; display: none; }
   .btn { display: inline-block; padding: .65rem 1.4rem; border-radius: 8px; border: none;
          font-weight: 600; font-size: .95rem; cursor: pointer; text-decoration: none; }
-  .btn-primary { background: #714B67; color: white; }
+  .btn-primary { background: var(--senedoo); color: white; }
   .btn-primary:hover:not(:disabled) { background: #5a3a52; }
   .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
   .btn-secondary { background: #e2e8f0; color: #1a1a2e; margin-left: .5rem; }
@@ -113,7 +117,7 @@
     display: flex; flex-direction: column; gap: .4rem;
   }
   .progress-zoom-col figcaption {
-    font-size: .78rem; font-weight: 700; color: #714B67; letter-spacing: .02em;
+    font-size: .78rem; font-weight: 700; color: var(--senedoo); letter-spacing: .02em;
   }
   .progress-zoom-img {
     display: block; width: 100%; height: auto;
@@ -133,7 +137,7 @@
   .progress-main-col .step-bar { flex-shrink: 0; }
   .progress-main-col .progress-hint { flex-shrink: 0; }
   .progress-main-col .progress-log { flex: 1; min-height: 0; max-height: none; }
-  .progress-panel h3 { font-size: 1rem; color: #714B67; margin-bottom: .5rem; }
+  .progress-panel h3 { font-size: 1rem; color: var(--senedoo); margin-bottom: .5rem; }
   .step-bar {
     margin-bottom: .65rem;
   }
@@ -143,7 +147,7 @@
   }
   .step-bar-fill {
     height: 100%; width: 0%; border-radius: 99px;
-    background: linear-gradient(90deg, #5a3a52, #714B67 40%, #8b5cf6);
+    background: linear-gradient(90deg, #4a1f63, var(--senedoo) 40%, #b478ec);
     transition: width .4s cubic-bezier(.4, 0, .2, 1);
   }
   .step-bar-nodes {
@@ -164,11 +168,11 @@
   }
   .step-node.pending .step-label { color: #94a3b8; }
   .step-node.active .step-bubble {
-    background: #ede9fe; border-color: #714B67; color: #714B67;
+    background: #ede9fe; border-color: var(--senedoo); color: var(--senedoo);
     box-shadow: 0 0 0 3px rgba(113, 75, 103, .22);
     animation: stepPulse 1.25s ease-in-out infinite;
   }
-  .step-node.active .step-label { color: #714B67; }
+  .step-node.active .step-label { color: var(--senedoo); }
   @keyframes stepPulse {
     50% { box-shadow: 0 0 0 5px rgba(113, 75, 103, .12); }
   }
@@ -207,25 +211,26 @@
     background: #fafafa; transition: .15s;
   }
   .source-pick input { position: absolute; opacity: 0; pointer-events: none; }
-  .source-pick input:checked + span { color: #714B67; }
+  .source-pick input:checked + span { color: var(--senedoo); }
   .source-pick label:has(input:checked) {
-    border-color: #714B67; background: #faf5ff; box-shadow: 0 0 0 2px rgba(113,75,103,.15);
+    border-color: var(--senedoo); background: #faf5ff; box-shadow: 0 0 0 2px rgba(113,75,103,.15);
   }
 </style>
 </head>
 <body>
 <header>
-  <div class="title-block">
-    <h1>📷 Capture quiz</h1>
-    <span class="app-version" title="Version">v{{ app_version }}</span>
-  </div>
+  <a class="brand" href="/" title="Accueil">
+    <img src="/static/senedoo-logo.png" alt="Senedoo" onerror="this.style.display='none'">
+    <span class="sep">·</span>
+    <span>📷 Capture <span class="app-version">v{{ app_version }}</span></span>
+  </a>
   <nav class="header-nav" aria-label="Navigation principale">
     <a class="header-btn" href="/">🎓 Quiz</a>
     <a class="header-btn" href="/banque">📋 Banque</a>
     <a class="header-btn" href="/import-capture" aria-current="page">📷 Capture</a>
+    <a class="header-btn" href="/eval" title="Évaluations Claude">📊 Éval Claude</a>
+    <a class="header-btn" href="/admin/review" title="Revue des questions">🔧 Admin</a>
     <a class="header-btn" href="/?openAsk=1">💬 Question</a>
-    <a class="header-btn" href="/" onclick="return confirm('Retour au quiz et recommencer ?');">↺ Recommencer</a>
-    <span class="header-timer" title="Pendant un quiz">⏱ --:--</span>
   </nav>
 </header>
 <main>

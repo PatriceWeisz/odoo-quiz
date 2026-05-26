@@ -6,9 +6,13 @@
 <title>Banque — v{{ app_version }}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --senedoo: #6E2D9E; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
          background: #f0f4ff; color: #1a1a2e; min-height: 100vh; }
-  header { background: #714B67; color: white; padding: .55rem 1.1rem;
+  .brand { display:flex; align-items:center; gap:.55rem; text-decoration:none; color:#fff; }
+  .brand img { height:28px; width:auto; display:block; background:#fff; border-radius:6px; padding:2px 4px; }
+  .brand .sep { opacity:.55; }
+  header { background: var(--senedoo); color: white; padding: .55rem 1.1rem;
            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
            gap: .5rem .75rem; width: 100%; }
   header .title-block { display: flex; flex-direction: row; align-items: baseline; gap: .65rem;
@@ -43,7 +47,7 @@
          grid-template-columns: minmax(260px, 1fr) minmax(0, 2.2fr); gap: 1rem; align-items: start; }
   @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
   .panel { background: white; border-radius: 12px; padding: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
-  h2 { font-size: 1rem; color: #714B67; margin-bottom: .75rem; }
+  h2 { font-size: 1rem; color: var(--senedoo); margin-bottom: .75rem; }
   input[type="search"], input[type="text"], select {
     width: 100%; padding: .5rem .65rem; border: 1px solid #e2e8f0; border-radius: 8px; font: inherit; }
   textarea {
@@ -56,15 +60,15 @@
   .list button { display: block; width: 100%; text-align: left; padding: .55rem .6rem; margin-bottom: .35rem;
                  border: 1px solid #e2e8f0; border-radius: 8px; background: #fafafa; cursor: pointer;
                  font-size: .82rem; line-height: 1.35; }
-  .list button:hover { border-color: #714B67; background: #faf5ff; }
-  .list button.active { border-color: #714B67; background: #f3e8ff; }
+  .list button:hover { border-color: var(--senedoo); background: #faf5ff; }
+  .list button.active { border-color: var(--senedoo); background: #f3e8ff; }
   .muted { font-size: .75rem; color: #64748b; margin-top: .2rem; }
   .bank-filters { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin-top: .5rem; }
   .bank-filters select { font-size: .8rem; padding: .38rem .45rem; }
-  #topicf optgroup { font-weight: 700; color: #714B67; }
+  #topicf optgroup { font-weight: 700; color: var(--senedoo); }
   #topicf option { font-weight: 400; color: #1a1a2e; }
   .filters-meta { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .4rem; min-height: 1.1rem; }
-  .link-btn { background: none; border: none; color: #714B67; font-size: .75rem; font-weight: 600;
+  .link-btn { background: none; border: none; color: var(--senedoo); font-size: .75rem; font-weight: 600;
               cursor: pointer; padding: 0; text-decoration: underline; }
   .badge-status-verified_by_judge { background: #dcfce7; color: #166534; }
   .badge-status-unverified { background: #fef9c3; color: #854d0e; }
@@ -75,7 +79,7 @@
   .badge-src-claude { background: #fae8ff; color: #86198f; }
   .badge-src-user { background: #dcfce7; color: #166534; }
   .btn { padding: .55rem 1.1rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: .9rem; }
-  .btn-primary { background: #714B67; color: white; }
+  .btn-primary { background: var(--senedoo); color: white; }
   .btn-secondary { background: #e2e8f0; color: #1a1a2e; margin-right: .5rem; }
   .row { margin-bottom: 1rem; }
   label { font-size: .78rem; font-weight: 600; color: #475569; display: block; margin-bottom: .25rem; }
@@ -91,7 +95,7 @@
   }
   .lang-cell { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
   .lang-tag { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
-              color: #714B67; background: #f3e8ff; padding: .12rem .4rem; border-radius: 4px; width: fit-content; }
+              color: var(--senedoo); background: #f3e8ff; padding: .12rem .4rem; border-radius: 4px; width: fit-content; }
   /* Réponse : EN | FR sur une ligne (très proches), bonne réponse à droite ; fond vert si cochée */
   .ans-block {
     display: grid;
@@ -206,27 +210,28 @@
 </head>
 <body>
 <header>
-  <div class="title-block">
-    <h1>📋 Banque de questions</h1>
-    <span class="app-version">v{{ app_version }}</span>
-  </div>
+  <a class="brand" href="/" title="Accueil">
+    <img src="/static/senedoo-logo.png" alt="Senedoo" onerror="this.style.display='none'">
+    <span class="sep">·</span>
+    <span>📋 Banque <span class="app-version">v{{ app_version }}</span></span>
+  </a>
   <nav class="header-nav" aria-label="Navigation principale">
-    <div class="cert-bar" aria-label="Certification cible">
-      <label for="cert-select">Certif.</label>
-      <select id="cert-select" title="Version Odoo visée pour l'entraînement">
-        <option value="18.0"{% if target_certification == '18.0' %} selected{% endif %}>v18</option>
-        <option value="19.0"{% if target_certification == '19.0' %} selected{% endif %}>v19</option>
-      </select>
-      <span class="cert-count" id="cert-count">{{ cert_question_count }} questions pour la cert v{{ target_certification|replace('.0','') }}</span>
-    </div>
     <a class="header-btn" href="/">🎓 Quiz</a>
     <a class="header-btn" href="/banque" aria-current="page">📋 Banque</a>
     <a class="header-btn" href="/import-capture">📷 Capture</a>
+    <a class="header-btn" href="/eval" title="Évaluations Claude">📊 Éval Claude</a>
+    <a class="header-btn" href="/admin/review" title="Revue des questions">🔧 Admin</a>
     <a class="header-btn" href="/?openAsk=1">💬 Question</a>
-    <a class="header-btn" href="/" onclick="return confirm('Retour au quiz et recommencer ?');">↺ Recommencer</a>
-    <span class="header-timer" title="Pendant un quiz">⏱ --:--</span>
   </nav>
 </header>
+<div class="cert-bar-strip" style="background:#faf5ff;border-bottom:1px solid #e9d5ff;padding:.5rem 1.1rem;display:flex;gap:.6rem;align-items:center;font-size:.85rem;color:#374151">
+  <label for="cert-select" style="font-weight:600;color:var(--senedoo)">Certification cible</label>
+  <select id="cert-select" style="padding:.25rem .4rem;border:1px solid #cbd5e1;border-radius:6px">
+    <option value="18.0"{% if target_certification == '18.0' %} selected{% endif %}>v18</option>
+    <option value="19.0"{% if target_certification == '19.0' %} selected{% endif %}>v19</option>
+  </select>
+  <span class="cert-count" id="cert-count" style="margin-left:.5rem;color:#64748b">{{ cert_question_count }} questions pour la cert v{{ target_certification|replace('.0','') }}</span>
+</div>
 <main>
   <div class="panel">
     <h2>Liste</h2>
