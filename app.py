@@ -55,7 +55,7 @@ from quiz_llm import api_available, parse_json_value, run_prompt_with_images
 
 CONFIG_FILE = Path(__file__).parent / "config.json"
 # Incrémenter à chaque livraison (affichée dans l’UI : en-tête, onglet, pied de page ; F5 si auto_reload).
-APP_VERSION = "2.7.4"
+APP_VERSION = "2.7.5"
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12 Mo (captures)
@@ -1261,6 +1261,14 @@ ADMIN_HTML = """<!DOCTYPE html>
   .tab .n { font-weight:700; }
   .refresh { margin-left:auto; background:#e2e8f0; border:none; border-radius:8px;
              padding:.45rem .9rem; cursor:pointer; font-weight:600; font-size:.85rem; }
+  .pager { max-width:920px; margin:.6rem auto 0; padding:0 1rem; display:flex; gap:.6rem;
+           flex-wrap:wrap; align-items:center; justify-content:center; font-size:.85rem; color:#475569; }
+  .pg-btn { background:var(--senedoo); color:#fff; border:none; border-radius:8px;
+            padding:.4rem .8rem; cursor:pointer; font-weight:600; font-size:.85rem; }
+  .pg-btn:disabled { background:#cbd5e1; color:#64748b; cursor:not-allowed; }
+  .pg-info { display:flex; align-items:center; gap:.35rem; }
+  .pg-info input, .pg-info select { padding:.25rem .35rem; border:1px solid #cbd5e1;
+                                     border-radius:6px; font:inherit; }
   main { max-width:920px; margin:1rem auto 3rem; padding:0 1rem; }
   .empty { text-align:center; color:#64748b; padding:3rem 1rem; font-size:1.1rem; }
   .card { background:#fff; border-radius:12px; padding:1.25rem 1.4rem; margin-bottom:1.1rem;
@@ -1342,10 +1350,12 @@ ADMIN_HTML = """<!DOCTYPE html>
   <button class="tab" data-s="flagged" onclick="load('flagged')">Signalées <span class="n" id="c-flagged">0</span></button>
   <button class="refresh" onclick="load(CURRENT)">↻ Rafraîchir</button>
 </div>
+<div id="pager-top" class="pager"></div>
 <main><div id="list"></div></main>
+<div id="pager-bottom" class="pager" style="margin:1rem auto 2rem"></div>
 <div class="toast" id="toast"></div>
 <script>
-let CACHE = {}, CURRENT = 'all';
+let CACHE = {}, CURRENT = 'all', PAGE = 1, PAGE_SIZE = 100, TOTAL = 0, PAGES = 0;
 
 function el(tag, props, kids) {
   const n = document.createElement(tag);
@@ -1364,14 +1374,19 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('show'), 1800);
 }
 
-async function load(status) {
-  CURRENT = status || 'all';
+async function load(status, page) {
+  const prev = CURRENT;
+  CURRENT = status || CURRENT || 'all';
+  if (status !== undefined && status !== prev) PAGE = 1;
+  if (typeof page === 'number' && page > 0) PAGE = page;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.s === CURRENT));
   const list = document.getElementById('list');
   list.textContent = 'Chargement…';
   let data;
   try {
-    const res = await fetch('/api/admin/review?status=' + encodeURIComponent(CURRENT));
+    const u = '/api/admin/review?status=' + encodeURIComponent(CURRENT)
+            + '&page=' + PAGE + '&page_size=' + PAGE_SIZE;
+    const res = await fetch(u);
     if (res.status === 403) { list.textContent = 'Session expirée — rechargez la page avec le jeton (?token=…).'; return; }
     data = await res.json();
   } catch (e) { list.textContent = 'Erreur réseau : ' + e; return; }
@@ -1379,7 +1394,31 @@ async function load(status) {
   document.getElementById('c-flagged').textContent = data.counts.flagged;
   CACHE = {};
   (data.questions || []).forEach(q => { CACHE[q.id] = q; });
+  TOTAL = data.total || 0; PAGES = data.pages || 0;
+  PAGE = data.page || PAGE; PAGE_SIZE = data.page_size || PAGE_SIZE;
   render(data.questions || []);
+  renderPager();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function renderPager() {
+  const html = (function() {
+    if (!TOTAL) return '';
+    if (PAGES <= 1) return '<span class="pg-info">' + TOTAL + ' question(s)</span>';
+    const prevDis = PAGE <= 1 ? 'disabled' : '';
+    const nextDis = PAGE >= PAGES ? 'disabled' : '';
+    return ''
+      + '<button class="pg-btn" ' + prevDis + ' onclick="load(undefined,' + (PAGE-1) + ')">← Précédent</button>'
+      + '<span class="pg-info">Page <input type="number" min="1" max="' + PAGES + '" value="' + PAGE + '" onchange="load(undefined, parseInt(this.value)||1)" style="width:4rem"> / ' + PAGES + ' — ' + TOTAL + ' au total</span>'
+      + '<button class="pg-btn" ' + nextDis + ' onclick="load(undefined,' + (PAGE+1) + ')">Suivant →</button>'
+      + '<span class="pg-info">Par page : <select onchange="PAGE_SIZE=parseInt(this.value)||100; load(undefined,1)">'
+      + [25,50,100,200].map(function(n){ return '<option value="'+n+'"'+(n===PAGE_SIZE?' selected':'')+'>'+n+'</option>'; }).join('')
+      + '</select></span>';
+  })();
+  const top = document.getElementById('pager-top');
+  const bot = document.getElementById('pager-bottom');
+  if (top) top.innerHTML = html;
+  if (bot) bot.innerHTML = html;
 }
 
 function render(items) {
@@ -3278,7 +3317,17 @@ def api_admin_review():
     want = (request.args.get("status") or "all").strip().lower()
     if want not in ("all", "unverified", "flagged"):
         want = "all"
-    out = []
+    try:
+        page = max(1, int(request.args.get("page") or 1))
+    except ValueError:
+        page = 1
+    try:
+        page_size = int(request.args.get("page_size") or 100)
+    except ValueError:
+        page_size = 100
+    page_size = max(10, min(500, page_size))
+
+    matching = []
     counts = {"unverified": 0, "flagged": 0}
     for q in ALL_QUESTIONS:
         st = (q.get("status") or "").strip()
@@ -3288,6 +3337,21 @@ def api_admin_review():
             continue
         if want != "all" and st != want:
             continue
+        matching.append(q)
+    matching.sort(key=lambda q: (
+        0 if (q.get("status") or "").strip() == "flagged" else 1,
+        q.get("id") if isinstance(q.get("id"), int) else 0,
+    ))
+    total = len(matching)
+    pages = max(1, (total + page_size - 1) // page_size) if total else 0
+    if page > pages and pages > 0:
+        page = pages
+    start = (page - 1) * page_size
+    slice_ = matching[start : start + page_size]
+
+    out = []
+    for q in slice_:
+        st = (q.get("status") or "").strip()
         out.append({
             "id": q.get("id"),
             "title": q.get("title"),
@@ -3312,11 +3376,10 @@ def api_admin_review():
                 for a in (q.get("answers") or [])
             ],
         })
-    out.sort(key=lambda r: (
-        0 if r["status"] == "flagged" else 1,
-        r["id"] if isinstance(r["id"], int) else 0,
-    ))
-    return jsonify({"questions": out, "counts": counts})
+    return jsonify({
+        "questions": out, "counts": counts,
+        "total": total, "page": page, "page_size": page_size, "pages": pages,
+    })
 
 
 @app.route("/api/admin/questions/<q_id>/validate", methods=["POST"])
