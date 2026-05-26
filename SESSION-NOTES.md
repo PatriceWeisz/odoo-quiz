@@ -7,6 +7,68 @@ document liste les **écarts**, **décisions prises pendant l'exécution**, et l
 
 ---
 
+## 🆕 SESSION 26 mai 2026 — Upgrade VPS Hetzner **CX23 → CX33** + hub d'évals + correctifs OOM
+
+### Contexte
+Après bascule au modèle d'embedding **mxbai-large-v1** (dim 1024) puis nettoyage mojibake
+de 22 titres, le warmup gunicorn re-embedde toute la banque au prochain restart
+(fingerprint changé). Avec **fastembed batch par défaut 256** + mxbai-large, ce warmup
+allouait **>3 Go** d'arena onnxruntime → **OOM** sur l'ancien VPS CX23 (3,7 Go RAM).
+Le hub d'évals /eval (lancement subprocess depuis Flask) chargeait une 2ᵉ copie du
+modèle → aggravait le problème.
+
+### VPS désormais
+- Hetzner Cloud, projet **« Odoo-quiz »**, serveur `odoo-quiz` **id `132093560`**,
+  IPv4 **178.104.211.37**, zone **eu-central / Falkenstein**.
+- Type : **cx33** (4 vCPU, 8 Go RAM, 80 Go disque NVMe) — **6,49 €/mois HT**.
+  ⚠️ La ligne actuelle Hetzner est **cx2X/cx3X gen 3** (cx23 / cx33 / cx43 / cx53),
+  pas cx22 / cx32. Ne pas confondre avec les comparatifs web qui mentionnent CX22/CX32.
+
+### Procédure rescale via API Hetzner (à reproduire si besoin)
+1. Console Hetzner → projet **Odoo-quiz** → **Security → API Tokens** → *Generate*
+   (Read & Write), description ex. `rescale-claude`.
+2. Sauver le token côté Mac (jamais en clair dans le chat) :
+   ```bash
+   umask 077; printf '%s' 'LE_TOKEN' > ~/odoo-quiz/.hetzner-token
+   ```
+   (Le fichier `.hetzner-token` est dans le `.gitignore`.)
+3. Appels API (via le pont) — bien parser le JSON avec un **heredoc Python séparé**,
+   ne pas mélanger `curl | python3 <<'PY'` (le heredoc remplace stdin du pipe) :
+   ```bash
+   TOKEN=$(cat ~/odoo-quiz/.hetzner-token); API='https://api.hetzner.cloud/v1'; SID=132093560
+   curl -X POST -H "Authorization: Bearer $TOKEN" "$API/servers/$SID/actions/poweroff"
+   # attendre status=off
+   curl -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+     -d '{"server_type":"cx33","upgrade_disk":true}' "$API/servers/$SID/actions/change_type"
+   # poller /v1/actions/<id> jusqu'à status=success
+   curl -X POST -H "Authorization: Bearer $TOKEN" "$API/servers/$SID/actions/poweron"
+   # attendre status=running, puis SSH verify
+   ```
+4. Cleanup : `rm ~/odoo-quiz/.hetzner-token` + révoquer le token dans la console.
+
+⚠️ `upgrade_disk: true` est **obligatoire** pour passer à un type à disque plus
+gros (cx23 40 Go → cx33 80 Go) ; le disque est ensuite **irréversible**. Le
+CPU/RAM, eux, sont réversibles.
+
+### Correctifs livrés (commits associés)
+- `bank_embeddings._embed_texts` : `batch_size=32` (au lieu du défaut fastembed 256).
+  Borne le pic mémoire du warmup même si le fingerprint change à nouveau.
+- Gunicorn : **`--workers 1 --threads 4`** (au lieu de 2/2) dans
+  `/etc/systemd/system/odoo-quiz.service` — une seule copie du modèle en RAM. Sur
+  CX33 (8 Go) on peut repasser à 2/2 sans risque si on veut.
+- Hub d'évals `/eval` : garde anti-concurrence **synchrone** (écrit le fichier
+  `running` avant `Popen`) + **pré-check `MemAvailable ≥ 900 Mo`** avant lancement.
+  Stockage par run dans `data/evals/<run_id>.json`.
+
+### État final v2.7.1
+- VPS : cx33 (4 vCPU / 7,6 Gi RAM / 75 Go libres / Falkenstein).
+- Service `odoo-quiz` actif, `bank_rag.embeddings = true`, modèle mxbai-large-v1.
+- Hub d'évals opérationnel à `/eval` (lancer / historique / détail).
+- Banque : 3 561 questions (mojibake nettoyé), index mxbai dim 1024.
+- Doc Odoo : 5 230 chunks dim 1024.
+
+---
+
 ## 🆕 SESSION 24 mai 2026 (soir) — Mode « test des prédictions de Claude » au quiz (v2.6.0)
 
 **But (demande Patrice)** : passer un quiz aléatoire en choisissant **Source = Udemy**,

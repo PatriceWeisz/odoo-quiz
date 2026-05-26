@@ -183,7 +183,11 @@ def _embed_texts(texts: list[str]) -> np.ndarray | None:
     if model is None:
         return None
     try:
-        vecs = np.array(list(model.embed(texts)), dtype=np.float32)
+        # batch_size borné (32) pour limiter le pic mémoire avec un gros modèle
+        # type mxbai-large-v1 : sans cette borne, fastembed prend batch_size=256
+        # et peut allouer >3 Go d'arena onnxruntime (cause d'OOM observée le 26 mai
+        # 2026 sur le VPS Hetzner CX23/4 Go avant l'upgrade en CX33).
+        vecs = np.array(list(model.embed(texts, batch_size=32)), dtype=np.float32)
     except Exception as exc:
         log.warning("Embedding batch échoué : %s", exc)
         return None
