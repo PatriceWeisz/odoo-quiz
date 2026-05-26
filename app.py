@@ -55,7 +55,7 @@ from quiz_llm import api_available, parse_json_value, run_prompt_with_images
 
 CONFIG_FILE = Path(__file__).parent / "config.json"
 # Incrémenter à chaque livraison (affichée dans l’UI : en-tête, onglet, pied de page ; F5 si auto_reload).
-APP_VERSION = "2.7.1"
+APP_VERSION = "2.7.2"
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12 Mo (captures)
@@ -447,35 +447,14 @@ HTML = """<!DOCTYPE html>
     <span class="app-version" title="Version de l'application">v{{ app_version }}</span>
   </div>
   <nav class="header-nav" aria-label="Navigation principale">
-    <div class="cert-bar" style="display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .55rem;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);border-radius:8px;padding:.35rem .5rem;font-size:.78rem;grid-column:1/-1">
-      <label for="quiz-cert-select" style="font-weight:600;margin:0">Certif.</label>
-      <select id="quiz-cert-select" style="background:#fff;color:#1a1a2e;border:none;border-radius:6px;padding:.25rem .4rem;font:inherit;font-weight:600">
-        <option value="18.0"{% if target_certification == '18.0' %} selected{% endif %}>v18</option>
-        <option value="19.0"{% if target_certification == '19.0' %} selected{% endif %}>v19</option>
-      </select>
-      <label for="quiz-source-select" style="font-weight:600;margin:0 0 0 .35rem">Source</label>
-      <select id="quiz-source-select" style="background:#fff;color:#1a1a2e;border:none;border-radius:6px;padding:.25rem .4rem;font:inherit;font-weight:600">
-        <option value="udemy" selected>Udemy</option>
-        <option value="">Toutes</option>
-        <option value="claude">Générées (Claude)</option>
-      </select>
-      <label for="quiz-module-select" style="font-weight:600;margin:0 0 0 .35rem">Module</label>
-      <select id="quiz-module-select" style="background:#fff;color:#1a1a2e;border:none;border-radius:6px;padding:.25rem .4rem;font:inherit;font-weight:600;max-width:280px">
-        <option value="__all__">Tous les modules</option>
-      </select>
-      <label style="font-size:.72rem;display:flex;align-items:center;gap:.25rem;margin:0 0 0 .35rem;cursor:pointer" title="Inclure les questions générées notées 3/5 par le judge (qualité moyenne)">
-        <input type="checkbox" id="quiz-include-hidden" style="margin:0">
-        inclure unverified
-      </label>
-      <span id="quiz-cert-count">— sélectionne un module —</span>
-    </div>
     <a class="header-btn" href="/" title="Accueil quiz" aria-current="page">🎓 Quiz</a>
     <a class="header-btn" href="/banque">📋 Banque</a>
     <a class="header-btn" href="/import-capture">📷 Capture</a>
+    <a class="header-btn" href="/eval" title="Évaluations Claude : lancer un test et consulter l'historique">📊 Éval Claude</a>
     <a class="header-btn" href="/admin/review" title="Revue des questions (accès restreint)">🔧 Admin</a>
     <button type="button" class="header-btn" onclick="openModal()">💬 Question</button>
-    <button type="button" class="header-btn" onclick="if(confirm('Recommencer un nouveau quiz ?')) location.reload()">↺ Recommencer</button>
-    <div id="timer" title="Temps écoulé (quiz)">00:00</div>
+    <button type="button" class="header-btn" id="btn-new-quiz" onclick="if(confirm('Démarrer un nouveau quiz ?')) location.reload()" style="display:none" title="Recommencer un quiz (revenir à l'écran de configuration)">↺ Nouveau quiz</button>
+    <div id="timer" title="Temps du quiz" style="display:none">00:00</div>
   </nav>
 </header>
 <div id="score-bar" style="display:none">
@@ -488,7 +467,34 @@ HTML = """<!DOCTYPE html>
   <div id="start-screen">
     <h2>Quiz Odoo</h2>
     <p id="start-info">{{ total }} questions disponibles.<br>Scoring : +1 bonne / −1 mauvaise / 0 saut.</p>
-    <div style="display:flex;flex-direction:column;gap:.9rem;max-width:420px;margin:0 auto 1.4rem;text-align:left">
+    <div style="display:flex;flex-direction:column;gap:.9rem;max-width:480px;margin:0 auto 1.4rem;text-align:left">
+      <label style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+        <span>Certification cible</span>
+        <select id="quiz-cert-select" style="padding:.35rem .4rem;border:1px solid #cbd5e1;border-radius:6px;font:inherit">
+          <option value="18.0"{% if target_certification == '18.0' %} selected{% endif %}>Odoo v18</option>
+          <option value="19.0"{% if target_certification == '19.0' %} selected{% endif %}>Odoo v19</option>
+        </select>
+      </label>
+      <label style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+        <span>Source</span>
+        <select id="quiz-source-select" style="padding:.35rem .4rem;border:1px solid #cbd5e1;border-radius:6px;font:inherit">
+          <option value="udemy" selected>Udemy</option>
+          <option value="">Toutes</option>
+          <option value="claude">Générées (Claude)</option>
+        </select>
+      </label>
+      <label style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+        <span>Module</span>
+        <select id="quiz-module-select" style="padding:.35rem .4rem;border:1px solid #cbd5e1;border-radius:6px;font:inherit;max-width:260px">
+          <option value="__all__">Tous les modules</option>
+        </select>
+      </label>
+      <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.88rem;color:#475569" title="Inclure les questions générées notées 3/5 par le judge (qualité moyenne)">
+        <input type="checkbox" id="quiz-include-hidden" style="margin:0">
+        <span>Inclure les questions non vérifiées (unverified)</span>
+      </label>
+      <div id="quiz-cert-count" style="font-size:.82rem;color:#475569;padding:.1rem 0">— sélectionne un module —</div>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:.3rem 0">
       <label style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
         <span>Nombre de questions</span>
         <input type="number" id="q-count" value="20" min="1" max="{{ total_bank }}" style="width:6rem">
@@ -732,6 +738,8 @@ async function startQuiz() {
   document.getElementById('start-screen').style.display = 'none';
   document.getElementById('score-bar').style.display = 'flex';
   document.getElementById('question-card').style.display = 'block';
+  document.getElementById('timer').style.display = '';
+  document.getElementById('btn-new-quiz').style.display = '';
   startTime = Date.now();
   timerInterval = setInterval(updateTimer, 1000);
   updateTimer();
