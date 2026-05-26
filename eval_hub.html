@@ -4,17 +4,20 @@
 <title>Évaluations — prédictions Claude</title>
 <style>
   :root { --senedoo:#6E2D9E; --p:#6E2D9E; --p2:#8E3FBC; }
-  .brand { display:flex; align-items:center; gap:.55rem; text-decoration:none; color:#fff; }
-  .brand img { height:28px; width:auto; display:block; background:#fff; border-radius:6px; padding:2px 4px; }
-  .brand .sep { opacity:.55; }
-  .navrow { display:flex; flex-wrap:wrap; gap:.35rem; }
-  .header-btn { background: rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); color:#fff;
-                border-radius:8px; padding:.35rem .55rem; font-size:.78rem; font-weight:600;
-                text-decoration:none; white-space:nowrap; }
-  .header-btn:hover { background: rgba(255,255,255,.25); }
+  .brand { display:flex; align-items:center; text-decoration:none; color:#fff; }
+  .brand img { height:50px; width:auto; display:block; background:#fff; border-radius:10px; padding:6px 12px; box-shadow:0 1px 3px rgba(0,0,0,.18); }
+  .header-top { display:flex; align-items:center; justify-content:space-between; padding:.75rem 1.4rem .35rem; gap:1rem; flex-wrap:wrap; background:var(--senedoo); }
+  .main-tabs { display:flex; gap:.35rem; }
+  .main-tab { color:#fff; text-decoration:none; font-weight:700; font-size:.95rem; padding:.55rem 1.05rem; border-radius:10px 10px 0 0; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); border-bottom:none; opacity:.72; }
+  .main-tab.active { background:rgba(255,255,255,.22); opacity:1; }
+  .main-tab:hover { opacity:1; }
+  .sub-nav { background:var(--senedoo); padding:.5rem 1.4rem; display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; border-top:1px solid rgba(255,255,255,.18); }
+  .sub-btn { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); color:#fff; border-radius:8px; padding:.35rem .65rem; font-size:.82rem; font-weight:600; text-decoration:none; white-space:nowrap; }
+  .sub-btn:hover { background:rgba(255,255,255,.22); }
+  .sub-btn.active { background:rgba(255,255,255,.32); border-color:rgba(255,255,255,.55); }
   * { box-sizing:border-box; }
   body { margin:0; font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:#f5f3f7; color:#1a1a2e; }
-  header { background:linear-gradient(135deg,var(--p),var(--p2)); color:#fff; padding:1rem 1.4rem; }
+  header { background:var(--senedoo); color:#fff; padding:0; }
   header h1 { margin:0; font-size:1.15rem; }
   .sub { opacity:.9; font-size:.8rem; margin-top:.25rem; }
   .wrap { padding:1rem 1.4rem; max-width:1200px; margin:0 auto; }
@@ -56,21 +59,22 @@
 </style></head>
 <body>
 <header>
-  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem .75rem">
-    <a class="brand" href="/" title="Accueil">
-      <img src="/static/senedoo-logo.png" alt="Senedoo" onerror="this.style.display='none'">
-      <span class="sep">·</span>
-      <span><strong>📊 Évaluations</strong> — prédictions de Claude</span>
-    </a>
-    <nav class="navrow">
-      <a class="header-btn" href="/">🎓 Quiz</a>
-      <a class="header-btn" href="/banque">📋 Banque</a>
-      <a class="header-btn" href="/import-capture">📷 Capture</a>
-      <a class="header-btn" href="/eval" aria-current="page">📊 Éval Claude</a>
-      <a class="header-btn" href="/admin/review">🔧 Admin</a>
+  <div class="header-top">
+    <a class="brand" href="/" title="Accueil"><img src="/static/senedoo-logo.png" alt="Senedoo" onerror="this.style.display='none'"></a>
+    <nav class="main-tabs" aria-label="Menu principal">
+      <a class="main-tab active" href="/">Quiz Senedoo</a>
+      <a class="main-tab" href="/tool-box">Tool-box</a>
     </nav>
   </div>
-  <div class="sub" style="margin-top:.4rem">Lance des évaluations paramétrables et consulte le détail en ligne.</div>
+  <nav class="sub-nav" aria-label="Navigation Quiz Senedoo">
+    <a class="sub-btn" href="/">🎓 Quiz</a>
+    <a class="sub-btn" href="/banque">📋 Banque</a>
+    <a class="sub-btn" href="/import-capture">📷 Capture</a>
+    <a class="sub-btn active" href="/eval" aria-current="page">📊 Éval Claude</a>
+    <a class="sub-btn" href="/admin/review">🔧 Admin</a>
+    <a class="sub-btn" href="/?openAsk=1">💬 Question</a>
+  </nav>
+  <div class="sub" style="padding:.5rem 1.4rem .6rem;background:var(--senedoo);color:rgba(255,255,255,.85);font-size:.78rem">📊 Évaluations — lance des évaluations paramétrables et consulte le détail en ligne.</div>
 </header>
 <div class="wrap">
   <div class="toolbar">
@@ -83,12 +87,18 @@
     <div class="grid">
       <div class="fld"><label>Source</label>
         <select id="f-source"><option value="udemy" selected>Udemy</option><option value="claude">Générées</option><option value="">Toutes</option></select></div>
+      <div class="fld"><label>Version (cert applicable)</label>
+        <select id="f-cert">
+          <option value="" selected>Toutes (v18 + v19 + both)</option>
+          <option value="19.0">v19 (v19 + both)</option>
+          <option value="18.0">v18 (v18 + both)</option>
+        </select></div>
       <div class="fld"><label>Nombre de questions</label><input type="number" id="f-limit" value="120" min="1" max="300"></div>
       <div class="fld"><label>Seed (reproductibilité)</label><input type="number" id="f-seed" value="42" min="0"></div>
       <div class="fld"><label>Abstention si confiance ≤</label>
         <select id="f-abstain"><option value="basse" selected>basse</option><option value="moyenne">moyenne</option><option value="none">jamais</option></select></div>
-      <div class="fld"><label>Concurrence</label><input type="number" id="f-conc" value="2" min="1" max="4"></div>
-      <div class="fld"><label>Budget global (min)</label><input type="number" id="f-budget" value="58" min="1" max="60"></div>
+      <div class="fld"><label>Recherches simultanées</label><input type="number" id="f-conc" value="2" min="1" max="4" title="Nombre de questions évaluées en parallèle (appels API Anthropic concurrents). Plus haut = plus rapide mais plus de charge."></div>
+      <div class="fld"><label>Temps maximum (min)</label><input type="number" id="f-budget" value="58" min="1" max="60" title="Plafond global d'exécution. L'éval s'arrête si dépassé et renvoie les résultats partiels."></div>
       <div class="fld"><label>Modèle de base (optionnel)</label><input type="text" id="f-model" placeholder="défaut config (Sonnet)"></div>
       <div class="fld"><label>Libellé (optionnel)</label><input type="text" id="f-label" placeholder="ex: held-out 120 sans escalade"></div>
     </div>
@@ -128,9 +138,12 @@ function fmtMS(s){ s=Math.round(s||0); var m=Math.floor(s/60), r=s%60; return m>
 function fmtAvg(s){ if(!s) return '0 s'; if(s>=60) return fmtMS(s); return (Math.round(s*10)/10)+' s'; }
 function card(lab,val,sub){ return '<div class="card"><div class="lab">'+lab+'</div><div class="val">'+val+'</div>'+(sub?'<div class="sub2">'+sub+'</div>':'')+'</div>'; }
 function vtag(v,m){ var s=''; if(v) s+='<span class="tag">v'+String(v).replace('.0','')+'</span>'; if(m) s+='<span class="tag">'+esc(m)+'</span>'; return s; }
-function paramStr(p){ p=p||{}; var x=[]; x.push('source: '+(p.source||'toutes')); x.push('n='+(p.limit!=null?p.limit:'?')); x.push('seed='+(p.seed!=null?p.seed:'?'));
+function paramStr(p){ p=p||{}; var x=[]; x.push('source: '+(p.source||'toutes'));
+  if(p.cert) x.push('cert: v'+String(p.cert).replace('.0',''));
+  x.push('n='+(p.limit!=null?p.limit:'?')); x.push('seed='+(p.seed!=null?p.seed:'?'));
   x.push('held-out: '+(p.holdout?'oui':'non')); if(p.rag_exclude) x.push('exclut '+p.rag_exclude); x.push('escalade: '+(p.escalate?'on':'off'));
-  x.push('abstention ≤ '+(p.abstain_below||'-')); x.push('modèle: '+(p.model||'config')); x.push('conc='+(p.concurrency||'')); x.push('budget='+(p.budget_min||0)+'min'); return x.join(' · '); }
+  x.push('abstention ≤ '+(p.abstain_below||'-')); x.push('modèle: '+(p.model||'config'));
+  x.push('recherches simul.='+(p.concurrency||'')); x.push('temps max='+(p.budget_min||0)+'min'); return x.join(' · '); }
 
 function rowClass(r){ if(r.error) return 'err'; if(r.abstain) return 'abst'; return r.ok?'ok':'ko'; }
 function badge(r){ if(r.error&&r.timeout) return '<span class="badge b-to">⏱️ Timeout</span>'; if(r.error) return '<span class="badge b-er">⚠️ Erreur</span>';
@@ -205,7 +218,9 @@ document.getElementById('btn-cancel').onclick=function(){ document.getElementByI
 document.getElementById('btn-refresh').onclick=function(){ if(view==='detail') renderDetail(); else loadRuns(); };
 document.getElementById('btn-back').onclick=function(){ if(pollTimer){clearInterval(pollTimer);pollTimer=null;} show('list'); loadRuns(); };
 document.getElementById('btn-launch').onclick=async function(){
-  const body={ source:document.getElementById('f-source').value, limit:+document.getElementById('f-limit').value,
+  const body={ source:document.getElementById('f-source').value,
+    cert_version:document.getElementById('f-cert').value,
+    limit:+document.getElementById('f-limit').value,
     seed:+document.getElementById('f-seed').value, abstain_below:document.getElementById('f-abstain').value,
     concurrency:+document.getElementById('f-conc').value, budget_min:+document.getElementById('f-budget').value,
     model:document.getElementById('f-model').value, label:document.getElementById('f-label').value,

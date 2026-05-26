@@ -127,6 +127,10 @@ def main() -> None:
                     help="écrit la progression incrémentale (JSON) après chaque question, pour "
                          "le tableau de bord web live (/eval-live).")
     ap.add_argument("--label", default="", help="libellé lisible de l'éval (affiché dans le hub).")
+    ap.add_argument("--cert", default="", choices=["", "18.0", "19.0"],
+                    help="Filtre par certification cible APPLICABLE : ne garde que les questions "
+                         "avec target_version == cert OU 'both'. Ex: --cert 19.0 → v19 + both. "
+                         "Différent de --version qui est exclusif.")
     ap.add_argument("--out", default=str(ROOT / "data" / "eval_suggestions.json"))
     args = ap.parse_args()
 
@@ -150,6 +154,10 @@ def main() -> None:
             return False
         if args.version != "all" and _target_version(q) != args.version:
             return False
+        if args.cert:
+            tv = _target_version(q)
+            if tv != args.cert and tv != "both":
+                return False
         if args.source and (q.get("correct_answer_source") or q.get("source")) != args.source:
             return False
         return True
@@ -255,7 +263,8 @@ def main() -> None:
                        "concurrency": args.concurrency, "budget_min": args.time_budget_min,
                        "source": args.source, "seed": args.seed, "limit": args.limit,
                        "label": args.label, "started_at": started_at,
-                       "rag_exclude": args.rag_exclude_source, "version": args.version},
+                       "rag_exclude": args.rag_exclude_source, "version": args.version,
+                       "cert": args.cert},
             "totals": {"answered": len(ans), "abstained": len(absd),
                        "correct": ac, "wrong": aw,
                        "accuracy_answered": round(ac / len(ans) * 100, 1) if ans else 0.0,

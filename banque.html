@@ -9,12 +9,18 @@
   :root { --senedoo: #6E2D9E; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
          background: #f0f4ff; color: #1a1a2e; min-height: 100vh; }
-  .brand { display:flex; align-items:center; gap:.55rem; text-decoration:none; color:#fff; }
-  .brand img { height:28px; width:auto; display:block; background:#fff; border-radius:6px; padding:2px 4px; }
-  .brand .sep { opacity:.55; }
-  header { background: var(--senedoo); color: white; padding: .55rem 1.1rem;
-           display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
-           gap: .5rem .75rem; width: 100%; }
+  .brand { display:flex; align-items:center; text-decoration:none; color:#fff; }
+  .brand img { height:50px; width:auto; display:block; background:#fff; border-radius:10px; padding:6px 12px; box-shadow:0 1px 3px rgba(0,0,0,.18); }
+  .header-top { display:flex; align-items:center; justify-content:space-between; padding:.75rem 1.4rem .35rem; gap:1rem; flex-wrap:wrap; background:var(--senedoo); }
+  .main-tabs { display:flex; gap:.35rem; }
+  .main-tab { color:#fff; text-decoration:none; font-weight:700; font-size:.95rem; padding:.55rem 1.05rem; border-radius:10px 10px 0 0; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); border-bottom:none; opacity:.72; }
+  .main-tab.active { background:rgba(255,255,255,.22); opacity:1; }
+  .main-tab:hover { opacity:1; }
+  .sub-nav { background:var(--senedoo); padding:.5rem 1.4rem; display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; border-top:1px solid rgba(255,255,255,.18); }
+  .sub-btn { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); color:#fff; border-radius:8px; padding:.35rem .65rem; font-size:.82rem; font-weight:600; text-decoration:none; white-space:nowrap; }
+  .sub-btn:hover { background:rgba(255,255,255,.22); }
+  .sub-btn.active { background:rgba(255,255,255,.32); border-color:rgba(255,255,255,.55); }
+  header { background: var(--senedoo); color: white; padding: 0; width: 100%; }
   header .title-block { display: flex; flex-direction: row; align-items: baseline; gap: .65rem;
                          flex-wrap: wrap; flex: 0 1 auto; min-width: 0; }
   header h1 { font-size: 1rem !important; font-weight: 700; }
@@ -210,18 +216,20 @@
 </head>
 <body>
 <header>
-  <a class="brand" href="/" title="Accueil">
-    <img src="/static/senedoo-logo.png" alt="Senedoo" onerror="this.style.display='none'">
-    <span class="sep">·</span>
-    <span>📋 Banque <span class="app-version">v{{ app_version }}</span></span>
-  </a>
-  <nav class="header-nav" aria-label="Navigation principale">
-    <a class="header-btn" href="/">🎓 Quiz</a>
-    <a class="header-btn" href="/banque" aria-current="page">📋 Banque</a>
-    <a class="header-btn" href="/import-capture">📷 Capture</a>
-    <a class="header-btn" href="/eval" title="Évaluations Claude">📊 Éval Claude</a>
-    <a class="header-btn" href="/admin/review" title="Revue des questions">🔧 Admin</a>
-    <a class="header-btn" href="/?openAsk=1">💬 Question</a>
+  <div class="header-top">
+    <a class="brand" href="/" title="Accueil"><img src="/static/senedoo-logo.png" alt="Senedoo" onerror="this.style.display='none'"></a>
+    <nav class="main-tabs" aria-label="Menu principal">
+      <a class="main-tab active" href="/">Quiz Senedoo</a>
+      <a class="main-tab" href="/tool-box">Tool-box</a>
+    </nav>
+  </div>
+  <nav class="sub-nav" aria-label="Navigation Quiz Senedoo">
+    <a class="sub-btn" href="/">🎓 Quiz</a>
+    <a class="sub-btn active" href="/banque" aria-current="page">📋 Banque</a>
+    <a class="sub-btn" href="/import-capture">📷 Capture</a>
+    <a class="sub-btn" href="/eval">📊 Éval Claude</a>
+    <a class="sub-btn" href="/admin/review">🔧 Admin</a>
+    <a class="sub-btn" href="/?openAsk=1">💬 Question</a>
   </nav>
 </header>
 <div class="cert-bar-strip" style="background:#faf5ff;border-bottom:1px solid #e9d5ff;padding:.5rem 1.1rem;display:flex;gap:.6rem;align-items:center;font-size:.85rem;color:#374151">

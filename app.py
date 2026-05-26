@@ -55,7 +55,7 @@ from quiz_llm import api_available, parse_json_value, run_prompt_with_images
 
 CONFIG_FILE = Path(__file__).parent / "config.json"
 # Incrémenter à chaque livraison (affichée dans l’UI : en-tête, onglet, pied de page ; F5 si auto_reload).
-APP_VERSION = "2.7.3"
+APP_VERSION = "2.7.4"
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12 Mo (captures)
@@ -313,13 +313,19 @@ HTML = """<!DOCTYPE html>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
          background: #f0f4ff; color: #1a1a2e; min-height: 100vh; }
-  .brand { display:flex; align-items:center; gap:.55rem; text-decoration:none; color:#fff; }
-  .brand img { height:30px; width:auto; display:block; background:#fff; border-radius:6px; padding:2px 5px; }
-  .brand .sep { opacity:.55; }
-  .brand .title { font-size:1rem; font-weight:700; }
-  header { background: var(--senedoo); color: white; padding: 1rem 2rem;
-           display: flex; align-items: center; justify-content: space-between;
-           flex-wrap: wrap; gap: .5rem .75rem; width: 100%; }
+  .brand { display:flex; align-items:center; text-decoration:none; color:#fff; }
+  .brand img { height:50px; width:auto; display:block; background:#fff; border-radius:10px; padding:6px 12px; box-shadow:0 1px 3px rgba(0,0,0,.18); }
+  .header-top { display:flex; align-items:center; justify-content:space-between; padding:.75rem 1.4rem .35rem; gap:1rem; flex-wrap:wrap; }
+  .main-tabs { display:flex; gap:.35rem; }
+  .main-tab { color:#fff; text-decoration:none; font-weight:700; font-size:.95rem; padding:.55rem 1.05rem; border-radius:10px 10px 0 0; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); border-bottom:none; opacity:.72; }
+  .main-tab.active { background:rgba(255,255,255,.22); opacity:1; }
+  .main-tab:hover { opacity:1; }
+  .sub-nav { background:rgba(255,255,255,.10); padding:.5rem 1.4rem; display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; border-top:1px solid rgba(255,255,255,.18); }
+  .sub-btn { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); color:#fff; border-radius:8px; padding:.35rem .65rem; font-size:.82rem; font-weight:600; text-decoration:none; white-space:nowrap; cursor:pointer; font-family:inherit; }
+  .sub-btn:hover { background:rgba(255,255,255,.22); }
+  .sub-btn.active { background:rgba(255,255,255,.32); border-color:rgba(255,255,255,.55); }
+  .sub-spacer { flex:1; }
+  header { background: var(--senedoo); color: white; padding: 0; width: 100%; }
   header .title-block { display: flex; flex-direction: column; align-items: flex-start; gap: .1rem;
                          flex: 0 1 auto; min-width: 0; }
   .header-nav {
@@ -447,20 +453,23 @@ HTML = """<!DOCTYPE html>
   </div>
 </div>
 <header>
-  <a class="brand" href="/" title="Accueil">
-    <img src="/static/senedoo-logo.png" alt="Senedoo" onerror="this.style.display='none'">
-    <span class="sep">·</span>
-    <span class="title">🎓 Quiz Odoo <span class="app-version" title="Version de l'application">v{{ app_version }}</span></span>
-  </a>
-  <nav class="header-nav" aria-label="Navigation principale">
-    <a class="header-btn" href="/" title="Accueil quiz" aria-current="page">🎓 Quiz</a>
-    <a class="header-btn" href="/banque">📋 Banque</a>
-    <a class="header-btn" href="/import-capture">📷 Capture</a>
-    <a class="header-btn" href="/eval" title="Évaluations Claude : lancer un test et consulter l'historique">📊 Éval Claude</a>
-    <a class="header-btn" href="/admin/review" title="Revue des questions (accès restreint)">🔧 Admin</a>
-    <button type="button" class="header-btn" onclick="openModal()">💬 Question</button>
-    <button type="button" class="header-btn" id="btn-new-quiz" onclick="if(confirm('Démarrer un nouveau quiz ?')) location.reload()" style="display:none" title="Recommencer un quiz (revenir à l'écran de configuration)">↺ Nouveau quiz</button>
-    <div id="timer" title="Temps du quiz" style="display:none">00:00</div>
+  <div class="header-top">
+    <a class="brand" href="/" title="Accueil"><img src="/static/senedoo-logo.png" alt="Senedoo" onerror="this.style.display='none'"></a>
+    <nav class="main-tabs" aria-label="Menu principal">
+      <a class="main-tab active" href="/">Quiz Senedoo</a>
+      <a class="main-tab" href="/tool-box">Tool-box</a>
+    </nav>
+  </div>
+  <nav class="sub-nav" aria-label="Navigation Quiz Senedoo">
+    <a class="sub-btn active" href="/" aria-current="page" title="Accueil quiz">🎓 Quiz</a>
+    <a class="sub-btn" href="/banque">📋 Banque</a>
+    <a class="sub-btn" href="/import-capture">📷 Capture</a>
+    <a class="sub-btn" href="/eval" title="Évaluations Claude : lancer un test et consulter l'historique">📊 Éval Claude</a>
+    <a class="sub-btn" href="/admin/review" title="Revue des questions (accès restreint)">🔧 Admin</a>
+    <button type="button" class="sub-btn" onclick="openModal()">💬 Question</button>
+    <span class="sub-spacer"></span>
+    <button type="button" class="sub-btn" id="btn-new-quiz" onclick="if(confirm('Démarrer un nouveau quiz ?')) location.reload()" style="display:none" title="Revenir à l'écran de configuration">↺ Nouveau quiz</button>
+    <div id="timer" title="Temps du quiz" style="display:none;font-weight:700;font-variant-numeric:tabular-nums;padding:.35rem .55rem;background:rgba(255,255,255,.18);border-radius:8px">00:00</div>
   </nav>
 </header>
 <div id="score-bar" style="display:none">
@@ -1178,6 +1187,7 @@ CAPTURE_PREVIEW_HTML = (Path(__file__).parent / "capture_preview.html").read_tex
 
 # --- Tableau de bord live de l'éval held-out (page /eval-live) ----------------
 EVAL_HUB_HTML = (Path(__file__).parent / "eval_hub.html").read_text(encoding="utf-8")
+TOOL_BOX_HTML = (Path(__file__).parent / "tool_box.html").read_text(encoding="utf-8")
 
 # --- Page d'administration : revue des questions (unverified / flagged) ------
 
@@ -1222,15 +1232,23 @@ ADMIN_HTML = """<!DOCTYPE html>
 <title>Revue des questions — v{{ app_version }}</title>
 <style>
   :root { --senedoo: #6E2D9E; }
-  .brand { display:flex; align-items:center; gap:.55rem; text-decoration:none; color:#fff; }
-  .brand img { height:28px; width:auto; display:block; background:#fff; border-radius:6px; padding:2px 4px; }
-  .brand .sep { opacity:.55; }
+  .brand { display:flex; align-items:center; text-decoration:none; color:#fff; }
+  .brand img { height:50px; width:auto; display:block; background:#fff; border-radius:10px; padding:6px 12px; box-shadow:0 1px 3px rgba(0,0,0,.18); }
+  .header-top { display:flex; align-items:center; justify-content:space-between; padding:.75rem 1.4rem .35rem; gap:1rem; flex-wrap:wrap; background:var(--senedoo); }
+  .main-tabs { display:flex; gap:.35rem; }
+  .main-tab { color:#fff; text-decoration:none; font-weight:700; font-size:.95rem; padding:.55rem 1.05rem; border-radius:10px 10px 0 0; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); border-bottom:none; opacity:.72; }
+  .main-tab.active { background:rgba(255,255,255,.22); opacity:1; }
+  .main-tab:hover { opacity:1; }
+  .sub-nav { background:var(--senedoo); padding:.5rem 1.4rem; display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; border-top:1px solid rgba(255,255,255,.18); }
+  .sub-nav::before { content:""; }
+  .sub-btn { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); color:#fff; border-radius:8px; padding:.35rem .65rem; font-size:.82rem; font-weight:600; text-decoration:none; white-space:nowrap; }
+  .sub-btn:hover { background:rgba(255,255,255,.22); }
+  .sub-btn.active { background:rgba(255,255,255,.32); border-color:rgba(255,255,255,.55); }
   * { box-sizing:border-box; margin:0; padding:0; }
   body { font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
          background:#f0f4ff; color:#1a1a2e; }
-  header { background:var(--senedoo); color:#fff; padding:1rem 1.5rem; display:flex;
-           align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.6rem; }
-  header h1 { font-size:1.2rem; }
+  header { background:var(--senedoo); color:#fff; padding:0; }
+  header h1 { font-size:1.05rem; font-weight:700; display:inline; }
   header .v { font-size:.78rem; opacity:.9; margin-left:.5rem; }
   header nav a { color:#fff; text-decoration:none; background:rgba(255,255,255,.15);
                  border:1px solid rgba(255,255,255,.3); border-radius:8px;
@@ -1302,17 +1320,20 @@ ADMIN_HTML = """<!DOCTYPE html>
 </style></head>
 <body>
 <header>
-  <a class="brand" href="/" title="Accueil">
-    <img src="/static/senedoo-logo.png" alt="Senedoo" onerror="this.style.display='none'">
-    <span class="sep">·</span>
-    <span>🔧 Revue <span class="v">v{{ app_version }}</span></span>
-  </a>
-  <nav>
-    <a href="/">🎓 Quiz</a>
-    <a href="/banque">📋 Banque</a>
-    <a href="/import-capture">📷 Capture</a>
-    <a href="/eval">📊 Éval Claude</a>
-    <a href="/admin/review" aria-current="page">🔧 Admin</a>
+  <div class="header-top">
+    <a class="brand" href="/" title="Accueil"><img src="/static/senedoo-logo.png" alt="Senedoo" onerror="this.style.display='none'"></a>
+    <nav class="main-tabs" aria-label="Menu principal">
+      <a class="main-tab active" href="/">Quiz Senedoo</a>
+      <a class="main-tab" href="/tool-box">Tool-box</a>
+    </nav>
+  </div>
+  <nav class="sub-nav" aria-label="Navigation Quiz Senedoo">
+    <a class="sub-btn" href="/">🎓 Quiz</a>
+    <a class="sub-btn" href="/banque">📋 Banque</a>
+    <a class="sub-btn" href="/import-capture">📷 Capture</a>
+    <a class="sub-btn" href="/eval">📊 Éval Claude</a>
+    <a class="sub-btn active" href="/admin/review" aria-current="page">🔧 Admin</a>
+    <a class="sub-btn" href="/?openAsk=1">💬 Question</a>
   </nav>
 </header>
 <div class="toolbar">
@@ -3018,6 +3039,11 @@ def eval_hub():
     return Response(EVAL_HUB_HTML, mimetype="text/html")
 
 
+@app.route("/tool-box")
+def tool_box():
+    return Response(TOOL_BOX_HTML, mimetype="text/html")
+
+
 @app.route("/api/eval/runs")
 def api_eval_runs():
     return jsonify({"runs": _list_eval_runs(), "active": bool(_active_eval_run())})
@@ -3101,6 +3127,9 @@ def api_eval_launch():
     model = (data.get("model") or "").strip()
     if model and not all(c.isalnum() or c in ".-_" for c in model):
         model = ""
+    cert_version = (data.get("cert_version") or "").strip()
+    if cert_version not in ("", "18.0", "19.0"):
+        cert_version = ""
     label = "".join(c for c in (data.get("label") or "").strip()
                     if c.isalnum() or c in " -_éèàçÉ").strip()[:40]
 
@@ -3127,6 +3156,8 @@ def api_eval_launch():
         cmd += ["--rag-exclude-source", "udemy"]
     if model:
         cmd += ["--model", model]
+    if cert_version:
+        cmd += ["--cert", cert_version]
 
     # Écrit immédiatement un fichier de progression "running" AVANT de lancer le
     # process : ferme la fenêtre de course où un 2e lancement passerait (le garde
@@ -3138,7 +3169,7 @@ def api_eval_launch():
                    "abstain_below": abstain, "concurrency": concurrency, "budget_min": budget,
                    "source": source, "seed": seed, "limit": limit, "label": label,
                    "started_at": now_iso, "rag_exclude": ("udemy" if exclude_all else ""),
-                   "version": "all"},
+                   "version": "all", "cert": cert_version},
         "totals": {"answered": 0, "abstained": 0, "correct": 0, "wrong": 0,
                    "accuracy_answered": 0, "odoo_abstain": 0, "odoo_all": 0, "odoo_max": limit,
                    "timeouts": 0, "api_errors": 0, "cost_usd": 0, "avg_latency_s": 0,

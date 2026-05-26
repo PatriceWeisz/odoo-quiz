@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tool-box — v{{ app_version }}</title>
+<style>
+  :root { --senedoo: #6E2D9E; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         background: #f0f4ff; color: #1a1a2e; min-height: 100vh; }
+  .brand { display:flex; align-items:center; text-decoration:none; color:#fff; }
+  .brand img { height:50px; width:auto; display:block; background:#fff; border-radius:10px; padding:6px 12px; box-shadow:0 1px 3px rgba(0,0,0,.18); }
+  .header-top { display:flex; align-items:center; justify-content:space-between; padding:.75rem 1.4rem .35rem; gap:1rem; flex-wrap:wrap; background:var(--senedoo); }
+  .main-tabs { display:flex; gap:.35rem; }
+  .main-tab { color:#fff; text-decoration:none; font-weight:700; font-size:.95rem; padding:.55rem 1.05rem; border-radius:10px 10px 0 0; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); border-bottom:none; opacity:.72; }
+  .main-tab.active { background:rgba(255,255,255,.22); opacity:1; }
+  .main-tab:hover { opacity:1; }
+  .sub-nav { background:var(--senedoo); padding:.5rem 1.4rem; display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; border-top:1px solid rgba(255,255,255,.18); color:rgba(255,255,255,.85); font-size:.82rem; }
+  header { background: var(--senedoo); color: white; padding: 0; width: 100%; }
+  main { max-width: 720px; margin: 3rem auto; padding: 0 1rem; text-align:center; }
+  .panel { background:#fff; border-radius:14px; padding:2.5rem 1.5rem; box-shadow:0 2px 14px rgba(0,0,0,.08); }
+  h1 { color:var(--senedoo); font-size:1.5rem; margin-bottom:.5rem; }
+  p { color:#475569; font-size:1rem; line-height:1.55; margin:.5rem 0; }
+  .icon { font-size:3rem; margin-bottom:.5rem; }
+  .ghost { color:#94a3b8; font-size:.85rem; margin-top:1.2rem; }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-top">
+    <a class="brand" href="/" title="Accueil"><img src="/static/senedoo-logo.png" alt="Senedoo" onerror="this.style.display='none'"></a>
+    <nav class="main-tabs" aria-label="Menu principal">
+      <a class="main-tab" href="/">Quiz Senedoo</a>
+      <a class="main-tab active" href="/tool-box" aria-current="page">Tool-box</a>
+    </nav>
+  </div>
+  <nav class="sub-nav" aria-label="Navigation Tool-box">
+    <em>Aucun outil pour l'instant — contenu à venir.</em>
+  </nav>
+</header>
+<main>
+  <div class="panel">
+    <div class="icon">🧰</div>
+    <h1>Tool-box</h1>
+    <p>Cet espace accueillera prochainement les <strong>outils Senedoo</strong>.</p>
+    <p class="ghost">Reviens bientôt — la liste des outils s'affichera dans le sous-menu ci-dessus dès qu'ils seront disponibles.</p>
+  </div>
+</main>
+</body>
+</html>
