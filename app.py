@@ -55,7 +55,7 @@ from quiz_llm import api_available, parse_json_value, run_prompt_with_images
 
 CONFIG_FILE = Path(__file__).parent / "config.json"
 # Incrémenter à chaque livraison (affichée dans l’UI : en-tête, onglet, pied de page ; F5 si auto_reload).
-APP_VERSION = "2.7.0"
+APP_VERSION = "2.7.1"
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12 Mo (captures)
@@ -3036,6 +3036,19 @@ def api_eval_launch():
     if _active_eval_run():
         return jsonify({"error": "Une évaluation est déjà en cours — attends la fin."}), 409
 
+    # Garde mémoire : refuse de lancer si la RAM dispo est trop faible (évite l'OOM
+    # sur ce petit VPS partagé avec le serveur web).
+    try:
+        with open("/proc/meminfo", encoding="utf-8") as _mf:
+            for _l in _mf:
+                if _l.startswith("MemAvailable"):
+                    if int(_l.split()[1]) < 900_000:  # < ~0,9 Go
+                        return jsonify({"error": "Mémoire serveur insuffisante pour l'instant "
+                                        "(warmup en cours ?). Réessaie dans une minute."}), 503
+                    break
+    except (OSError, ValueError, IndexError):
+        pass
+
     data = request.get_json(silent=True) or {}
 
     def clampi(v, lo, hi, dft):
@@ -3087,11 +3100,37 @@ def api_eval_launch():
     if model:
         cmd += ["--model", model]
 
+    # Écrit immédiatement un fichier de progression "running" AVANT de lancer le
+    # process : ferme la fenêtre de course où un 2e lancement passerait (le garde
+    # _active_eval_run() le voit aussitôt).
+    now_iso = __import__("datetime").datetime.now().isoformat(timespec="seconds")
+    init_doc = {
+        "status": "running", "updated_at": now_iso, "n_test": limit, "done": 0,
+        "params": {"model": model or "config", "escalate": escalate, "holdout": holdout,
+                   "abstain_below": abstain, "concurrency": concurrency, "budget_min": budget,
+                   "source": source, "seed": seed, "limit": limit, "label": label,
+                   "started_at": now_iso, "rag_exclude": ("udemy" if exclude_all else ""),
+                   "version": "all"},
+        "totals": {"answered": 0, "abstained": 0, "correct": 0, "wrong": 0,
+                   "accuracy_answered": 0, "odoo_abstain": 0, "odoo_all": 0, "odoo_max": limit,
+                   "timeouts": 0, "api_errors": 0, "cost_usd": 0, "avg_latency_s": 0,
+                   "elapsed_s": 0},
+        "results": [],
+    }
+    try:
+        progress.write_text(json.dumps(init_doc, ensure_ascii=False), encoding="utf-8")
+    except OSError as e:
+        return jsonify({"error": f"Écriture impossible : {e}"}), 500
+
     try:
         lf = open(logf, "w")
         subprocess.Popen(cmd, cwd=str(Path(__file__).parent),
                          stdout=lf, stderr=subprocess.STDOUT, start_new_session=True)
     except OSError as e:
+        try:
+            progress.unlink(missing_ok=True)  # nettoie le fichier "running" orphelin
+        except OSError:
+            pass
         return jsonify({"error": f"Lancement impossible : {e}"}), 500
     return jsonify({"ok": True, "run_id": run_id})
 
